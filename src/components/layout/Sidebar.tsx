@@ -55,16 +55,16 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - adjusted height to match header */}
       <div className={`
-        fixed top-0 left-0 h-full bg-white shadow-lg z-50 transition-all duration-300 ease-in-out
+        fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white shadow-lg z-50 transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:static lg:shadow-none
+        lg:translate-x-0 lg:static lg:shadow-none lg:h-[calc(100vh-4rem)]
         ${isCollapsed ? 'lg:w-16' : 'lg:w-64'}
         w-64 border-r border-gray-200 flex flex-col
       `}>
-        {/* Header với logo NESA */}
-        <div className={`flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 ${isCollapsed ? 'lg:px-3' : ''}`}>
+        {/* Header với logo NESA - adjusted height */}
+        <div className={`flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 h-16 ${isCollapsed ? 'lg:px-3' : ''}`}>
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
               <div className="text-blue-600 font-bold text-lg">N</div>

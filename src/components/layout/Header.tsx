@@ -14,9 +14,9 @@ export function Header({ toggleSidebar, toggleSidebarCollapse, sidebarCollapsed 
   const { profile } = useAuth();
 
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-30">
-      <div className="flex items-center justify-between px-6 py-3">
-        <div className="flex items-center space-x-4">
+    <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-30 h-16">
+      <div className="flex items-center justify-between px-6 py-2 h-full">
+        <div className="flex items-center space-x-2">
           {/* Mobile menu button */}
           <Button 
             variant="ghost" 
@@ -27,7 +27,7 @@ export function Header({ toggleSidebar, toggleSidebarCollapse, sidebarCollapsed 
             <Menu className="h-4 w-4" />
           </Button>
           
-          {/* Desktop sidebar toggle */}
+          {/* Desktop sidebar toggle - positioned closer to sidebar */}
           <Button 
             variant="ghost" 
             size="icon"
@@ -42,13 +42,13 @@ export function Header({ toggleSidebar, toggleSidebarCollapse, sidebarCollapsed 
           </Button>
         </div>
 
-        {/* Centered Search Bar */}
-        <div className="flex-1 max-w-xl mx-8">
+        {/* Centered Search Bar - more compact and modern */}
+        <div className="flex-1 max-w-md mx-6">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input 
-              placeholder="Tìm kiếm nhân viên, quy trình, báo cáo..." 
-              className="pl-11 pr-4 py-2 h-9 w-full bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder:text-gray-500 text-sm"
+              placeholder="Tìm kiếm..." 
+              className="pl-10 pr-4 h-8 w-full bg-gray-50 border-gray-200 rounded-full focus:bg-white focus:ring-1 focus:ring-blue-400 focus:border-blue-400 transition-all duration-200 placeholder:text-gray-500 text-sm shadow-sm"
             />
           </div>
         </div>
