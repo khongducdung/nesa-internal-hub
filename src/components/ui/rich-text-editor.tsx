@@ -71,6 +71,29 @@ export function RichTextEditor({
     }
   }, [value]);
 
+  // CSS styles for the placeholder
+  const placeholderStyles = `
+    [contenteditable]:empty:before {
+      content: attr(data-placeholder);
+      color: #9ca3af;
+      pointer-events: none;
+    }
+  `;
+
+  useEffect(() => {
+    // Add styles to document head
+    const styleElement = document.createElement('style');
+    styleElement.textContent = placeholderStyles;
+    document.head.appendChild(styleElement);
+
+    // Cleanup function
+    return () => {
+      if (document.head.contains(styleElement)) {
+        document.head.removeChild(styleElement);
+      }
+    };
+  }, []);
+
   return (
     <div className="border rounded-md">
       {/* Toolbar */}
@@ -150,14 +173,6 @@ export function RichTextEditor({
         data-placeholder={placeholder}
         suppressContentEditableWarning={true}
       />
-      
-      <style jsx>{`
-        [contenteditable]:empty:before {
-          content: attr(data-placeholder);
-          color: #9ca3af;
-          pointer-events: none;
-        }
-      `}</style>
     </div>
   );
 }
