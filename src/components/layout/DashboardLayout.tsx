@@ -15,7 +15,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const toggleSidebarCollapse = () => setSidebarCollapsed(!sidebarCollapsed);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       <div className="flex h-screen">
         <Sidebar 
           isOpen={sidebarOpen} 
@@ -31,7 +31,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             sidebarCollapsed={sidebarCollapsed}
           />
           
-          <main className="flex-1 overflow-y-auto p-6 bg-background">
+          <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
             <div className={`mx-auto transition-all duration-300 ${
               sidebarCollapsed ? 'max-w-7xl' : 'max-w-6xl'
             }`}>

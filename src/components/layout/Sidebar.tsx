@@ -58,22 +58,19 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
 
       {/* Sidebar */}
       <div className={`
-        fixed top-0 left-0 h-full bg-white shadow-lg z-50 transition-all duration-300 ease-in-out
+        fixed top-0 left-0 h-full sidebar-gradient shadow-lg z-50 transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:static lg:shadow-none
         ${isCollapsed ? 'lg:w-16' : 'lg:w-64'}
-        w-64 border-r border-border flex flex-col
+        w-64 flex flex-col
       `}>
-        {/* Header with NESA logo - blue gradient */}
-        <div className={`flex items-center justify-between px-4 py-3 border-b border-border bg-gradient-brand h-[65px] ${isCollapsed ? 'lg:px-3' : ''}`}>
+        {/* Header - simplified without logo */}
+        <div className={`flex items-center justify-between px-4 py-6 border-b border-white/20 h-[73px] ${isCollapsed ? 'lg:px-3' : ''}`}>
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-              <div className="text-primary font-bold text-lg">N</div>
-            </div>
             {!isCollapsed && (
               <div>
-                <h1 className="font-bold text-lg text-primary-foreground">NESA</h1>
-                <p className="text-xs text-primary-foreground/80">Nền tảng quản trị nội bộ</p>
+                <h1 className="font-bold text-xl text-white">Quản lý</h1>
+                <p className="text-sm text-white/80">Nền tảng quản trị nội bộ</p>
               </div>
             )}
           </div>
@@ -82,14 +79,14 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
             variant="ghost" 
             size="icon" 
             onClick={toggleSidebar} 
-            className="lg:hidden text-primary-foreground hover:bg-white/20 h-8 w-8"
+            className="lg:hidden text-white hover:bg-white/20 h-8 w-8"
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
 
         {/* Navigation Menu */}
-        <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-3 space-y-2 overflow-y-auto">
           {menuItems.map(item => {
             if (!hasAccess(item.access)) return null;
             const isActive = location.pathname === item.path;
@@ -99,32 +96,38 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
               <Button
                 key={item.path}
                 variant="ghost"
-                className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start px-3'} h-10 text-left transition-all duration-200 ${
+                className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start px-4'} h-12 text-left menu-item-hover ${
                   isActive 
                     ? 'nav-active' 
-                    : 'text-muted-foreground hover:bg-accent hover:text-primary'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
                 }`}
                 onClick={() => handleNavigation(item.path)}
                 title={isCollapsed ? item.label : undefined}
               >
-                <Icon className={`h-4 w-4 ${isActive ? 'text-primary' : ''} ${isCollapsed ? '' : 'mr-3'}`} />
-                {!isCollapsed && <span className="text-sm">{item.label}</span>}
+                <Icon className={`h-5 w-5 ${isActive ? 'text-white' : ''} ${isCollapsed ? '' : 'mr-3'}`} />
+                {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
               </Button>
             );
           })}
         </nav>
 
-        {/* Sign Out */}
-        <div className="p-2 border-t border-border">
+        {/* Footer with copyright */}
+        <div className="p-3 border-t border-white/20 space-y-2">
           <Button 
             variant="ghost" 
-            className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start px-3'} h-10 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors duration-200`}
+            className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start px-4'} h-12 text-white/80 hover:bg-white/10 hover:text-white menu-item-hover`}
             onClick={handleSignOut}
             title={isCollapsed ? 'Đăng xuất' : undefined}
           >
-            <LogOut className={`h-4 w-4 ${isCollapsed ? '' : 'mr-3'}`} />
-            {!isCollapsed && <span className="text-sm">Đăng xuất</span>}
+            <LogOut className={`h-5 w-5 ${isCollapsed ? '' : 'mr-3'}`} />
+            {!isCollapsed && <span className="text-sm font-medium">Đăng xuất</span>}
           </Button>
+          
+          {!isCollapsed && (
+            <div className="text-center pt-2">
+              <p className="text-xs text-white/60">© 2025 Khổng Đức Dũng</p>
+            </div>
+          )}
         </div>
       </div>
     </>
