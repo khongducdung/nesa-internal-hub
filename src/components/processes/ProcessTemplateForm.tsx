@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -11,13 +10,14 @@ import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { CategorySelector } from './CategorySelector';
 import { TargetSelector } from './TargetSelector';
 import { FileAttachments } from './FileAttachments';
+import { NotificationDialog } from './NotificationDialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ProcessTemplateFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: any) => Promise<void>;
   initialData?: any;
   inline?: boolean;
 }
@@ -39,6 +39,8 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
   const [newTag, setNewTag] = useState('');
   const [newLink, setNewLink] = useState({ title: '', url: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNotificationDialog, setShowNotificationDialog] = useState(false);
+  const [pendingSubmitData, setPendingSubmitData] = useState<any>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -147,49 +149,6 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
     return true;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (isSubmitting) return;
-    
-    console.log('Form submission attempted with data:', formData);
-    
-    if (!validateForm()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      await onSubmit(formData);
-      
-      if (!inline) {
-        onOpenChange(false);
-      } else if (!initialData) {
-        // Reset form for inline mode only when creating new (not editing)
-        setFormData({
-          name: '',
-          content: '',
-          category_id: '',
-          target_type: 'general',
-          target_ids: [],
-          priority: 'medium',
-          tags: [],
-          external_links: [],
-          status: 'published',
-          attachments: []
-        });
-        setNewTag('');
-        setNewLink({ title: '', url: '' });
-      }
-    } catch (error) {
-      console.error('Form submission error:', error);
-      // Error handling is done in the parent component and mutations
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const addTag = () => {
     if (newTag.trim()) {
       setFormData(prev => ({
@@ -238,6 +197,83 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
       ...prev,
       external_links: prev.external_links.filter((_, i) => i !== index)
     }));
+  };
+
+  const handleCancel = () => {
+    if (inline) {
+      // Reset form for inline mode
+      setFormData({
+        name: '',
+        content: '',
+        category_id: '',
+        target_type: 'general',
+        target_ids: [],
+        priority: 'medium',
+        tags: [],
+        external_links: [],
+        status: 'published',
+        attachments: []
+      });
+      setNewTag('');
+      setNewLink({ title: '', url: '' });
+    } else {
+      onOpenChange(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (isSubmitting) return;
+    
+    console.log('Form submission attempted with data:', formData);
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    // Store data for notification dialog
+    setPendingSubmitData(formData);
+    setShowNotificationDialog(true);
+  };
+
+  const handleNotificationConfirm = async () => {
+    if (!pendingSubmitData) return;
+
+    setIsSubmitting(true);
+
+    try {
+      await onSubmit(pendingSubmitData);
+      
+      if (!inline) {
+        onOpenChange(false);
+      } else if (!initialData) {
+        // Reset form for inline mode only when creating new (not editing)
+        setFormData({
+          name: '',
+          content: '',
+          category_id: '',
+          target_type: 'general',
+          target_ids: [],
+          priority: 'medium',
+          tags: [],
+          external_links: [],
+          status: 'published',
+          attachments: []
+        });
+        setNewTag('');
+        setNewLink({ title: '', url: '' });
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
+    } finally {
+      setIsSubmitting(false);
+      setPendingSubmitData(null);
+    }
+  };
+
+  const handleNotificationCancel = () => {
+    setPendingSubmitData(null);
   };
 
   // Kiểm tra user đã đăng nhập chưa
@@ -421,11 +457,14 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
       </div>
 
       <div className="flex justify-end gap-3 pt-4 border-t">
-        {!inline && (
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-            Hủy
-          </Button>
-        )}
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={handleCancel} 
+          disabled={isSubmitting}
+        >
+          Huỷ
+        </Button>
         <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
           {isSubmitting ? 'Đang xử lý...' : (initialData ? 'Cập nhật' : 'Tạo tài liệu')}
         </Button>
@@ -434,19 +473,52 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
   );
 
   if (inline) {
-    return formContent;
+    return (
+      <>
+        {formContent}
+        {pendingSubmitData && (
+          <NotificationDialog
+            open={showNotificationDialog}
+            onOpenChange={setShowNotificationDialog}
+            processTemplateId={initialData?.id || ''}
+            processName={pendingSubmitData.name}
+            targetType={pendingSubmitData.target_type}
+            targetIds={pendingSubmitData.target_ids}
+            notificationType={initialData ? 'process_updated' : 'new_process'}
+            onConfirm={handleNotificationConfirm}
+            onCancel={handleNotificationCancel}
+          />
+        )}
+      </>
+    );
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
-            {initialData ? 'Chỉnh sửa tài liệu hướng dẫn' : 'Tạo tài liệu hướng dẫn mới'}
-          </DialogTitle>
-        </DialogHeader>
-        {formContent}
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              {initialData ? 'Chỉnh sửa tài liệu hướng dẫn' : 'Tạo tài liệu hướng dẫn mới'}
+            </DialogTitle>
+          </DialogHeader>
+          {formContent}
+        </DialogContent>
+      </Dialog>
+      
+      {pendingSubmitData && (
+        <NotificationDialog
+          open={showNotificationDialog}
+          onOpenChange={setShowNotificationDialog}
+          processTemplateId={initialData?.id || ''}
+          processName={pendingSubmitData.name}
+          targetType={pendingSubmitData.target_type}
+          targetIds={pendingSubmitData.target_ids}
+          notificationType={initialData ? 'process_updated' : 'new_process'}
+          onConfirm={handleNotificationConfirm}
+          onCancel={handleNotificationCancel}
+        />
+      )}
+    </>
   );
 }
