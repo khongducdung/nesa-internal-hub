@@ -14,6 +14,7 @@ import { useProcessCategories } from '@/hooks/useProcessCategories';
 import { useDepartments } from '@/hooks/useDepartments';
 import { usePositions } from '@/hooks/usePositions';
 import { useEmployees } from '@/hooks/useEmployees';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 
 interface ProcessTemplateFormProps {
   open: boolean;
@@ -34,7 +35,6 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData 
     estimated_duration: initialData?.estimated_duration || 60,
     tags: initialData?.tags || [],
     external_links: initialData?.external_links || [],
-    steps: initialData?.steps || [{ title: '', description: '', required: true }],
     status: initialData?.status || 'draft'
   });
 
@@ -48,31 +48,13 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    // Tạo steps từ content để tương thích với schema hiện tại
+    const processData = {
+      ...formData,
+      steps: [{ title: 'Nội dung hướng dẫn', description: formData.content, required: true }]
+    };
+    onSubmit(processData);
     onOpenChange(false);
-  };
-
-  const addStep = () => {
-    setFormData(prev => ({
-      ...prev,
-      steps: [...prev.steps, { title: '', description: '', required: true }]
-    }));
-  };
-
-  const removeStep = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      steps: prev.steps.filter((_, i) => i !== index)
-    }));
-  };
-
-  const updateStep = (index: number, field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      steps: prev.steps.map((step, i) => 
-        i === index ? { ...step, [field]: value } : step
-      )
-    }));
   };
 
   const addTag = () => {
@@ -124,33 +106,61 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {initialData ? 'Chỉnh sửa mẫu quy trình' : 'Tạo mẫu quy trình mới'}
+          <DialogTitle className="text-xl font-semibold">
+            {initialData ? 'Chỉnh sửa tài liệu hướng dẫn' : 'Tạo tài liệu hướng dẫn mới'}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <Tabs defaultValue="basic" className="w-full">
+          <Tabs defaultValue="content" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="content">Nội dung chính</TabsTrigger>
               <TabsTrigger value="basic">Thông tin cơ bản</TabsTrigger>
-              <TabsTrigger value="steps">Các bước</TabsTrigger>
-              <TabsTrigger value="attachments">Đính kèm</TabsTrigger>
+              <TabsTrigger value="attachments">Tài liệu đính kèm</TabsTrigger>
               <TabsTrigger value="targets">Đối tượng áp dụng</TabsTrigger>
             </TabsList>
 
+            <TabsContent value="content" className="space-y-4">
+              <div>
+                <Label htmlFor="name" className="text-base font-medium">Tiêu đề tài liệu *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Nhập tiêu đề tài liệu hướng dẫn..."
+                  className="mt-2 text-base"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="description" className="text-base font-medium">Mô tả ngắn</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Mô tả ngắn gọn về nội dung tài liệu..."
+                  rows={2}
+                  className="mt-2"
+                />
+              </div>
+
+              <div>
+                <Label className="text-base font-medium mb-3 block">Nội dung hướng dẫn chi tiết *</Label>
+                <RichTextEditor
+                  value={formData.content}
+                  onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
+                  placeholder="Soạn thảo nội dung hướng dẫn chi tiết..."
+                  minHeight="400px"
+                  className="border rounded-lg"
+                />
+              </div>
+            </TabsContent>
+
             <TabsContent value="basic" className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Tên quy trình *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    required
-                  />
-                </div>
                 <div>
                   <Label htmlFor="category">Danh mục *</Label>
                   <Select value={formData.category_id} onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}>
@@ -160,36 +170,34 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData 
                     <SelectContent>
                       {categories?.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
-                          {category.name}
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: category.color || '#6B7280' }}
+                            />
+                            {category.name}
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <Label htmlFor="status">Trạng thái</Label>
+                  <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Bản nháp</SelectItem>
+                      <SelectItem value="published">Đã xuất bản</SelectItem>
+                      <SelectItem value="archived">Lưu trữ</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <div>
-                <Label htmlFor="description">Mô tả</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="content">Nội dung hướng dẫn</Label>
-                <Textarea
-                  id="content"
-                  value={formData.content}
-                  onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                  rows={6}
-                  placeholder="Nhập nội dung hướng dẫn chi tiết..."
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="priority">Độ ưu tiên</Label>
                   <Select value={formData.priority} onValueChange={(value) => setFormData(prev => ({ ...prev, priority: value }))}>
@@ -204,26 +212,13 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData 
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="duration">Thời gian ước tính (phút)</Label>
+                  <Label htmlFor="duration">Thời gian đọc ước tính (phút)</Label>
                   <Input
                     id="duration"
                     type="number"
                     value={formData.estimated_duration}
                     onChange={(e) => setFormData(prev => ({ ...prev, estimated_duration: parseInt(e.target.value) }))}
                   />
-                </div>
-                <div>
-                  <Label htmlFor="status">Trạng thái</Label>
-                  <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Bản nháp</SelectItem>
-                      <SelectItem value="published">Đã xuất bản</SelectItem>
-                      <SelectItem value="archived">Lưu trữ</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
 
@@ -251,57 +246,14 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData 
               </div>
             </TabsContent>
 
-            <TabsContent value="steps" className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Các bước thực hiện</h3>
-                <Button type="button" onClick={addStep} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Thêm bước
-                </Button>
-              </div>
-              
-              {formData.steps.map((step, index) => (
-                <Card key={index}>
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-sm">Bước {index + 1}</CardTitle>
-                      {formData.steps.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeStep(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Input
-                      placeholder="Tiêu đề bước..."
-                      value={step.title}
-                      onChange={(e) => updateStep(index, 'title', e.target.value)}
-                    />
-                    <Textarea
-                      placeholder="Mô tả chi tiết..."
-                      value={step.description}
-                      onChange={(e) => updateStep(index, 'description', e.target.value)}
-                      rows={3}
-                    />
-                  </CardContent>
-                </Card>
-              ))}
-            </TabsContent>
-
             <TabsContent value="attachments" className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold mb-4">Liên kết ngoài</h3>
+                <h3 className="text-lg font-semibold mb-4">Liên kết tham khảo</h3>
                 <div className="space-y-2 mb-4">
                   {formData.external_links.map((link, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
                       <div className="flex items-center gap-2">
-                        <Link className="h-4 w-4" />
+                        <Link className="h-4 w-4 text-blue-600" />
                         <div>
                           <div className="font-medium">{link.title}</div>
                           <div className="text-sm text-gray-500">{link.url}</div>
@@ -338,24 +290,29 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData 
 
               <div>
                 <h3 className="text-lg font-semibold mb-4">Tệp đính kèm</h3>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-gray-500">Tính năng upload file sẽ được triển khai sau</p>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50">
+                  <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <p className="text-gray-600 mb-2">Kéo thả file vào đây hoặc click để chọn</p>
+                  <p className="text-sm text-gray-500">Hỗ trợ: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX (Tối đa 10MB)</p>
+                  <Button type="button" variant="outline" className="mt-4">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Chọn tệp
+                  </Button>
                 </div>
               </div>
             </TabsContent>
 
             <TabsContent value="targets" className="space-y-4">
               <div>
-                <Label htmlFor="target_type">Loại đối tượng áp dụng</Label>
+                <Label htmlFor="target_type">Đối tượng áp dụng</Label>
                 <Select value={formData.target_type} onValueChange={(value) => setFormData(prev => ({ ...prev, target_type: value, target_ids: [] }))}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="general">Chung</SelectItem>
-                    <SelectItem value="department">Phòng ban</SelectItem>
-                    <SelectItem value="position">Vị trí</SelectItem>
+                    <SelectItem value="general">Tất cả nhân viên</SelectItem>
+                    <SelectItem value="department">Theo phòng ban</SelectItem>
+                    <SelectItem value="position">Theo vị trí</SelectItem>
                     <SelectItem value="employee">Nhân viên cụ thể</SelectItem>
                   </SelectContent>
                 </Select>
@@ -363,10 +320,10 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData 
 
               {formData.target_type !== 'general' && (
                 <div>
-                  <Label>Chọn đối tượng</Label>
-                  <div className="space-y-2 max-h-40 overflow-y-auto border rounded-lg p-2">
+                  <Label>Chọn đối tượng cụ thể</Label>
+                  <div className="space-y-2 max-h-60 overflow-y-auto border rounded-lg p-3 mt-2">
                     {getTargetOptions().map((option) => (
-                      <label key={option.id} className="flex items-center space-x-2">
+                      <label key={option.id} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded">
                         <input
                           type="checkbox"
                           checked={formData.target_ids.includes(option.id)}
@@ -383,8 +340,9 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData 
                               }));
                             }
                           }}
+                          className="rounded"
                         />
-                        <span>{option.name}</span>
+                        <span className="text-sm">{option.name}</span>
                       </label>
                     ))}
                   </div>
@@ -393,12 +351,12 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData 
             </TabsContent>
           </Tabs>
 
-          <div className="flex justify-end gap-2 pt-4 border-t">
+          <div className="flex justify-end gap-3 pt-4 border-t">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Hủy
             </Button>
-            <Button type="submit">
-              {initialData ? 'Cập nhật' : 'Tạo mới'}
+            <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+              {initialData ? 'Cập nhật' : 'Tạo tài liệu'}
             </Button>
           </div>
         </form>
