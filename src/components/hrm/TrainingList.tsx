@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { TrainingManagement } from './TrainingManagement';
+import { TrainingProgramList } from './TrainingProgramList';
 
 export function TrainingList() {
-  return <TrainingManagement />;
+  return <TrainingProgramList />;
 }
