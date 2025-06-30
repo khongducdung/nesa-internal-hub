@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -5,12 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, X, Link, Upload, FileText } from 'lucide-react';
-import { useProcessCategories } from '@/hooks/useProcessCategories';
-import { useDepartments } from '@/hooks/useDepartments';
-import { usePositions } from '@/hooks/usePositions';
-import { useEmployees } from '@/hooks/useEmployees';
+import { Plus, X, Link } from 'lucide-react';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { CategorySelector } from './CategorySelector';
+import { TargetSelector } from './TargetSelector';
+import { FileAttachments } from './FileAttachments';
 
 interface ProcessTemplateFormProps {
   open: boolean;
@@ -30,16 +30,12 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
     priority: initialData?.priority || 'medium',
     tags: initialData?.tags || [],
     external_links: initialData?.external_links || [],
-    status: initialData?.status || 'published'
+    status: initialData?.status || 'published',
+    attachments: initialData?.attachments || []
   });
 
   const [newTag, setNewTag] = useState('');
   const [newLink, setNewLink] = useState({ title: '', url: '' });
-
-  const { data: categories } = useProcessCategories();
-  const { data: departments } = useDepartments();
-  const { data: positions } = usePositions();
-  const { data: employees } = useEmployees();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +57,8 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
         priority: 'medium',
         tags: [],
         external_links: [],
-        status: 'published'
+        status: 'published',
+        attachments: []
       });
       setNewTag('');
       setNewLink({ title: '', url: '' });
@@ -102,19 +99,6 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
     }));
   };
 
-  const getTargetOptions = () => {
-    switch (formData.target_type) {
-      case 'department':
-        return departments?.map(dept => ({ id: dept.id, name: dept.name })) || [];
-      case 'position':
-        return positions?.map(pos => ({ id: pos.id, name: pos.name })) || [];
-      case 'employee':
-        return employees?.map(emp => ({ id: emp.id, name: emp.full_name })) || [];
-      default:
-        return [];
-    }
-  };
-
   const formContent = (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Thông tin cơ bản */}
@@ -132,28 +116,17 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
         </div>
         <div>
           <Label htmlFor="category">Danh mục *</Label>
-          <Select value={formData.category_id} onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}>
-            <SelectTrigger className="mt-2">
-              <SelectValue placeholder="Chọn danh mục" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories?.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: category.color || '#6B7280' }}
-                    />
-                    {category.name}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="mt-2">
+            <CategorySelector
+              value={formData.category_id}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      {/* Hàng thứ hai với 4 trường */}
+      <div className="grid grid-cols-4 gap-4">
         <div>
           <Label htmlFor="status">Trạng thái</Label>
           <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
@@ -193,36 +166,42 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
             </SelectContent>
           </Select>
         </div>
+        <div>
+          <Label>Từ khóa (Tags)</Label>
+          <div className="flex gap-2 mt-2">
+            <Input
+              value={newTag}
+              onChange={(e) => setNewTag(e.target.value)}
+              placeholder="Thêm từ khóa..."
+              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+            />
+            <Button type="button" onClick={addTag} size="sm">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          {formData.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {formData.tags.map((tag, index) => (
+                <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                  {tag}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(index)} />
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Đối tượng áp dụng cụ thể */}
       {formData.target_type !== 'general' && (
         <div>
           <Label>Chọn đối tượng cụ thể</Label>
-          <div className="space-y-2 max-h-40 overflow-y-auto border rounded-lg p-3 mt-2">
-            {getTargetOptions().map((option) => (
-              <label key={option.id} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded">
-                <input
-                  type="checkbox"
-                  checked={formData.target_ids.includes(option.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setFormData(prev => ({
-                        ...prev,
-                        target_ids: [...prev.target_ids, option.id]
-                      }));
-                    } else {
-                      setFormData(prev => ({
-                        ...prev,
-                        target_ids: prev.target_ids.filter(id => id !== option.id)
-                      }));
-                    }
-                  }}
-                  className="rounded"
-                />
-                <span className="text-sm">{option.name}</span>
-              </label>
-            ))}
+          <div className="mt-2">
+            <TargetSelector
+              targetType={formData.target_type}
+              selectedIds={formData.target_ids}
+              onSelectionChange={(ids) => setFormData(prev => ({ ...prev, target_ids: ids }))}
+            />
           </div>
         </div>
       )}
@@ -283,40 +262,10 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
         </div>
 
         <div>
-          <h3 className="text-lg font-semibold mb-4">Tệp đính kèm</h3>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
-            <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-            <p className="text-sm text-gray-600 mb-2">Kéo thả file hoặc click để chọn</p>
-            <p className="text-xs text-gray-500">PDF, DOC, DOCX, XLS, XLSX (Max 10MB)</p>
-            <Button type="button" variant="outline" size="sm" className="mt-2">
-              <FileText className="h-4 w-4 mr-2" />
-              Chọn tệp
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Từ khóa */}
-      <div>
-        <Label>Từ khóa (Tags)</Label>
-        <div className="flex flex-wrap gap-2 mb-2">
-          {formData.tags.map((tag, index) => (
-            <Badge key={index} variant="secondary" className="flex items-center gap-1">
-              {tag}
-              <X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(index)} />
-            </Badge>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <Input
-            value={newTag}
-            onChange={(e) => setNewTag(e.target.value)}
-            placeholder="Thêm từ khóa..."
-            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+          <FileAttachments
+            attachments={formData.attachments}
+            onAttachmentsChange={(attachments) => setFormData(prev => ({ ...prev, attachments }))}
           />
-          <Button type="button" onClick={addTag} size="sm">
-            <Plus className="h-4 w-4" />
-          </Button>
         </div>
       </div>
 
