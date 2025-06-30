@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTrainingRequirements } from '@/hooks/useTrainingRequirements';
-import { ExternalLink, BookOpen } from 'lucide-react';
+import { ExternalLink, BookOpen, Eye, Pencil, Trash2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface TrainingRequirementListProps {
@@ -39,6 +39,21 @@ export function TrainingRequirementList({ searchTerm }: TrainingRequirementListP
     }
   };
 
+  const handleView = (requirement: any) => {
+    // TODO: Implement view functionality
+    console.log('View requirement:', requirement);
+  };
+
+  const handleEdit = (requirement: any) => {
+    // TODO: Implement edit functionality
+    console.log('Edit requirement:', requirement);
+  };
+
+  const handleDelete = (requirement: any) => {
+    // TODO: Implement delete functionality
+    console.log('Delete requirement:', requirement);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -64,23 +79,17 @@ export function TrainingRequirementList({ searchTerm }: TrainingRequirementListP
                   </TableHead>
                   <TableHead className="font-semibold text-gray-900 text-center py-4">Đối tượng</TableHead>
                   <TableHead className="font-semibold text-gray-900 text-center py-4">Trạng thái</TableHead>
-                  <TableHead className="font-semibold text-gray-900 text-center py-4">Hành động</TableHead>
+                  <TableHead className="font-semibold text-gray-900 text-center py-4">Khóa học</TableHead>
+                  <TableHead className="font-semibold text-gray-900 text-center py-4">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredRequirements.map((requirement) => (
                   <TableRow key={requirement.id} className="border-gray-100 hover:bg-gray-50/50">
                     <TableCell className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-medium text-gray-900">
-                          {requirement.name}
-                        </h3>
-                        {requirement.auto_assign_after_days > 0 && (
-                          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
-                            Tự động giao sau {requirement.auto_assign_after_days} ngày
-                          </Badge>
-                        )}
-                      </div>
+                      <h3 className="font-medium text-gray-900">
+                        {requirement.name}
+                      </h3>
                     </TableCell>
                     <TableCell className="py-4 text-center">
                       <Badge className={`${getTargetTypeColor(requirement.target_type)} font-medium text-xs`}>
@@ -112,6 +121,34 @@ export function TrainingRequirementList({ searchTerm }: TrainingRequirementListP
                       ) : (
                         <span className="text-xs text-gray-400 italic">Chưa có liên kết</span>
                       )}
+                    </TableCell>
+                    <TableCell className="py-4 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleView(requirement)}
+                          className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(requirement)}
+                          className="h-8 w-8 p-0 hover:bg-orange-50 hover:text-orange-600"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(requirement)}
+                          className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
