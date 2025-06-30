@@ -15,7 +15,10 @@ export const usePayrollPeriods = () => {
         .order('month', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(item => ({
+        ...item,
+        status: item.status as 'draft' | 'processing' | 'completed' | 'paid'
+      }));
     },
   });
 };
@@ -79,9 +82,25 @@ export const useCreatePayrollPeriod = () => {
 
   return useMutation({
     mutationFn: async (data: Partial<PayrollPeriod>) => {
+      // Get current user from auth
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const payrollData = {
+        name: data.name!,
+        start_date: data.start_date!,
+        end_date: data.end_date!,
+        month: data.month!,
+        year: data.year!,
+        status: data.status || 'draft',
+        total_employees: data.total_employees || 0,
+        total_amount: data.total_amount || 0,
+        created_by: user.id,
+      };
+
       const { data: result, error } = await supabase
         .from('payroll_periods')
-        .insert([data])
+        .insert(payrollData)
         .select()
         .single();
 
