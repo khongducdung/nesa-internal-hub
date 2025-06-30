@@ -55,6 +55,11 @@ export function NotificationDialog({
     onOpenChange(false);
   };
 
+  const handleCheckboxChange = (checked: boolean | "indeterminate") => {
+    // Convert "indeterminate" to false for our boolean state
+    setSendNotification(checked === true);
+  };
+
   const getTargetDescription = () => {
     if (!targetUsers) return 'Đang tải...';
     
@@ -97,7 +102,7 @@ export function NotificationDialog({
             <Checkbox 
               id="send-notification" 
               checked={sendNotification}
-              onCheckedChange={setSendNotification}
+              onCheckedChange={handleCheckboxChange}
             />
             <Label htmlFor="send-notification" className="text-sm">
               Gửi thông báo cho nhân sự
