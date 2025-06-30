@@ -48,11 +48,17 @@ export function DepartmentForm({ onClose, departmentId }: DepartmentFormProps) {
 
   const loadDepartments = async () => {
     try {
-      const { data, error } = await supabase
+      const query = supabase
         .from('departments')
         .select('id, name')
-        .eq('status', 'active')
-        .neq('id', departmentId || ''); // Exclude current department
+        .eq('status', 'active');
+      
+      // Only exclude current department if departmentId exists and is not empty
+      if (departmentId && departmentId.trim() !== '') {
+        query.neq('id', departmentId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setDepartments(data || []);
@@ -96,10 +102,12 @@ export function DepartmentForm({ onClose, departmentId }: DepartmentFormProps) {
   const onSubmit = async (data: DepartmentFormData) => {
     setIsLoading(true);
     try {
+      console.log('Submitting department data:', data);
+      
       const departmentData = {
         name: data.name,
         description: data.description || null,
-        parent_id: data.parent_id || null,
+        parent_id: data.parent_id && data.parent_id.trim() !== '' ? data.parent_id : null,
         status: data.status,
       };
 
@@ -128,7 +136,9 @@ export function DepartmentForm({ onClose, departmentId }: DepartmentFormProps) {
         });
       }
 
+      // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ['departments'] });
+      queryClient.invalidateQueries({ queryKey: ['department-stats'] });
       queryClient.invalidateQueries({ queryKey: ['employee-stats'] });
       onClose();
     } catch (error: any) {
@@ -166,7 +176,7 @@ export function DepartmentForm({ onClose, departmentId }: DepartmentFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Phòng ban cấp trên</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || ""}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn phòng ban cấp trên (nếu có)" />
@@ -192,7 +202,7 @@ export function DepartmentForm({ onClose, departmentId }: DepartmentFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Trạng thái</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn trạng thái" />

@@ -33,8 +33,7 @@ export const useDepartmentStats = () => {
       
       const { data: departmentsData, error: departmentsError } = await supabase
         .from('departments')
-        .select('id, status')
-        .eq('status', 'active');
+        .select('id, status');
 
       if (departmentsError) {
         console.error('Error fetching department stats:', departmentsError);
@@ -44,7 +43,8 @@ export const useDepartmentStats = () => {
       const { data: employeesPerDept, error: employeesError } = await supabase
         .from('employees')
         .select('department_id')
-        .eq('work_status', 'active');
+        .eq('work_status', 'active')
+        .not('department_id', 'is', null);
 
       if (employeesError) {
         console.error('Error fetching employees per department:', employeesError);
@@ -59,11 +59,15 @@ export const useDepartmentStats = () => {
         return acc;
       }, {} as Record<string, number>);
 
+      const activeDepartments = departmentsData?.filter(d => d.status === 'active') || [];
+      const totalEmployees = Object.values(employeeCount || {}).reduce((a, b) => a + b, 0);
+      const avgEmployees = activeDepartments.length > 0 ? Math.round(totalEmployees / activeDepartments.length) : 0;
+
       const stats = {
         totalDepartments: departmentsData?.length || 0,
-        activeDepartments: departmentsData?.filter(d => d.status === 'active').length || 0,
-        averageEmployeesPerDept: employeeCount ? Math.round(Object.values(employeeCount).reduce((a, b) => a + b, 0) / Object.keys(employeeCount).length) : 0,
-        largestDepartment: employeeCount ? Math.max(...Object.values(employeeCount)) : 0,
+        activeDepartments: activeDepartments.length,
+        averageEmployeesPerDept: avgEmployees,
+        largestDepartment: employeeCount ? Math.max(...Object.values(employeeCount), 0) : 0,
       };
 
       console.log('Department stats fetched:', stats);
