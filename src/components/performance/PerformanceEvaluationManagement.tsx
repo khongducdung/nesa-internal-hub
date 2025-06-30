@@ -292,7 +292,7 @@ export function PerformanceEvaluationManagement() {
                   required
                 />
                 <p className="text-xs text-gray-500">
-                  Nhập % hoàn thành so với KPI đề ra (có thể > 100% nếu vượt mục tiêu)
+                  Nhập % hoàn thành so với KPI đề ra (có thể {'>'}100% nếu vượt mục tiêu)
                 </p>
               </div>
 
