@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { useTrainingRequirements } from '@/hooks/useTrainingRequirements';
 import { TrainingRequirementForm } from './TrainingRequirementForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Search, Calendar, Users, ExternalLink } from 'lucide-react';
+import { Plus, Search, ExternalLink } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export function TrainingRequirementList() {
   const { data: requirements, isLoading } = useTrainingRequirements();
@@ -31,15 +32,15 @@ export function TrainingRequirementList() {
 
   const getStatusBadge = (isActive: boolean) => {
     return isActive ? (
-      <Badge className="bg-green-100 text-green-800">Đang hoạt động</Badge>
+      <Badge className="bg-green-50 text-green-700 hover:bg-green-50">Đang hoạt động</Badge>
     ) : (
-      <Badge className="bg-gray-100 text-gray-800">Tạm dừng</Badge>
+      <Badge variant="secondary">Tạm dừng</Badge>
     );
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
+      <div className="flex items-center justify-center p-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -50,12 +51,12 @@ export function TrainingRequirementList() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold">Yêu cầu đào tạo</h2>
-          <p className="text-gray-600">Quản lý các yêu cầu đào tạo cho nhân viên</p>
+          <h2 className="text-2xl font-semibold text-gray-900">Yêu cầu đào tạo</h2>
+          <p className="text-gray-600 mt-1">Quản lý các yêu cầu đào tạo cho nhân viên</p>
         </div>
         <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-blue-600 hover:bg-blue-700">
               <Plus className="h-4 w-4 mr-2" />
               Tạo yêu cầu mới
             </Button>
@@ -76,83 +77,95 @@ export function TrainingRequirementList() {
           placeholder="Tìm kiếm yêu cầu đào tạo..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
+          className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
         />
       </div>
 
-      {/* Requirements List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredRequirements?.map((requirement) => (
-          <Card key={requirement.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle className="text-lg mb-2">{requirement.name}</CardTitle>
-                  {getStatusBadge(requirement.is_active)}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {requirement.description && (
-                <p className="text-gray-600 text-sm line-clamp-2">
-                  {requirement.description}
-                </p>
+      {/* Table */}
+      <Card className="border-gray-200 shadow-sm">
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-gray-200">
+                <TableHead className="font-semibold text-gray-900">Tên chương trình</TableHead>
+                <TableHead className="font-semibold text-gray-900">Đối tượng</TableHead>
+                <TableHead className="font-semibold text-gray-900 text-center">Thời hạn</TableHead>
+                <TableHead className="font-semibold text-gray-900 text-center">Trạng thái</TableHead>
+                <TableHead className="font-semibold text-gray-900 text-center">Hành động</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredRequirements && filteredRequirements.length > 0 ? (
+                filteredRequirements.map((requirement) => (
+                  <TableRow key={requirement.id} className="border-gray-100 hover:bg-gray-50">
+                    <TableCell className="py-4">
+                      <div className="space-y-1">
+                        <div className="font-medium text-gray-900">{requirement.name}</div>
+                        {requirement.description && (
+                          <div className="text-sm text-gray-600 line-clamp-2 max-w-md">
+                            {requirement.description}
+                          </div>
+                        )}
+                        {requirement.reason && (
+                          <div className="text-xs text-gray-500">
+                            <span className="font-medium">Lý do:</span> {requirement.reason}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4">
+                      <div className="text-sm text-gray-700">
+                        {getTargetTypeLabel(requirement.target_type)}
+                      </div>
+                      {requirement.auto_assign_after_days > 0 && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Tự động giao sau {requirement.auto_assign_after_days} ngày
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-4 text-center">
+                      <div className="text-sm font-medium text-gray-900">
+                        {requirement.duration_days} ngày
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-4 text-center">
+                      {getStatusBadge(requirement.is_active)}
+                    </TableCell>
+                    <TableCell className="py-4 text-center">
+                      {requirement.course_url ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(requirement.course_url, '_blank')}
+                          className="border-gray-200 hover:bg-gray-50"
+                        >
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          Xem khóa học
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-gray-400">Không có link</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-12">
+                    <div className="text-gray-500">
+                      {searchTerm ? 'Không tìm thấy yêu cầu đào tạo phù hợp' : 'Chưa có yêu cầu đào tạo nào'}
+                    </div>
+                  </TableCell>
+                </TableRow>
               )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-              {requirement.reason && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">Lý do:</p>
-                  <p className="text-sm text-gray-600 line-clamp-2">{requirement.reason}</p>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">
-                    {requirement.duration_days} ngày
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">
-                    {getTargetTypeLabel(requirement.target_type)}
-                  </span>
-                </div>
-              </div>
-
-              {requirement.auto_assign_after_days > 0 && (
-                <div className="text-sm">
-                  <span className="text-gray-700 font-medium">Tự động giao sau: </span>
-                  <span className="text-gray-600">{requirement.auto_assign_after_days} ngày</span>
-                </div>
-              )}
-
-              {requirement.course_url && (
-                <div className="pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => window.open(requirement.course_url, '_blank')}
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Xem khóa học
-                  </Button>
-                </div>
-              )}
-
-              <div className="text-xs text-gray-500 pt-2 border-t">
-                Tạo: {new Date(requirement.created_at).toLocaleDateString('vi-VN')}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {filteredRequirements?.length === 0 && (
-        <div className="text-center py-8">
-          <p className="text-gray-500">Không tìm thấy yêu cầu đào tạo nào</p>
+      {/* Footer info */}
+      {filteredRequirements && filteredRequirements.length > 0 && (
+        <div className="text-sm text-gray-500 text-center">
+          Hiển thị {filteredRequirements.length} yêu cầu đào tạo
         </div>
       )}
     </div>
