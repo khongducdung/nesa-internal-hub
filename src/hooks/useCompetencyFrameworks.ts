@@ -12,7 +12,8 @@ export function useCompetencyFrameworks() {
           *,
           positions (
             id,
-            name
+            name,
+            department_id
           )
         `)
         .order('created_at', { ascending: false });
@@ -33,7 +34,8 @@ export function useCompetencyFramework(id: string) {
           *,
           positions (
             id,
-            name
+            name,
+            department_id
           )
         `)
         .eq('id', id)
