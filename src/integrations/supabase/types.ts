@@ -330,8 +330,10 @@ export type Database = {
       }
       attendance_settings: {
         Row: {
+          allow_multiple_checkins: boolean | null
           break_end_time: string | null
           break_start_time: string | null
+          check_type_config: string | null
           created_at: string | null
           created_by: string
           description: string | null
@@ -342,7 +344,13 @@ export type Database = {
           late_threshold_minutes: number | null
           name: string
           overtime_start_after_minutes: number | null
+          require_daily_end_checkout: boolean | null
+          require_daily_start_checkin: boolean | null
           require_gps_check: boolean | null
+          require_shift_end_checkin: boolean | null
+          require_shift_end_checkout: boolean | null
+          require_shift_start_checkin: boolean | null
+          require_shift_start_checkout: boolean | null
           status: string | null
           updated_at: string | null
           weekend_work_allowed: boolean | null
@@ -350,8 +358,10 @@ export type Database = {
           work_start_time: string
         }
         Insert: {
+          allow_multiple_checkins?: boolean | null
           break_end_time?: string | null
           break_start_time?: string | null
+          check_type_config?: string | null
           created_at?: string | null
           created_by: string
           description?: string | null
@@ -362,7 +372,13 @@ export type Database = {
           late_threshold_minutes?: number | null
           name: string
           overtime_start_after_minutes?: number | null
+          require_daily_end_checkout?: boolean | null
+          require_daily_start_checkin?: boolean | null
           require_gps_check?: boolean | null
+          require_shift_end_checkin?: boolean | null
+          require_shift_end_checkout?: boolean | null
+          require_shift_start_checkin?: boolean | null
+          require_shift_start_checkout?: boolean | null
           status?: string | null
           updated_at?: string | null
           weekend_work_allowed?: boolean | null
@@ -370,8 +386,10 @@ export type Database = {
           work_start_time?: string
         }
         Update: {
+          allow_multiple_checkins?: boolean | null
           break_end_time?: string | null
           break_start_time?: string | null
+          check_type_config?: string | null
           created_at?: string | null
           created_by?: string
           description?: string | null
@@ -382,7 +400,13 @@ export type Database = {
           late_threshold_minutes?: number | null
           name?: string
           overtime_start_after_minutes?: number | null
+          require_daily_end_checkout?: boolean | null
+          require_daily_start_checkin?: boolean | null
           require_gps_check?: boolean | null
+          require_shift_end_checkin?: boolean | null
+          require_shift_end_checkout?: boolean | null
+          require_shift_start_checkin?: boolean | null
+          require_shift_start_checkout?: boolean | null
           status?: string | null
           updated_at?: string | null
           weekend_work_allowed?: boolean | null

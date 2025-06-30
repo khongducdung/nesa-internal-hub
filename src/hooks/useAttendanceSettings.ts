@@ -19,6 +19,14 @@ export interface AttendanceSetting {
   gps_radius_meters: number;
   is_default: boolean;
   status: 'active' | 'inactive';
+  check_type_config?: 'daily' | 'shift' | 'both';
+  require_shift_start_checkin?: boolean;
+  require_shift_start_checkout?: boolean;
+  require_shift_end_checkin?: boolean;
+  require_shift_end_checkout?: boolean;
+  require_daily_start_checkin?: boolean;
+  require_daily_end_checkout?: boolean;
+  allow_multiple_checkins?: boolean;
   created_at: string;
   updated_at: string;
   created_by: string;
