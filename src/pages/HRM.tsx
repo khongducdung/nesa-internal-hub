@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Users, 
   Plus, 
@@ -21,19 +22,41 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { useEmployees, useEmployeeStats } from '@/hooks/useEmployees';
 import { useAttendance } from '@/hooks/useAttendance';
+import { useDepartments, useDepartmentStats } from '@/hooks/useDepartments';
+import { EmployeeForm } from '@/components/hrm/EmployeeForm';
+import { AttendanceForm } from '@/components/hrm/AttendanceForm';
+import { DepartmentForm } from '@/components/hrm/DepartmentForm';
 import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function HRM() {
   const [activeTab, setActiveTab] = useState('employees');
+  const [isEmployeeFormOpen, setIsEmployeeFormOpen] = useState(false);
+  const [isAttendanceFormOpen, setIsAttendanceFormOpen] = useState(false);
+  const [isDepartmentFormOpen, setIsDepartmentFormOpen] = useState(false);
+  const [editingEmployeeId, setEditingEmployeeId] = useState<string | undefined>();
+  const [editingAttendanceId, setEditingAttendanceId] = useState<string | undefined>();
+  const [editingDepartmentId, setEditingDepartmentId] = useState<string | undefined>();
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  
   const { data: employees = [], isLoading: isLoadingEmployees, error: employeesError } = useEmployees();
   const { data: stats, isLoading: isLoadingStats } = useEmployeeStats();
-  const { data: attendanceData = [], isLoading: isLoadingAttendance } = useAttendance();
+  const { data: attendanceData = [], isLoading: isLoadingAttendance } = useAttendance(selectedDate);
+  const { data: departments = [], isLoading: isLoadingDepartments } = useDepartments();
+  const { data: deptStats } = useDepartmentStats();
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  console.log('HRM Component - Current data:', { employees, stats, attendanceData });
+  console.log('HRM Component - Current data:', { employees, stats, attendanceData, departments });
 
   const hrStats = [
     {
@@ -54,7 +77,7 @@ export default function HRM() {
     },
     {
       title: 'Phòng ban',
-      value: stats?.activeDepartments?.toString() || '0',
+      value: deptStats?.activeDepartments?.toString() || '0',
       icon: Building,
       color: 'from-purple-500 to-purple-600',
       change: '+1',
@@ -62,7 +85,7 @@ export default function HRM() {
     },
     {
       title: 'Có mặt hôm nay',
-      value: stats?.presentToday?.toString() || '0',
+      value: attendanceData.filter(a => a.status === 'present').length.toString(),
       icon: CheckCircle,
       color: 'from-emerald-500 to-emerald-600',
       change: '+5',
@@ -91,6 +114,8 @@ export default function HRM() {
         return <Badge className="bg-yellow-100 text-yellow-800">Trễ</Badge>;
       case 'absent':
         return <Badge className="bg-red-100 text-red-800">Vắng mặt</Badge>;
+      case 'half_day':
+        return <Badge className="bg-blue-100 text-blue-800">Nửa ngày</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
     }
@@ -107,6 +132,116 @@ export default function HRM() {
       default:
         return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
     }
+  };
+
+  const handleEditEmployee = (employeeId: string) => {
+    setEditingEmployeeId(employeeId);
+    setIsEmployeeFormOpen(true);
+  };
+
+  const handleDeleteEmployee = async (employeeId: string) => {
+    if (confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) {
+      try {
+        const { error } = await supabase
+          .from('employees')
+          .delete()
+          .eq('id', employeeId);
+
+        if (error) throw error;
+
+        toast({
+          title: 'Thành công',
+          description: 'Xóa nhân viên thành công',
+        });
+
+        queryClient.invalidateQueries({ queryKey: ['employees'] });
+        queryClient.invalidateQueries({ queryKey: ['employee-stats'] });
+      } catch (error: any) {
+        toast({
+          title: 'Lỗi',
+          description: error.message || 'Có lỗi xảy ra khi xóa nhân viên',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  const handleEditAttendance = (attendanceId: string) => {
+    setEditingAttendanceId(attendanceId);
+    setIsAttendanceFormOpen(true);
+  };
+
+  const handleDeleteAttendance = async (attendanceId: string) => {
+    if (confirm('Bạn có chắc chắn muốn xóa bản ghi chấm công này?')) {
+      try {
+        const { error } = await supabase
+          .from('attendance')
+          .delete()
+          .eq('id', attendanceId);
+
+        if (error) throw error;
+
+        toast({
+          title: 'Thành công',
+          description: 'Xóa bản ghi chấm công thành công',
+        });
+
+        queryClient.invalidateQueries({ queryKey: ['attendance'] });
+      } catch (error: any) {
+        toast({
+          title: 'Lỗi',
+          description: error.message || 'Có lỗi xảy ra khi xóa bản ghi chấm công',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  const handleEditDepartment = (departmentId: string) => {
+    setEditingDepartmentId(departmentId);
+    setIsDepartmentFormOpen(true);
+  };
+
+  const handleDeleteDepartment = async (departmentId: string) => {
+    if (confirm('Bạn có chắc chắn muốn xóa phòng ban này?')) {
+      try {
+        const { error } = await supabase
+          .from('departments')
+          .delete()
+          .eq('id', departmentId);
+
+        if (error) throw error;
+
+        toast({
+          title: 'Thành công',
+          description: 'Xóa phòng ban thành công',
+        });
+
+        queryClient.invalidateQueries({ queryKey: ['departments'] });
+        queryClient.invalidateQueries({ queryKey: ['department-stats'] });
+      } catch (error: any) {
+        toast({
+          title: 'Lỗi',
+          description: error.message || 'Có lỗi xảy ra khi xóa phòng ban',
+          variant: 'destructive',
+        });
+      }
+    }
+  };
+
+  const closeEmployeeForm = () => {
+    setIsEmployeeFormOpen(false);
+    setEditingEmployeeId(undefined);
+  };
+
+  const closeAttendanceForm = () => {
+    setIsAttendanceFormOpen(false);
+    setEditingAttendanceId(undefined);
+  };
+
+  const closeDepartmentForm = () => {
+    setIsDepartmentFormOpen(false);
+    setEditingDepartmentId(undefined);
   };
 
   if (employeesError) {
@@ -142,7 +277,10 @@ export default function HRM() {
             <h1 className="text-2xl font-bold text-gray-900">Quản lý nhân sự</h1>
             <p className="text-gray-600 mt-1">Quản lý thông tin nhân viên và chấm công</p>
           </div>
-          <Button className="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700">
+          <Button 
+            className="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700"
+            onClick={() => setIsEmployeeFormOpen(true)}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Thêm nhân viên
           </Button>
@@ -381,6 +519,50 @@ export default function HRM() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Dialogs */}
+        <Dialog open={isEmployeeFormOpen} onOpenChange={setIsEmployeeFormOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingEmployeeId ? 'Chỉnh sửa nhân viên' : 'Thêm nhân viên mới'}
+              </DialogTitle>
+            </DialogHeader>
+            <EmployeeForm 
+              onClose={closeEmployeeForm}
+              employeeId={editingEmployeeId}
+            />
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isAttendanceFormOpen} onOpenChange={setIsAttendanceFormOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {editingAttendanceId ? 'Chỉnh sửa chấm công' : 'Thêm bản ghi chấm công'}
+              </DialogTitle>
+            </DialogHeader>
+            <AttendanceForm 
+              onClose={closeAttendanceForm}
+              attendanceId={editingAttendanceId}
+              selectedDate={selectedDate}
+            />
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isDepartmentFormOpen} onOpenChange={setIsDepartmentFormOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>
+                {editingDepartmentId ? 'Chỉnh sửa phòng ban' : 'Thêm phòng ban mới'}
+              </DialogTitle>
+            </DialogHeader>
+            <DepartmentForm 
+              onClose={closeDepartmentForm}
+              departmentId={editingDepartmentId}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
