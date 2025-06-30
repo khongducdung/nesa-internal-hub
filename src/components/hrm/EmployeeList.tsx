@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,7 +24,7 @@ import { Edit, Trash2, Plus, Search } from 'lucide-react';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useDeleteEmployee } from '@/hooks/useEmployeeMutations';
 import { EmployeeEditDialog } from './EmployeeEditDialog';
-import { EmployeeForm } from './EmployeeForm';
+import { EmployeeFormDialog } from './EmployeeFormDialog';
 
 export function EmployeeList() {
   const { data: employees, isLoading } = useEmployees();
@@ -156,12 +155,10 @@ export function EmployeeList() {
       </div>
 
       {/* Create Form Dialog */}
-      {showCreateForm && (
-        <EmployeeForm
-          open={showCreateForm}
-          onClose={() => setShowCreateForm(false)}
-        />
-      )}
+      <EmployeeFormDialog
+        open={showCreateForm}
+        onClose={() => setShowCreateForm(false)}
+      />
 
       {/* Edit Dialog */}
       {editingEmployee && (

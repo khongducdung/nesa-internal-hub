@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,7 +24,7 @@ import { Edit, Trash2, Plus, Search } from 'lucide-react';
 import { useDepartments } from '@/hooks/useDepartments';
 import { useDeleteDepartment } from '@/hooks/useDepartmentMutations';
 import { DepartmentEditDialog } from './DepartmentEditDialog';
-import { DepartmentForm } from './DepartmentForm';
+import { DepartmentFormDialog } from './DepartmentFormDialog';
 
 export function DepartmentList() {
   const { data: departments, isLoading } = useDepartments();
@@ -134,12 +133,10 @@ export function DepartmentList() {
       </div>
 
       {/* Create Form Dialog */}
-      {showCreateForm && (
-        <DepartmentForm
-          open={showCreateForm}
-          onClose={() => setShowCreateForm(false)}
-        />
-      )}
+      <DepartmentFormDialog
+        open={showCreateForm}
+        onClose={() => setShowCreateForm(false)}
+      />
 
       {/* Edit Dialog */}
       {editingDepartment && (

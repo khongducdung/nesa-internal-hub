@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Edit, Trash2, Plus, Search } from 'lucide-react';
 import { usePositions } from '@/hooks/usePositions';
 import { useDeletePosition } from '@/hooks/usePositionMutations';
 import { PositionEditDialog } from './PositionEditDialog';
-import { PositionForm } from './PositionForm';
+import { PositionFormDialog } from './PositionFormDialog';
 
 export function PositionList() {
   const { data: positions, isLoading } = usePositions();
@@ -143,12 +142,10 @@ export function PositionList() {
       </div>
 
       {/* Create Form Dialog */}
-      {showCreateForm && (
-        <PositionForm
-          open={showCreateForm}
-          onClose={() => setShowCreateForm(false)}
-        />
-      )}
+      <PositionFormDialog
+        open={showCreateForm}
+        onClose={() => setShowCreateForm(false)}
+      />
 
       {/* Edit Dialog */}
       {editingPosition && (
