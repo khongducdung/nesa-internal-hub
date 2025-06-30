@@ -101,6 +101,10 @@ export function CompanyPolicyForm({ open, onOpenChange, onSubmit, initialData }:
     onOpenChange(false);
   };
 
+  const handleNotificationConfirm = (sendNotification: boolean) => {
+    submitForm(sendNotification);
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -264,7 +268,7 @@ export function CompanyPolicyForm({ open, onOpenChange, onSubmit, initialData }:
       <NotificationDialog
         open={showNotificationDialog}
         onOpenChange={setShowNotificationDialog}
-        onConfirm={(sendNotification) => submitForm(sendNotification)}
+        onConfirm={handleNotificationConfirm}
         targetCount={targetUsers?.length || 0}
         itemName="quy định"
         isUpdate={!!initialData}
