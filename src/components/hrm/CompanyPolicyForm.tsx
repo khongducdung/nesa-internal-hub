@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -11,7 +10,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { TargetSelector } from '@/components/processes/TargetSelector';
-import { NotificationDialog } from '@/components/processes/NotificationDialog';
 import { useCreateProcessNotifications, useGetTargetUsers } from '@/hooks/useNotifications';
 import { CompanyPolicy } from '@/hooks/useCompanyPolicies';
 import { cn } from '@/lib/utils';
@@ -21,6 +19,86 @@ interface CompanyPolicyFormProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: any) => void;
   initialData?: CompanyPolicy | null;
+}
+
+interface CustomNotificationDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: (sendNotification: boolean) => void;
+  targetCount: number;
+  itemName: string;
+  isUpdate: boolean;
+}
+
+function CustomNotificationDialog({
+  open,
+  onOpenChange,
+  onConfirm,
+  targetCount,
+  itemName,
+  isUpdate
+}: CustomNotificationDialogProps) {
+  const [sendNotification, setSendNotification] = useState(true);
+
+  const handleConfirm = () => {
+    onConfirm(sendNotification);
+  };
+
+  const handleCancel = () => {
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            {isUpdate ? 'Thông báo cập nhật quy định' : 'Thông báo quy định mới'}
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm text-gray-600 mb-2">
+              {isUpdate 
+                ? 'Bạn có muốn gửi thông báo cho nhân sự về việc cập nhật quy định này không?'
+                : 'Bạn có muốn gửi thông báo cho nhân sự về quy định mới này không?'
+              }
+            </p>
+            <p className="text-sm font-medium">Đối tượng: {targetCount} người</p>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <input 
+              type="checkbox" 
+              id="send-notification" 
+              checked={sendNotification}
+              onChange={(e) => setSendNotification(e.target.checked)}
+            />
+            <Label htmlFor="send-notification" className="text-sm">
+              Gửi thông báo cho nhân sự
+            </Label>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleCancel}
+            >
+              Huỷ
+            </Button>
+            <Button 
+              onClick={handleConfirm}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Xác nhận
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 export function CompanyPolicyForm({ open, onOpenChange, onSubmit, initialData }: CompanyPolicyFormProps) {
@@ -68,7 +146,7 @@ export function CompanyPolicyForm({ open, onOpenChange, onSubmit, initialData }:
     }
   }, [initialData, open]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.status === 'active' && formData.target_type !== 'general' && formData.target_ids.length > 0) {
@@ -90,7 +168,7 @@ export function CompanyPolicyForm({ open, onOpenChange, onSubmit, initialData }:
 
     if (sendNotification && formData.status === 'active' && targetUsers?.length) {
       await createNotifications.mutateAsync({
-        processTemplateId: 'policy-' + Date.now(), // Temporary ID for policies
+        processTemplateId: 'policy-' + Date.now(),
         processName: formData.title,
         targetUsers,
         notificationType: initialData ? 'process_updated' : 'new_process'
@@ -265,7 +343,7 @@ export function CompanyPolicyForm({ open, onOpenChange, onSubmit, initialData }:
         </DialogContent>
       </Dialog>
 
-      <NotificationDialog
+      <CustomNotificationDialog
         open={showNotificationDialog}
         onOpenChange={setShowNotificationDialog}
         onConfirm={handleNotificationConfirm}
