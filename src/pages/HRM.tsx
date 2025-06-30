@@ -23,88 +23,22 @@ import {
   XCircle,
   AlertCircle
 } from 'lucide-react';
+import { useEmployees, useEmployeeStats } from '@/hooks/useEmployees';
+import { useAttendance } from '@/hooks/useAttendance';
+import { format } from 'date-fns';
 
 export default function HRM() {
   const [activeTab, setActiveTab] = useState('employees');
+  const { data: employees = [], isLoading: isLoadingEmployees, error: employeesError } = useEmployees();
+  const { data: stats, isLoading: isLoadingStats } = useEmployeeStats();
+  const { data: attendanceData = [], isLoading: isLoadingAttendance } = useAttendance();
 
-  // Mock data cho employees
-  const employees = [
-    {
-      id: '1',
-      employee_code: 'EMP001',
-      full_name: 'Nguyễn Văn An',
-      email: 'nguyenvanan@company.com',
-      phone: '0901234567',
-      department: 'Phòng Kỹ Thuật',
-      position: 'Senior Developer',
-      hire_date: '2023-01-15',
-      work_status: 'active',
-      avatar: 'A',
-      employee_level: 'level_2'
-    },
-    {
-      id: '2',
-      employee_code: 'EMP002',
-      full_name: 'Trần Thị Bình',
-      email: 'tranthibinh@company.com',
-      phone: '0901234568',
-      department: 'Phòng Nhân Sự',
-      position: 'HR Manager',
-      hire_date: '2022-03-20',
-      work_status: 'active',
-      avatar: 'B',
-      employee_level: 'level_2'
-    },
-    {
-      id: '3',
-      employee_code: 'EMP003',
-      full_name: 'Lê Văn Công',
-      email: 'levancong@company.com',
-      phone: '0901234569',
-      department: 'Phòng Kinh Doanh',
-      position: 'Sales Executive',
-      hire_date: '2023-08-10',
-      work_status: 'active',
-      avatar: 'C',
-      employee_level: 'level_3'
-    }
-  ];
-
-  // Mock data cho attendance
-  const attendanceData = [
-    {
-      id: '1',
-      employee_name: 'Nguyễn Văn An',
-      date: '2024-01-15',
-      check_in: '08:00',
-      check_out: '17:30',
-      status: 'present',
-      overtime_hours: 0.5
-    },
-    {
-      id: '2',
-      employee_name: 'Trần Thị Bình',
-      date: '2024-01-15',
-      check_in: '08:15',
-      check_out: '17:45',
-      status: 'late',
-      overtime_hours: 0
-    },
-    {
-      id: '3',
-      employee_name: 'Lê Văn Công',
-      date: '2024-01-15',
-      check_in: null,
-      check_out: null,
-      status: 'absent',
-      overtime_hours: 0
-    }
-  ];
+  console.log('HRM Component - Current data:', { employees, stats, attendanceData });
 
   const hrStats = [
     {
       title: 'Tổng nhân viên',
-      value: '156',
+      value: stats?.totalEmployees?.toString() || '0',
       icon: Users,
       color: 'from-blue-500 to-blue-600',
       change: '+12',
@@ -112,7 +46,7 @@ export default function HRM() {
     },
     {
       title: 'Nhân viên mới',
-      value: '8',
+      value: stats?.newEmployees?.toString() || '0',
       icon: UserPlus,
       color: 'from-green-500 to-green-600',
       change: '+3',
@@ -120,7 +54,7 @@ export default function HRM() {
     },
     {
       title: 'Phòng ban',
-      value: '12',
+      value: stats?.activeDepartments?.toString() || '0',
       icon: Building,
       color: 'from-purple-500 to-purple-600',
       change: '+1',
@@ -128,7 +62,7 @@ export default function HRM() {
     },
     {
       title: 'Có mặt hôm nay',
-      value: '142',
+      value: stats?.presentToday?.toString() || '0',
       icon: CheckCircle,
       color: 'from-emerald-500 to-emerald-600',
       change: '+5',
@@ -175,6 +109,30 @@ export default function HRM() {
     }
   };
 
+  if (employeesError) {
+    console.error('Error in HRM component:', employeesError);
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <Card className="p-6 max-w-md">
+            <CardContent>
+              <div className="text-center">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h2 className="text-lg font-semibold mb-2">Lỗi tải dữ liệu</h2>
+                <p className="text-gray-600">
+                  Không thể tải dữ liệu nhân sự. Vui lòng thử lại sau.
+                </p>
+                <p className="text-sm text-red-500 mt-2">
+                  {employeesError.message}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -203,7 +161,7 @@ export default function HRM() {
                         {stat.title}
                       </p>
                       <p className="text-3xl font-bold text-gray-900 mb-1">
-                        {stat.value}
+                        {isLoadingStats ? '...' : stat.value}
                       </p>
                       <p className="text-sm text-green-600 font-medium flex items-center">
                         {stat.change} so với tháng trước
@@ -246,48 +204,68 @@ export default function HRM() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {employees.map((employee) => (
-                    <div key={employee.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                          <span className="text-white font-semibold">{employee.avatar}</span>
+                {isLoadingEmployees ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className="ml-2">Đang tải dữ liệu...</span>
+                  </div>
+                ) : employees.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">Chưa có nhân viên nào trong hệ thống</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {employees.map((employee) => (
+                      <div key={employee.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                            <span className="text-white font-semibold">
+                              {employee.full_name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <h3 className="font-semibold text-gray-900">{employee.full_name}</h3>
+                              <Badge variant="outline" className="text-xs">
+                                {employee.employee_code}
+                              </Badge>
+                              {getLevelBadge(employee.employee_level || 'level_3')}
+                            </div>
+                            <p className="text-sm text-gray-600 mb-1">
+                              {employee.positions?.name || 'Chưa xác định'} - {employee.departments?.name || 'Chưa xác định'}
+                            </p>
+                            <div className="flex items-center space-x-4 text-xs text-gray-500">
+                              <div className="flex items-center space-x-1">
+                                <Mail className="h-3 w-3" />
+                                <span>{employee.email}</span>
+                              </div>
+                              {employee.phone && (
+                                <div className="flex items-center space-x-1">
+                                  <Phone className="h-3 w-3" />
+                                  <span>{employee.phone}</span>
+                                </div>
+                              )}
+                              {employee.hire_date && (
+                                <div className="flex items-center space-x-1">
+                                  <Calendar className="h-3 w-3" />
+                                  <span>Vào làm: {format(new Date(employee.hire_date), 'dd/MM/yyyy')}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <h3 className="font-semibold text-gray-900">{employee.full_name}</h3>
-                            <Badge variant="outline" className="text-xs">
-                              {employee.employee_code}
-                            </Badge>
-                            {getLevelBadge(employee.employee_level)}
-                          </div>
-                          <p className="text-sm text-gray-600 mb-1">{employee.position} - {employee.department}</p>
-                          <div className="flex items-center space-x-4 text-xs text-gray-500">
-                            <div className="flex items-center space-x-1">
-                              <Mail className="h-3 w-3" />
-                              <span>{employee.email}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Phone className="h-3 w-3" />
-                              <span>{employee.phone}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Calendar className="h-3 w-3" />
-                              <span>Vào làm: {new Date(employee.hire_date).toLocaleDateString('vi-VN')}</span>
-                            </div>
-                          </div>
+                        
+                        <div className="flex items-center space-x-4">
+                          {getStatusBadge(employee.work_status || 'active')}
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center space-x-4">
-                        {getStatusBadge(employee.work_status)}
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -299,7 +277,7 @@ export default function HRM() {
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                   <CardTitle className="text-xl font-semibold text-gray-900">Chấm công hôm nay</CardTitle>
                   <div className="flex items-center space-x-2 mt-4 sm:mt-0">
-                    <Input type="date" className="w-40" />
+                    <Input type="date" className="w-40" defaultValue={new Date().toISOString().split('T')[0]} />
                     <Button variant="outline" size="sm">
                       <Filter className="h-4 w-4 mr-2" />
                       Lọc
@@ -308,43 +286,57 @@ export default function HRM() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {attendanceData.map((attendance) => (
-                    <div key={attendance.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                          <span className="text-white font-semibold">{attendance.employee_name.charAt(0)}</span>
+                {isLoadingAttendance ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className="ml-2">Đang tải dữ liệu chấm công...</span>
+                  </div>
+                ) : attendanceData.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">Chưa có dữ liệu chấm công cho ngày hôm nay</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {attendanceData.map((attendance) => (
+                      <div key={attendance.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                            <span className="text-white font-semibold">
+                              {attendance.employee_name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900">{attendance.employee_name}</h3>
+                            <p className="text-sm text-gray-600">{format(new Date(attendance.date), 'dd/MM/yyyy')}</p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{attendance.employee_name}</h3>
-                          <p className="text-sm text-gray-600">{new Date(attendance.date).toLocaleDateString('vi-VN')}</p>
+                        
+                        <div className="flex items-center space-x-6">
+                          <div className="text-center">
+                            <p className="text-xs text-gray-500 mb-1">Vào</p>
+                            <p className="font-semibold text-gray-900">
+                              {attendance.check_in_time ? format(new Date(attendance.check_in_time), 'HH:mm') : '--:--'}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs text-gray-500 mb-1">Ra</p>
+                            <p className="font-semibold text-gray-900">
+                              {attendance.check_out_time ? format(new Date(attendance.check_out_time), 'HH:mm') : '--:--'}
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs text-gray-500 mb-1">Tăng ca</p>
+                            <p className="font-semibold text-gray-900">
+                              {attendance.overtime_hours}h
+                            </p>
+                          </div>
+                          {getAttendanceStatusBadge(attendance.status || 'present')}
                         </div>
                       </div>
-                      
-                      <div className="flex items-center space-x-6">
-                        <div className="text-center">
-                          <p className="text-xs text-gray-500 mb-1">Vào</p>
-                          <p className="font-semibold text-gray-900">
-                            {attendance.check_in || '--:--'}
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-xs text-gray-500 mb-1">Ra</p>
-                          <p className="font-semibold text-gray-900">
-                            {attendance.check_out || '--:--'}
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-xs text-gray-500 mb-1">Tăng ca</p>
-                          <p className="font-semibold text-gray-900">
-                            {attendance.overtime_hours}h
-                          </p>
-                        </div>
-                        {getAttendanceStatusBadge(attendance.status)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
