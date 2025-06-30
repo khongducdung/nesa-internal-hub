@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useDepartments } from '@/hooks/useDepartments';
-import { useCreatePosition } from '@/hooks/usePositions';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 const positionFormSchema = z.object({
   name: z.string().min(1, 'Tên vị trí là bắt buộc'),
@@ -23,32 +23,138 @@ type PositionFormData = z.infer<typeof positionFormSchema>;
 
 interface PositionFormProps {
   onClose: () => void;
+  positionId?: string;
 }
 
-export function PositionForm({ onClose }: PositionFormProps) {
-  const { data: departments } = useDepartments();
-  const createPosition = useCreatePosition();
+export function PositionForm({ onClose, positionId }: PositionFormProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [departments, setDepartments] = React.useState<any[]>([]);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const form = useForm<PositionFormData>({
     resolver: zodResolver(positionFormSchema),
     defaultValues: {
+      name: '',
+      description: '',
+      department_id: undefined,
       level: 'level_3',
       status: 'active',
     },
   });
 
-  const onSubmit = async (data: PositionFormData) => {
-    const positionData = {
-      name: data.name,
-      description: data.description,
-      department_id: data.department_id,
-      level: data.level,
-      status: data.status,
-    };
+  React.useEffect(() => {
+    loadDepartments();
+    if (positionId) {
+      loadPositionData();
+    }
+  }, [positionId]);
 
-    await createPosition.mutateAsync(positionData);
-    onClose();
+  const loadDepartments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('departments')
+        .select('id, name')
+        .eq('status', 'active');
+
+      if (error) throw error;
+      setDepartments(data || []);
+    } catch (error) {
+      console.error('Error loading departments:', error);
+    }
   };
+
+  const loadPositionData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('positions')
+        .select('*')
+        .eq('id', positionId)
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        const validStatus = ['active', 'inactive', 'pending'].includes(data.status || '') 
+          ? (data.status as 'active' | 'inactive' | 'pending')
+          : 'active';
+        
+        const validLevel = ['level_1', 'level_2', 'level_3'].includes(data.level || '')
+          ? (data.level as 'level_1' | 'level_2' | 'level_3')
+          : 'level_3';
+
+        form.reset({
+          name: data.name,
+          description: data.description || '',
+          department_id: data.department_id || undefined,
+          level: validLevel,
+          status: validStatus,
+        });
+      }
+    } catch (error) {
+      console.error('Error loading position:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể tải thông tin vị trí',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const onSubmit = async (data: PositionFormData) => {
+    setIsLoading(true);
+    try {
+      console.log('Submitting position data:', data);
+      
+      const positionData = {
+        name: data.name,
+        description: data.description || null,
+        department_id: data.department_id && data.department_id.trim() !== '' ? data.department_id : null,
+        level: data.level,
+        status: data.status,
+      };
+
+      if (positionId) {
+        const { error } = await supabase
+          .from('positions')
+          .update(positionData)
+          .eq('id', positionId);
+        
+        if (error) throw error;
+        
+        toast({
+          title: 'Thành công',
+          description: 'Cập nhật vị trí thành công',
+        });
+      } else {
+        const { error } = await supabase
+          .from('positions')
+          .insert(positionData);
+        
+        if (error) throw error;
+        
+        toast({
+          title: 'Thành công',
+          description: 'Thêm vị trí mới thành công',
+        });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['positions'] });
+      onClose();
+    } catch (error: any) {
+      console.error('Error saving position:', error);
+      toast({
+        title: 'Lỗi',
+        description: error.message || 'Có lỗi xảy ra khi lưu thông tin vị trí',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Form {...form}>
@@ -60,7 +166,7 @@ export function PositionForm({ onClose }: PositionFormProps) {
             <FormItem>
               <FormLabel>Tên vị trí *</FormLabel>
               <FormControl>
-                <Input placeholder="Nhập tên vị trí" {...field} />
+                <Input placeholder="Nhân viên kỹ thuật" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -73,15 +179,15 @@ export function PositionForm({ onClose }: PositionFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Phòng ban</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || ""}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn phòng ban" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Không có</SelectItem>
-                  {departments?.map((dept) => (
+                  <SelectItem value="none">Không có</SelectItem>
+                  {departments.map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name}
                     </SelectItem>
@@ -98,17 +204,17 @@ export function PositionForm({ onClose }: PositionFormProps) {
           name="level"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Cấp độ</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormLabel>Cấp bậc</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Chọn cấp độ" />
+                    <SelectValue placeholder="Chọn cấp bậc" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="level_1">Cấp 1 (Lãnh đạo)</SelectItem>
-                  <SelectItem value="level_2">Cấp 2 (Quản lý)</SelectItem>
-                  <SelectItem value="level_3">Cấp 3 (Nhân viên)</SelectItem>
+                  <SelectItem value="level_1">Level 1</SelectItem>
+                  <SelectItem value="level_2">Level 2</SelectItem>
+                  <SelectItem value="level_3">Level 3</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -122,7 +228,7 @@ export function PositionForm({ onClose }: PositionFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Trạng thái</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn trạng thái" />
@@ -146,7 +252,7 @@ export function PositionForm({ onClose }: PositionFormProps) {
             <FormItem>
               <FormLabel>Mô tả</FormLabel>
               <FormControl>
-                <Textarea placeholder="Mô tả về vị trí công việc..." {...field} />
+                <Textarea placeholder="Mô tả về vị trí..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -157,8 +263,8 @@ export function PositionForm({ onClose }: PositionFormProps) {
           <Button type="button" variant="outline" onClick={onClose}>
             Hủy
           </Button>
-          <Button type="submit" disabled={createPosition.isPending}>
-            {createPosition.isPending ? 'Đang lưu...' : 'Thêm mới'}
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? 'Đang lưu...' : positionId ? 'Cập nhật' : 'Thêm mới'}
           </Button>
         </div>
       </form>
