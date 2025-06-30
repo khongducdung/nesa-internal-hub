@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { EmployeeList } from './EmployeeList';
@@ -50,16 +51,24 @@ export function HRMTabs() {
   ];
 
   return (
-    <Tabs defaultValue={activeTab} className="w-full">
-      <TabsList>
-        {tabs.map((tab) => (
-          <TabsTrigger key={tab.id} value={tab.id}>
-            {tab.label}
-          </TabsTrigger>
-        ))}
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <TabsList className="grid w-full grid-cols-5 mb-6">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <TabsTrigger 
+              key={tab.id} 
+              value={tab.id}
+              className="flex items-center space-x-2 px-4 py-2"
+            >
+              <Icon className="h-4 w-4" />
+              <span className="hidden sm:inline">{tab.label}</span>
+            </TabsTrigger>
+          );
+        })}
       </TabsList>
       {tabs.map((tab) => (
-        <TabsContent key={tab.id} value={tab.id}>
+        <TabsContent key={tab.id} value={tab.id} className="mt-0">
           {tab.component}
         </TabsContent>
       ))}
