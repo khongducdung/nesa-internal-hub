@@ -1,7 +1,7 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Users, Building2, Settings, LogOut, X, Home, FileText, TrendingUp, Target, BarChart3 } from 'lucide-react';
+import { Users, Building2, Settings, X, Home, FileText, TrendingUp, Target, BarChart3, User } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
@@ -12,7 +12,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: SidebarProps) {
-  const { signOut, isSuperAdmin, isAdmin } = useAuth();
+  const { profile, isSuperAdmin, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -34,16 +34,18 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
-
   const hasAccess = (access: string) => {
     if (access === 'all') return true;
     if (access === 'admin') return isAdmin || isSuperAdmin;
     if (access === 'super_admin') return isSuperAdmin;
     return false;
+  };
+
+  const handleProfileClick = () => {
+    navigate('/profile');
+    if (window.innerWidth < 1024) {
+      toggleSidebar();
+    }
   };
 
   return (
@@ -64,24 +66,43 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
         ${isCollapsed ? 'lg:w-16' : 'lg:w-64'}
         w-64 flex flex-col
       `}>
-        {/* Header - simplified without logo */}
-        <div className={`flex items-center justify-between px-4 py-6 border-b border-white/20 h-[73px] ${isCollapsed ? 'lg:px-3' : ''}`}>
-          <div className="flex items-center space-x-3">
-            {!isCollapsed && (
-              <div>
-                <h1 className="font-bold text-xl text-white">Quản lý</h1>
-                <p className="text-sm text-white/80">Nền tảng quản trị nội bộ</p>
-              </div>
-            )}
-          </div>
-          
+        {/* Close button for mobile */}
+        <div className="flex justify-end p-3 lg:hidden">
           <Button 
             variant="ghost" 
             size="icon" 
             onClick={toggleSidebar} 
-            className="lg:hidden text-white hover:bg-white/20 h-8 w-8"
+            className="text-white hover:bg-white/20 h-8 w-8"
           >
             <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Profile Section */}
+        <div className={`p-3 border-b border-white/20 ${isCollapsed ? 'px-2' : ''}`}>
+          <Button
+            variant="ghost"
+            className={`w-full ${isCollapsed ? 'justify-center px-0 h-12' : 'justify-start px-3 h-16'} text-white hover:bg-white/10 rounded-lg`}
+            onClick={handleProfileClick}
+          >
+            <div className={`w-8 h-8 bg-white rounded-full flex items-center justify-center flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`}>
+              <span className="text-primary font-bold text-sm">
+                {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'DK'}
+              </span>
+            </div>
+            {!isCollapsed && (
+              <div className="flex flex-col items-start">
+                <p className="text-sm font-medium text-white leading-tight">
+                  {profile?.full_name || 'Khổng Đức Dũng'}
+                </p>
+                <p className="text-xs text-white/80 leading-tight">
+                  {profile?.employee_code || 'khongducdzung@gmail...'}
+                </p>
+                <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded mt-1">
+                  Admin
+                </span>
+              </div>
+            )}
           </Button>
         </div>
 
@@ -98,7 +119,7 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
                 variant="ghost"
                 className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start px-4'} h-12 text-left menu-item-hover ${
                   isActive 
-                    ? 'nav-active' 
+                    ? 'bg-white/10 text-white' 
                     : 'text-white/80 hover:bg-white/10 hover:text-white'
                 }`}
                 onClick={() => handleNavigation(item.path)}
@@ -112,19 +133,9 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
         </nav>
 
         {/* Footer with copyright */}
-        <div className="p-3 border-t border-white/20 space-y-2">
-          <Button 
-            variant="ghost" 
-            className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start px-4'} h-12 text-white/80 hover:bg-white/10 hover:text-white menu-item-hover`}
-            onClick={handleSignOut}
-            title={isCollapsed ? 'Đăng xuất' : undefined}
-          >
-            <LogOut className={`h-5 w-5 ${isCollapsed ? '' : 'mr-3'}`} />
-            {!isCollapsed && <span className="text-sm font-medium">Đăng xuất</span>}
-          </Button>
-          
+        <div className="p-3 border-t border-white/20">
           {!isCollapsed && (
-            <div className="text-center pt-2">
+            <div className="text-center">
               <p className="text-xs text-white/60">© 2025 Khổng Đức Dũng</p>
             </div>
           )}
