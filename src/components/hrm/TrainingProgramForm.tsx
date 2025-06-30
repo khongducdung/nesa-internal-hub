@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,10 +22,10 @@ const trainingProgramFormSchema = z.object({
 type TrainingProgramFormData = z.infer<typeof trainingProgramFormSchema>;
 
 interface TrainingProgramFormProps {
-  onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export function TrainingProgramForm({ onClose }: TrainingProgramFormProps) {
+export function TrainingProgramForm({ onSuccess }: TrainingProgramFormProps) {
   const createTrainingProgram = useCreateTrainingProgram();
 
   const form = useForm<TrainingProgramFormData>({
@@ -48,7 +47,7 @@ export function TrainingProgramForm({ onClose }: TrainingProgramFormProps) {
     };
 
     await createTrainingProgram.mutateAsync(trainingData);
-    onClose();
+    onSuccess?.();
   };
 
   return (
@@ -166,7 +165,7 @@ export function TrainingProgramForm({ onClose }: TrainingProgramFormProps) {
         />
 
         <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="outline" onClick={onSuccess}>
             Hủy
           </Button>
           <Button type="submit" disabled={createTrainingProgram.isPending}>

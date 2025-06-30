@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTrainingPrograms } from '@/hooks/useTrainingPrograms';
-import { TrainingProgramForm } from './TrainingProgramForm';
+import { SimpleTrainingProgramForm } from './SimpleTrainingProgramForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus, Search } from 'lucide-react';
 
@@ -20,11 +20,16 @@ export function TrainingProgramList() {
   );
 
   const getStatusBadge = (status: string) => {
-    return status === 'active' ? (
-      <Badge className="bg-green-100 text-green-800">Đang hoạt động</Badge>
-    ) : (
-      <Badge className="bg-gray-100 text-gray-800">Tạm dừng</Badge>
-    );
+    switch (status) {
+      case 'active':
+        return <Badge className="bg-green-100 text-green-800">Đang hoạt động</Badge>;
+      case 'completed':
+        return <Badge className="bg-blue-100 text-blue-800">Đã hoàn thành</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-100 text-red-800">Đã hủy</Badge>;
+      default:
+        return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
+    }
   };
 
   if (isLoading) {
@@ -54,7 +59,7 @@ export function TrainingProgramList() {
             <DialogHeader>
               <DialogTitle>Tạo chương trình đào tạo mới</DialogTitle>
             </DialogHeader>
-            <TrainingProgramForm onSuccess={() => setShowCreateForm(false)} />
+            <SimpleTrainingProgramForm onSuccess={() => setShowCreateForm(false)} />
           </DialogContent>
         </Dialog>
       </div>

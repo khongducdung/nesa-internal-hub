@@ -18,7 +18,7 @@ const trainingProgramSchema = z.object({
   end_date: z.string().min(1, 'Ngày kết thúc không được để trống'),
   trainer: z.string().optional(),
   max_participants: z.number().min(1, 'Số lượng tối đa phải lớn hơn 0').optional(),
-  status: z.enum(['active', 'inactive']),
+  status: z.enum(['active', 'completed', 'cancelled']),
 });
 
 type TrainingProgramFormData = z.infer<typeof trainingProgramSchema>;
@@ -147,7 +147,8 @@ export function SimpleTrainingProgramForm({ onSuccess }: SimpleTrainingProgramFo
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="active">Đang hoạt động</SelectItem>
-                <SelectItem value="inactive">Tạm dừng</SelectItem>
+                <SelectItem value="completed">Đã hoàn thành</SelectItem>
+                <SelectItem value="cancelled">Đã hủy</SelectItem>
               </SelectContent>
             </Select>
           </div>
