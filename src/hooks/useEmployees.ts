@@ -17,6 +17,9 @@ export interface EmployeeWithDetails {
   emergency_contact_name?: string;
   emergency_contact_phone?: string;
   notes?: string;
+  job_description?: string;
+  contract_file_url?: string;
+  cv_file_url?: string;
   profile_id?: string;
   manager_id?: string;
   avatar_url?: string;

@@ -10,6 +10,9 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { useUpdateEmployee } from '@/hooks/useEmployeeMutations';
 import { useDepartments } from '@/hooks/useDepartments';
 import { usePositions } from '@/hooks/usePositions';
+import { Upload, FileText, X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface EmployeeEditDialogProps {
   employeeId: string;
@@ -22,6 +25,7 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
   const { data: departments } = useDepartments();
   const { data: positions } = usePositions();
   const updateEmployee = useUpdateEmployee();
+  const { toast } = useToast();
   
   const employee = employees?.find(emp => emp.id === employeeId);
   
@@ -38,7 +42,13 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
     emergency_contact_name: '',
     emergency_contact_phone: '',
     notes: '',
+    job_description: '',
   });
+
+  const [contractFile, setContractFile] = useState<File | null>(null);
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [existingContractUrl, setExistingContractUrl] = useState<string>('');
+  const [existingCvUrl, setExistingCvUrl] = useState<string>('');
 
   useEffect(() => {
     if (employee) {
@@ -55,20 +65,90 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
         emergency_contact_name: employee.emergency_contact_name || '',
         emergency_contact_phone: employee.emergency_contact_phone || '',
         notes: employee.notes || '',
+        job_description: (employee as any).job_description || '',
       });
+      
+      setExistingContractUrl((employee as any).contract_file_url || '');
+      setExistingCvUrl((employee as any).cv_file_url || '');
     }
   }, [employee]);
+
+  const uploadFile = async (file: File, fileType: 'contract' | 'cv', employeeCode: string) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${employeeCode}_${fileType}_${Date.now()}.${fileExt}`;
+      const filePath = `${fileType}s/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('employee-files')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('employee-files')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error(`Error uploading ${fileType}:`, error);
+      throw error;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const updateData = {
-      ...formData,
-      salary: formData.salary ? parseFloat(formData.salary) : null,
-    };
+    try {
+      let contractUrl = existingContractUrl;
+      let cvUrl = existingCvUrl;
 
-    await updateEmployee.mutateAsync({ id: employeeId, data: updateData });
-    onClose();
+      // Upload new files if provided
+      if (contractFile) {
+        contractUrl = await uploadFile(contractFile, 'contract', employee?.employee_code || 'unknown');
+      }
+      if (cvFile) {
+        cvUrl = await uploadFile(cvFile, 'cv', employee?.employee_code || 'unknown');
+      }
+
+      const updateData = {
+        ...formData,
+        salary: formData.salary ? parseFloat(formData.salary) : null,
+        contract_file_url: contractUrl || null,
+        cv_file_url: cvUrl || null,
+      };
+
+      await updateEmployee.mutateAsync({ id: employeeId, data: updateData });
+      onClose();
+    } catch (error) {
+      console.error('Error updating employee:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Có lỗi xảy ra khi cập nhật nhân viên',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, fileType: 'contract' | 'cv') => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (fileType === 'contract') {
+        setContractFile(file);
+      } else {
+        setCvFile(file);
+      }
+    }
+  };
+
+  const removeFile = (fileType: 'contract' | 'cv') => {
+    if (fileType === 'contract') {
+      setContractFile(null);
+      setExistingContractUrl('');
+    } else {
+      setCvFile(null);
+      setExistingCvUrl('');
+    }
   };
 
   const filteredPositions = positions?.filter(pos => 
@@ -204,6 +284,98 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
               value={formData.address}
               onChange={(e) => setFormData({...formData, address: e.target.value})}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="job_description">Mô tả công việc</Label>
+            <RichTextEditor
+              value={formData.job_description}
+              onChange={(value) => setFormData({...formData, job_description: value})}
+              placeholder="Nhập mô tả chi tiết công việc của nhân viên..."
+            />
+          </div>
+
+          {/* File Uploads */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Contract File */}
+            <div className="space-y-2">
+              <Label>Hợp đồng lao động</Label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                {contractFile || existingContractUrl ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <FileText className="h-5 w-5 text-blue-500" />
+                      <span className="text-sm">
+                        {contractFile ? contractFile.name : 'Hợp đồng hiện tại'}
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile('contract')}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                    <label className="cursor-pointer">
+                      <span className="text-sm text-blue-600 hover:text-blue-500">
+                        Tải lên hợp đồng
+                      </span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => handleFileChange(e, 'contract')}
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* CV File */}
+            <div className="space-y-2">
+              <Label>CV/Hồ sơ</Label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                {cvFile || existingCvUrl ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <FileText className="h-5 w-5 text-green-500" />
+                      <span className="text-sm">
+                        {cvFile ? cvFile.name : 'CV hiện tại'}
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile('cv')}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                    <label className="cursor-pointer">
+                      <span className="text-sm text-green-600 hover:text-green-500">
+                        Tải lên CV
+                      </span>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => handleFileChange(e, 'cv')}
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">

@@ -544,6 +544,50 @@ export type Database = {
           },
         ]
       }
+      employee_attachments: {
+        Row: {
+          created_at: string | null
+          employee_id: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_attachments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_competency_assessments: {
         Row: {
           assessed_at: string | null
@@ -675,7 +719,9 @@ export type Database = {
           address: string | null
           auth_user_id: string | null
           avatar_url: string | null
+          contract_file_url: string | null
           created_at: string | null
+          cv_file_url: string | null
           department_id: string | null
           email: string
           emergency_contact_name: string | null
@@ -685,6 +731,7 @@ export type Database = {
           full_name: string
           hire_date: string | null
           id: string
+          job_description: string | null
           manager_id: string | null
           notes: string | null
           phone: string | null
@@ -698,7 +745,9 @@ export type Database = {
           address?: string | null
           auth_user_id?: string | null
           avatar_url?: string | null
+          contract_file_url?: string | null
           created_at?: string | null
+          cv_file_url?: string | null
           department_id?: string | null
           email: string
           emergency_contact_name?: string | null
@@ -708,6 +757,7 @@ export type Database = {
           full_name: string
           hire_date?: string | null
           id?: string
+          job_description?: string | null
           manager_id?: string | null
           notes?: string | null
           phone?: string | null
@@ -721,7 +771,9 @@ export type Database = {
           address?: string | null
           auth_user_id?: string | null
           avatar_url?: string | null
+          contract_file_url?: string | null
           created_at?: string | null
+          cv_file_url?: string | null
           department_id?: string | null
           email?: string
           emergency_contact_name?: string | null
@@ -731,6 +783,7 @@ export type Database = {
           full_name?: string
           hire_date?: string | null
           id?: string
+          job_description?: string | null
           manager_id?: string | null
           notes?: string | null
           phone?: string | null
