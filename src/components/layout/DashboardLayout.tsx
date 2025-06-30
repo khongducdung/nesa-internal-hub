@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { Sidebar } from './Sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { AppSidebar } from './AppSidebar';
 import { Header } from './Header';
 
 interface DashboardLayoutProps {
@@ -8,23 +8,17 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="flex h-screen">
-        <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-        
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <Header toggleSidebar={toggleSidebar} />
-          
-          <main className="flex-1 overflow-y-auto p-6">
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-gray-50">
+        <AppSidebar />
+        <SidebarInset>
+          <Header />
+          <main className="flex-1 p-6">
             {children}
           </main>
-        </div>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
