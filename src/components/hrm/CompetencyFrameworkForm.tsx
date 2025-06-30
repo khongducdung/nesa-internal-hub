@@ -11,6 +11,7 @@ import { usePositions } from '@/hooks/usePositions';
 import { useDepartments } from '@/hooks/useDepartments';
 import { useCreateCompetencyFramework, useUpdateCompetencyFramework } from '@/hooks/useCompetencyFrameworkMutations';
 import { useCompetencyFramework } from '@/hooks/useCompetencyFrameworks';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CompetencyFrameworkFormProps {
   onClose: () => void;
@@ -85,22 +86,36 @@ export function CompetencyFrameworkForm({ onClose, frameworkId }: CompetencyFram
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const data = {
-      name: formData.name,
-      description: formData.description,
-      position_id: formData.position_id || null,
-      status: formData.status,
-      competencies: competencies,
-      created_by: 'current-user-id', // Replace with actual user ID
-    };
+    try {
+      // Get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.error('No authenticated user found');
+        return;
+      }
 
-    if (frameworkId) {
-      await updateFramework.mutateAsync({ id: frameworkId, data });
-    } else {
-      await createFramework.mutateAsync(data);
+      const data = {
+        name: formData.name,
+        description: formData.description,
+        position_id: formData.position_id || null,
+        status: formData.status,
+        competencies: competencies,
+        created_by: user.id,
+      };
+
+      console.log('Submitting competency framework data:', data);
+
+      if (frameworkId) {
+        await updateFramework.mutateAsync({ id: frameworkId, data });
+      } else {
+        await createFramework.mutateAsync(data);
+      }
+      
+      onClose();
+    } catch (error) {
+      console.error('Error submitting form:', error);
     }
-    
-    onClose();
   };
 
   if (isLoading && frameworkId) {
