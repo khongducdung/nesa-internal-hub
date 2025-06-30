@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, Edit, Eye, Clock, Users, FileText, Link } from 'lucide-react';
+import { MoreHorizontal, Edit, Eye, Calendar, Users, Link, User } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ProcessTemplateWithDetails } from '@/hooks/useProcessTemplates';
 
@@ -17,11 +17,9 @@ export function ProcessTemplateCard({ template, onEdit, onView }: ProcessTemplat
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'published':
-        return <Badge className="bg-green-100 text-green-800">Đã xuất bản</Badge>;
+        return <Badge className="bg-green-100 text-green-800">Đang áp dụng</Badge>;
       case 'draft':
-        return <Badge className="bg-yellow-100 text-yellow-800">Bản nháp</Badge>;
-      case 'archived':
-        return <Badge className="bg-gray-100 text-gray-800">Lưu trữ</Badge>;
+        return <Badge className="bg-gray-100 text-gray-800">Tạm dừng</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
     }
@@ -40,15 +38,6 @@ export function ProcessTemplateCard({ template, onEdit, onView }: ProcessTemplat
     }
   };
 
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return `${hours}h${mins > 0 ? ` ${mins}m` : ''}`;
-    }
-    return `${mins}m`;
-  };
-
   const getTargetTypeLabel = (targetType: string) => {
     switch (targetType) {
       case 'department':
@@ -60,6 +49,14 @@ export function ProcessTemplateCard({ template, onEdit, onView }: ProcessTemplat
       default:
         return 'Tất cả';
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   };
 
   const hasAttachments = template.external_links && template.external_links.length > 0;
@@ -111,18 +108,14 @@ export function ProcessTemplateCard({ template, onEdit, onView }: ProcessTemplat
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-          {template.description || 'Không có mô tả'}
-        </p>
-        
         <div className="grid grid-cols-2 gap-4 text-sm text-gray-500 mb-4">
           <div className="flex items-center space-x-1">
-            <FileText className="h-4 w-4" />
-            <span>Tài liệu hướng dẫn</span>
+            <Calendar className="h-4 w-4" />
+            <span>Ngày tạo: {formatDate(template.created_at || '')}</span>
           </div>
           <div className="flex items-center space-x-1">
-            <Clock className="h-4 w-4" />
-            <span>{formatDuration(template.estimated_duration || 30)}</span>
+            <User className="h-4 w-4" />
+            <span>Người tạo</span>
           </div>
           <div className="flex items-center space-x-1">
             <Users className="h-4 w-4" />

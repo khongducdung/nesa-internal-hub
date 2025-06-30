@@ -4,23 +4,17 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   FileText, 
   Plus, 
-  Search, 
-  Filter,
-  Clock,
+  Search,
   CheckCircle,
   Eye,
-  Users,
-  Calendar,
-  Activity,
-  Settings,
   BookOpen,
-  Target
+  Settings,
+  List
 } from 'lucide-react';
 import { useProcessTemplates, useCreateProcessTemplate, useUpdateProcessTemplate } from '@/hooks/useProcessTemplates';
 import { useProcessCategories } from '@/hooks/useProcessCategories';
@@ -28,7 +22,7 @@ import { ProcessTemplateForm } from '@/components/processes/ProcessTemplateForm'
 import { ProcessTemplateCard } from '@/components/processes/ProcessTemplateCard';
 
 export default function Processes() {
-  const [activeTab, setActiveTab] = useState('documents');
+  const [activeTab, setActiveTab] = useState('create');
   const [showForm, setShowForm] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,7 +33,7 @@ export default function Processes() {
   const createMutation = useCreateProcessTemplate();
   const updateMutation = useUpdateProcessTemplate();
 
-  // Mock data cho thống kê
+  // Thống kê
   const documentStats = [
     {
       title: 'Tổng tài liệu',
@@ -50,7 +44,7 @@ export default function Processes() {
       changeType: 'increase'
     },
     {
-      title: 'Đã xuất bản',
+      title: 'Đang áp dụng',
       value: processTemplates?.filter(t => t.status === 'published').length.toString() || '0',
       icon: CheckCircle,
       color: 'from-green-500 to-green-600',
@@ -58,7 +52,7 @@ export default function Processes() {
       changeType: 'increase'
     },
     {
-      title: 'Bản nháp',
+      title: 'Tạm dừng',
       value: processTemplates?.filter(t => t.status === 'draft').length.toString() || '0',
       icon: BookOpen,
       color: 'from-yellow-500 to-yellow-600',
@@ -82,7 +76,7 @@ export default function Processes() {
     } else {
       await createMutation.mutateAsync({
         ...data,
-        created_by: '00000000-0000-0000-0000-000000000000' // Temp user ID
+        created_by: '00000000-0000-0000-0000-000000000000'
       });
     }
     setShowForm(false);
@@ -119,10 +113,6 @@ export default function Processes() {
               <Settings className="h-4 w-4 mr-2" />
               Danh mục
             </Button>
-            <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Tạo tài liệu mới
-            </Button>
           </div>
         </div>
 
@@ -158,16 +148,51 @@ export default function Processes() {
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="documents">Tài liệu hướng dẫn</TabsTrigger>
-            <TabsTrigger value="analytics">Thống kê & Báo cáo</TabsTrigger>
+            <TabsTrigger value="create">Tài liệu hướng dẫn</TabsTrigger>
+            <TabsTrigger value="list">Danh sách</TabsTrigger>
           </TabsList>
 
-          {/* Documents Tab */}
-          <TabsContent value="documents" className="space-y-6">
+          {/* Create/Edit Tab */}
+          <TabsContent value="create" className="space-y-6">
             <Card className="shadow-md border-0">
               <CardHeader>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                  <CardTitle className="text-xl font-semibold text-gray-900">Tài liệu hướng dẫn</CardTitle>
+                  <CardTitle className="text-xl font-semibold text-gray-900">
+                    {editingTemplate ? 'Chỉnh sửa tài liệu hướng dẫn' : 'Tạo tài liệu hướng dẫn mới'}
+                  </CardTitle>
+                  <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700 mt-4 sm:mt-0">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Tạo tài liệu mới
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {editingTemplate ? 'Chỉnh sửa tài liệu' : 'Tạo tài liệu hướng dẫn mới'}
+                  </h3>
+                  <p className="text-gray-500 mb-6">
+                    {editingTemplate 
+                      ? 'Chỉnh sửa nội dung và thông tin tài liệu hướng dẫn'
+                      : 'Bắt đầu tạo tài liệu hướng dẫn công việc cho nhân viên'
+                    }
+                  </p>
+                  <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700">
+                    <Plus className="h-4 w-4 mr-2" />
+                    {editingTemplate ? 'Chỉnh sửa' : 'Tạo tài liệu mới'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* List Tab */}
+          <TabsContent value="list" className="space-y-6">
+            <Card className="shadow-md border-0">
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                  <CardTitle className="text-xl font-semibold text-gray-900">Danh sách tài liệu</CardTitle>
                   <div className="flex items-center space-x-2 mt-4 sm:mt-0">
                     <div className="relative">
                       <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
@@ -208,10 +233,13 @@ export default function Processes() {
                   </div>
                 ) : filteredTemplates.length === 0 ? (
                   <div className="text-center py-12">
-                    <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <List className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có tài liệu hướng dẫn</h3>
                     <p className="text-gray-500 mb-6">Bắt đầu bằng cách tạo tài liệu hướng dẫn đầu tiên cho nhân viên</p>
-                    <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700">
+                    <Button onClick={() => {
+                      setActiveTab('create');
+                      setShowForm(true);
+                    }} className="bg-blue-600 hover:bg-blue-700">
                       <Plus className="h-4 w-4 mr-2" />
                       Tạo tài liệu đầu tiên
                     </Button>
@@ -222,28 +250,15 @@ export default function Processes() {
                       <ProcessTemplateCard
                         key={template.id}
                         template={template}
-                        onEdit={handleEdit}
+                        onEdit={(template) => {
+                          handleEdit(template);
+                          setActiveTab('create');
+                        }}
                         onView={handleView}
                       />
                     ))}
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-6">
-            <Card className="shadow-md border-0">
-              <CardHeader>
-                <CardTitle className="text-xl font-semibold text-gray-900">Thống kê sử dụng</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <Activity className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Thống kê chi tiết</h3>
-                  <p className="text-gray-500">Tính năng thống kê chi tiết sẽ được triển khai trong phiên bản tiếp theo</p>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
