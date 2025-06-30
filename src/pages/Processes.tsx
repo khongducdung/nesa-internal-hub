@@ -8,22 +8,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   FileText, 
-  Plus, 
   Search,
   CheckCircle,
   Eye,
-  BookOpen,
-  Settings,
-  List
+  BookOpen
 } from 'lucide-react';
 import { useProcessTemplates, useCreateProcessTemplate, useUpdateProcessTemplate } from '@/hooks/useProcessTemplates';
 import { useProcessCategories } from '@/hooks/useProcessCategories';
 import { ProcessTemplateForm } from '@/components/processes/ProcessTemplateForm';
-import { ProcessTemplateCard } from '@/components/processes/ProcessTemplateCard';
+import { ProcessTemplateList } from '@/components/processes/ProcessTemplateList';
 
 export default function Processes() {
-  const [activeTab, setActiveTab] = useState('create');
-  const [showForm, setShowForm] = useState(false);
+  const [activeTab, setActiveTab] = useState('list');
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -79,12 +75,12 @@ export default function Processes() {
         created_by: '00000000-0000-0000-0000-000000000000'
       });
     }
-    setShowForm(false);
+    // Không chuyển tab, giữ nguyên tab create
   };
 
   const handleEdit = (template: any) => {
     setEditingTemplate(template);
-    setShowForm(true);
+    setActiveTab('create');
   };
 
   const handleView = (template: any) => {
@@ -107,12 +103,6 @@ export default function Processes() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Quản lý tài liệu hướng dẫn</h1>
             <p className="text-gray-600 mt-1">Tạo và quản lý các tài liệu hướng dẫn công việc cho nhân viên</p>
-          </div>
-          <div className="flex items-center gap-2 mt-4 sm:mt-0">
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Danh mục
-            </Button>
           </div>
         </div>
 
@@ -148,44 +138,9 @@ export default function Processes() {
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="create">Tài liệu hướng dẫn</TabsTrigger>
             <TabsTrigger value="list">Danh sách</TabsTrigger>
+            <TabsTrigger value="create">Tạo tài liệu</TabsTrigger>
           </TabsList>
-
-          {/* Create/Edit Tab */}
-          <TabsContent value="create" className="space-y-6">
-            <Card className="shadow-md border-0">
-              <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                  <CardTitle className="text-xl font-semibold text-gray-900">
-                    {editingTemplate ? 'Chỉnh sửa tài liệu hướng dẫn' : 'Tạo tài liệu hướng dẫn mới'}
-                  </CardTitle>
-                  <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700 mt-4 sm:mt-0">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Tạo tài liệu mới
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    {editingTemplate ? 'Chỉnh sửa tài liệu' : 'Tạo tài liệu hướng dẫn mới'}
-                  </h3>
-                  <p className="text-gray-500 mb-6">
-                    {editingTemplate 
-                      ? 'Chỉnh sửa nội dung và thông tin tài liệu hướng dẫn'
-                      : 'Bắt đầu tạo tài liệu hướng dẫn công việc cho nhân viên'
-                    }
-                  </p>
-                  <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700">
-                    <Plus className="h-4 w-4 mr-2" />
-                    {editingTemplate ? 'Chỉnh sửa' : 'Tạo tài liệu mới'}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           {/* List Tab */}
           <TabsContent value="list" className="space-y-6">
@@ -226,56 +181,37 @@ export default function Processes() {
                 </div>
               </CardHeader>
               <CardContent>
-                {isLoading ? (
-                  <div className="text-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-2 text-gray-500">Đang tải...</p>
-                  </div>
-                ) : filteredTemplates.length === 0 ? (
-                  <div className="text-center py-12">
-                    <List className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có tài liệu hướng dẫn</h3>
-                    <p className="text-gray-500 mb-6">Bắt đầu bằng cách tạo tài liệu hướng dẫn đầu tiên cho nhân viên</p>
-                    <Button onClick={() => {
-                      setActiveTab('create');
-                      setShowForm(true);
-                    }} className="bg-blue-600 hover:bg-blue-700">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Tạo tài liệu đầu tiên
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredTemplates.map((template) => (
-                      <ProcessTemplateCard
-                        key={template.id}
-                        template={template}
-                        onEdit={(template) => {
-                          handleEdit(template);
-                          setActiveTab('create');
-                        }}
-                        onView={handleView}
-                      />
-                    ))}
-                  </div>
-                )}
+                <ProcessTemplateList
+                  templates={filteredTemplates}
+                  isLoading={isLoading}
+                  onEdit={handleEdit}
+                  onView={handleView}
+                  onCreateFirst={() => setActiveTab('create')}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Create Tab */}
+          <TabsContent value="create" className="space-y-6">
+            <Card className="shadow-md border-0">
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold text-gray-900">
+                  {editingTemplate ? 'Chỉnh sửa tài liệu hướng dẫn' : 'Tạo tài liệu hướng dẫn mới'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ProcessTemplateForm
+                  open={true}
+                  onOpenChange={() => {}}
+                  onSubmit={handleSubmit}
+                  initialData={editingTemplate}
+                  inline={true}
+                />
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Form Modal */}
-        <ProcessTemplateForm
-          open={showForm}
-          onOpenChange={(open) => {
-            setShowForm(open);
-            if (!open) {
-              setEditingTemplate(null);
-            }
-          }}
-          onSubmit={handleSubmit}
-          initialData={editingTemplate}
-        />
       </div>
     </DashboardLayout>
   );
