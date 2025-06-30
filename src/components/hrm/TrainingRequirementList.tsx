@@ -3,17 +3,16 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useTrainingRequirements } from '@/hooks/useTrainingRequirements';
-import { TrainingRequirementForm } from './TrainingRequirementForm';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Search, ExternalLink, Clock, Users, BookOpen } from 'lucide-react';
+import { ExternalLink, BookOpen } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-export function TrainingRequirementList() {
+interface TrainingRequirementListProps {
+  searchTerm: string;
+}
+
+export function TrainingRequirementList({ searchTerm }: TrainingRequirementListProps) {
   const { data: requirements, isLoading } = useTrainingRequirements();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const filteredRequirements = requirements?.filter(req =>
     req.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -22,10 +21,10 @@ export function TrainingRequirementList() {
 
   const getTargetTypeLabel = (targetType: string) => {
     switch (targetType) {
-      case 'general': return 'Tất cả nhân viên';
-      case 'department': return 'Theo phòng ban';
-      case 'position': return 'Theo chức vụ';
-      case 'employee': return 'Cá nhân cụ thể';
+      case 'general': return 'Tất cả';
+      case 'department': return 'Phòng ban';
+      case 'position': return 'Chức vụ';
+      case 'employee': return 'Cá nhân';
       default: return targetType;
     }
   };
@@ -49,35 +48,7 @@ export function TrainingRequirementList() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Actions Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Tìm kiếm yêu cầu đào tạo..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 bg-white border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-          />
-        </div>
-        
-        <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Tạo yêu cầu mới
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-semibold">Tạo yêu cầu đào tạo mới</DialogTitle>
-            </DialogHeader>
-            <TrainingRequirementForm onSuccess={() => setShowCreateForm(false)} />
-          </DialogContent>
-        </Dialog>
-      </div>
-
+    <div className="space-y-4">
       {/* Training Requirements Table */}
       <Card className="border-0 shadow-sm bg-white">
         <CardContent className="p-0">
@@ -92,12 +63,6 @@ export function TrainingRequirementList() {
                     </div>
                   </TableHead>
                   <TableHead className="font-semibold text-gray-900 text-center py-4">Đối tượng</TableHead>
-                  <TableHead className="font-semibold text-gray-900 text-center py-4">
-                    <div className="flex items-center justify-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      Thời hạn
-                    </div>
-                  </TableHead>
                   <TableHead className="font-semibold text-gray-900 text-center py-4">Trạng thái</TableHead>
                   <TableHead className="font-semibold text-gray-900 text-center py-4">Hành động</TableHead>
                 </TableRow>
@@ -106,47 +71,29 @@ export function TrainingRequirementList() {
                 {filteredRequirements.map((requirement) => (
                   <TableRow key={requirement.id} className="border-gray-100 hover:bg-gray-50/50">
                     <TableCell className="py-4 px-6">
-                      <div className="space-y-2">
-                        <h3 className="font-medium text-gray-900 leading-tight">
+                      <div className="flex items-center gap-3">
+                        <h3 className="font-medium text-gray-900">
                           {requirement.name}
                         </h3>
-                        {requirement.description && (
-                          <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-                            {requirement.description}
-                          </p>
+                        {requirement.auto_assign_after_days > 0 && (
+                          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
+                            Tự động giao sau {requirement.auto_assign_after_days} ngày
+                          </Badge>
                         )}
-                        <div className="flex flex-wrap gap-2">
-                          {requirement.reason && (
-                            <Badge variant="outline" className="text-xs bg-gray-50 text-gray-600 border-gray-200">
-                              {requirement.reason}
-                            </Badge>
-                          )}
-                          {requirement.auto_assign_after_days > 0 && (
-                            <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600 border-blue-200">
-                              Tự động giao sau {requirement.auto_assign_after_days} ngày
-                            </Badge>
-                          )}
-                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="py-4 text-center">
-                      <Badge className={`${getTargetTypeColor(requirement.target_type)} font-medium`}>
-                        <Users className="h-3 w-3 mr-1" />
+                      <Badge className={`${getTargetTypeColor(requirement.target_type)} font-medium text-xs`}>
                         {getTargetTypeLabel(requirement.target_type)}
                       </Badge>
                     </TableCell>
                     <TableCell className="py-4 text-center">
-                      <span className="font-semibold text-gray-900">
-                        {requirement.duration_days} ngày
-                      </span>
-                    </TableCell>
-                    <TableCell className="py-4 text-center">
                       {requirement.is_active ? (
-                        <Badge className="bg-green-50 text-green-700 border-green-200 font-medium">
+                        <Badge className="bg-green-50 text-green-700 border-green-200 font-medium text-xs">
                           Hoạt động
                         </Badge>
                       ) : (
-                        <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 font-medium">
+                        <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 font-medium text-xs">
                           Tạm dừng
                         </Badge>
                       )}
@@ -157,7 +104,7 @@ export function TrainingRequirementList() {
                           variant="outline"
                           size="sm"
                           onClick={() => window.open(requirement.course_url, '_blank')}
-                          className="border-gray-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-colors"
+                          className="border-gray-200 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-colors text-xs"
                         >
                           <ExternalLink className="h-3 w-3 mr-1" />
                           Xem khóa học
@@ -187,16 +134,6 @@ export function TrainingRequirementList() {
                     }
                   </p>
                 </div>
-                {!searchTerm && (
-                  <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="mt-2">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Tạo yêu cầu đầu tiên
-                      </Button>
-                    </DialogTrigger>
-                  </Dialog>
-                )}
               </div>
             </div>
           )}
