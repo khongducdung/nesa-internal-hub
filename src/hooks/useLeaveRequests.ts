@@ -30,7 +30,7 @@ export interface LeaveRequest {
 export function useLeaveRequests() {
   return useQuery({
     queryKey: ['leave-requests'],
-    queryFn: async () => {
+    queryFn: async (): Promise<LeaveRequest[]> => {
       // Get leave requests
       const { data: leaveData, error: leaveError } = await supabase
         .from('leave_requests')
@@ -44,9 +44,11 @@ export function useLeaveRequests() {
         .from('employees')
         .select('id, full_name, employee_code');
 
-      // Combine the data
+      // Combine the data with proper type casting
       const enrichedLeaveRequests: LeaveRequest[] = (leaveData || []).map(request => ({
         ...request,
+        leave_type: request.leave_type as 'annual' | 'sick' | 'personal' | 'emergency',
+        status: request.status as 'pending' | 'approved' | 'rejected',
         employees: employeeData?.find(emp => emp.id === request.employee_id) || null,
         approved_by_employee: request.approved_by 
           ? employeeData?.find(emp => emp.id === request.approved_by) || null

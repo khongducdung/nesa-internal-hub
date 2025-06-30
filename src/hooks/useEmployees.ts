@@ -64,9 +64,11 @@ export const useEmployees = () => {
         .from('positions')
         .select('id, name');
 
-      // Combine the data
+      // Combine the data with proper type casting
       const enrichedEmployees: EmployeeWithDetails[] = (employeeData || []).map(employee => ({
         ...employee,
+        employee_level: (employee.employee_level as 'level_1' | 'level_2' | 'level_3') || 'level_3',
+        work_status: (employee.work_status as 'active' | 'inactive' | 'pending') || 'active',
         departments: employee.department_id 
           ? departmentData?.find(dept => dept.id === employee.department_id) || null
           : null,
