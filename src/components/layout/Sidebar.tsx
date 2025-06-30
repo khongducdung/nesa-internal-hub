@@ -114,7 +114,7 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
                   onClick={handleProfileClick}
                   className="text-white hover:bg-white/20 h-8 w-8"
                 >
-                  <Settings className="h-4 w-4" />
+                  <User className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="ghost"

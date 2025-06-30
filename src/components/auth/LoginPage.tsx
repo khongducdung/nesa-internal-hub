@@ -8,13 +8,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, Mail } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showResetForm, setShowResetForm] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [isResetLoading, setIsResetLoading] = useState(false);
   const { signIn, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -44,35 +48,139 @@ export function LoginPage() {
         title: "Đăng nhập thành công",
         description: "Chào mừng bạn đến với NESA!"
       });
-      // Navigation will be handled by useEffect
     }
     
     setIsLoading(false);
   };
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsResetLoading(true);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại.",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Email đã được gửi",
+        description: "Vui lòng kiểm tra email để đặt lại mật khẩu. Yêu cầu đã được gửi đến Admin.",
+      });
+      setShowResetForm(false);
+      setResetEmail('');
+    }
+
+    setIsResetLoading(false);
+  };
+
+  if (showResetForm) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4">
+        <div className="w-full max-w-md">
+          <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
+            <CardHeader className="text-center space-y-6 pb-8">
+              <div className="flex justify-center mb-6">
+                <div className="relative">
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg">
+                    <img 
+                      src="/lovable-uploads/e6c395cd-68c2-46ec-8fef-ddaecbf68791.png" 
+                      alt="NESA Logo" 
+                      className="h-12 w-auto filter brightness-0 invert"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-bold text-gray-800 mb-2">
+                  Đặt lại mật khẩu
+                </CardTitle>
+                <p className="text-gray-600">Nhập email để yêu cầu đặt lại mật khẩu</p>
+              </div>
+            </CardHeader>
+            
+            <CardContent className="space-y-6">
+              <form onSubmit={handlePasswordReset} className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email" className="text-sm font-medium text-gray-700">
+                    Địa chỉ email
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="Nhập email của bạn"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      required
+                      className="pl-10 h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <Button 
+                    type="submit" 
+                    className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 shadow-lg"
+                    disabled={isResetLoading}
+                  >
+                    {isResetLoading ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Đang gửi...</span>
+                      </div>
+                    ) : (
+                      "Gửi yêu cầu đặt lại mật khẩu"
+                    )}
+                  </Button>
+                  
+                  <Button 
+                    type="button"
+                    variant="ghost"
+                    className="w-full h-12 text-gray-600 hover:text-gray-800"
+                    onClick={() => setShowResetForm(false)}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Quay lại đăng nhập
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4">
       <div className="w-full max-w-md">
         <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center space-y-6 pb-8">
             <div className="flex justify-center mb-6">
               <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl flex items-center justify-center shadow-2xl">
                   <img 
                     src="/lovable-uploads/e6c395cd-68c2-46ec-8fef-ddaecbf68791.png" 
                     alt="NESA Logo" 
-                    className="h-12 w-auto filter brightness-0 invert"
+                    className="h-14 w-auto filter brightness-0 invert"
                   />
                 </div>
-                <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-2 border-white"></div>
+                <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg"></div>
               </div>
             </div>
             <div>
-              <CardTitle className="text-3xl font-bold text-gray-800 mb-2">
-                Chào mừng trở lại
+              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-3">
+                Chào mừng đến với NESA
               </CardTitle>
-              <p className="text-gray-600 text-lg">Đăng nhập vào hệ thống NESA</p>
-              <p className="text-sm text-gray-500 mt-2">Nền tảng quản trị nội bộ</p>
+              <p className="text-gray-600 text-lg font-medium">Nền tảng quản trị nội bộ</p>
+              <p className="text-sm text-gray-500 mt-2">Đăng nhập để tiếp tục</p>
             </div>
           </CardHeader>
           
@@ -89,7 +197,7 @@ export function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
                 />
               </div>
               
@@ -105,7 +213,7 @@ export function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 pr-12"
+                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 pr-12 transition-all duration-200"
                   />
                   <Button
                     type="button"
@@ -123,9 +231,20 @@ export function LoginPage() {
                 </div>
               </div>
               
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="link"
+                  className="text-sm text-blue-600 hover:text-blue-800 p-0 h-auto"
+                  onClick={() => setShowResetForm(true)}
+                >
+                  Quên mật khẩu?
+                </Button>
+              </div>
+              
               <Button 
                 type="submit" 
-                className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 shadow-lg"
+                className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 shadow-lg transform transition-all duration-200 hover:scale-[1.02]"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -138,16 +257,8 @@ export function LoginPage() {
                 )}
               </Button>
             </form>
-            
-            <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-800 font-medium mb-3">Tài khoản demo:</p>
-              <div className="space-y-1">
-                <p className="text-sm font-mono text-blue-700">📧 khongducdung@gmail.com</p>
-                <p className="text-sm font-mono text-blue-700">🔒 123</p>
-              </div>
-            </div>
 
-            <div className="text-center pt-4">
+            <div className="text-center pt-6 border-t border-gray-100">
               <p className="text-xs text-gray-500">
                 © 2025 NESA Platform. Tất cả quyền được bảo lưu.
               </p>
