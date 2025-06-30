@@ -11,45 +11,101 @@ export type Database = {
     Tables: {
       attendance: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
+          attendance_setting_id: string | null
           break_time: number | null
+          check_in_latitude: number | null
+          check_in_longitude: number | null
           check_in_time: string | null
+          check_out_latitude: number | null
+          check_out_longitude: number | null
           check_out_time: string | null
           created_at: string | null
           date: string
+          early_leave_minutes: number | null
           employee_id: string
           id: string
+          is_early_leave: boolean | null
+          is_late: boolean | null
+          late_minutes: number | null
+          location_id: string | null
           notes: string | null
           overtime_hours: number | null
           status: string | null
+          total_work_hours: number | null
           updated_at: string | null
+          work_shift_id: string | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          attendance_setting_id?: string | null
           break_time?: number | null
+          check_in_latitude?: number | null
+          check_in_longitude?: number | null
           check_in_time?: string | null
+          check_out_latitude?: number | null
+          check_out_longitude?: number | null
           check_out_time?: string | null
           created_at?: string | null
           date: string
+          early_leave_minutes?: number | null
           employee_id: string
           id?: string
+          is_early_leave?: boolean | null
+          is_late?: boolean | null
+          late_minutes?: number | null
+          location_id?: string | null
           notes?: string | null
           overtime_hours?: number | null
           status?: string | null
+          total_work_hours?: number | null
           updated_at?: string | null
+          work_shift_id?: string | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          attendance_setting_id?: string | null
           break_time?: number | null
+          check_in_latitude?: number | null
+          check_in_longitude?: number | null
           check_in_time?: string | null
+          check_out_latitude?: number | null
+          check_out_longitude?: number | null
           check_out_time?: string | null
           created_at?: string | null
           date?: string
+          early_leave_minutes?: number | null
           employee_id?: string
           id?: string
+          is_early_leave?: boolean | null
+          is_late?: boolean | null
+          late_minutes?: number | null
+          location_id?: string | null
           notes?: string | null
           overtime_hours?: number | null
           status?: string | null
+          total_work_hours?: number | null
           updated_at?: string | null
+          work_shift_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "attendance_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_attendance_setting_id_fkey"
+            columns: ["attendance_setting_id"]
+            isOneToOne: false
+            referencedRelation: "attendance_settings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "attendance_employee_id_fkey"
             columns: ["employee_id"]
@@ -57,7 +113,211 @@ export type Database = {
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "attendance_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "attendance_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_work_shift_id_fkey"
+            columns: ["work_shift_id"]
+            isOneToOne: false
+            referencedRelation: "work_shifts"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      attendance_assignments: {
+        Row: {
+          attendance_setting_id: string
+          created_at: string | null
+          created_by: string
+          department_id: string | null
+          effective_from: string
+          effective_to: string | null
+          employee_id: string | null
+          id: string
+          is_active: boolean | null
+          location_id: string | null
+          position_id: string | null
+          updated_at: string | null
+          work_shift_id: string | null
+        }
+        Insert: {
+          attendance_setting_id: string
+          created_at?: string | null
+          created_by: string
+          department_id?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          employee_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          location_id?: string | null
+          position_id?: string | null
+          updated_at?: string | null
+          work_shift_id?: string | null
+        }
+        Update: {
+          attendance_setting_id?: string
+          created_at?: string | null
+          created_by?: string
+          department_id?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          employee_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          location_id?: string | null
+          position_id?: string | null
+          updated_at?: string | null
+          work_shift_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_assignments_attendance_setting_id_fkey"
+            columns: ["attendance_setting_id"]
+            isOneToOne: false
+            referencedRelation: "attendance_settings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_assignments_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_assignments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_assignments_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "attendance_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_assignments_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_assignments_work_shift_id_fkey"
+            columns: ["work_shift_id"]
+            isOneToOne: false
+            referencedRelation: "work_shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance_locations: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          latitude: number
+          longitude: number
+          name: string
+          radius_meters: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          latitude: number
+          longitude: number
+          name: string
+          radius_meters?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          latitude?: number
+          longitude?: number
+          name?: string
+          radius_meters?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      attendance_settings: {
+        Row: {
+          break_end_time: string | null
+          break_start_time: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          early_leave_threshold_minutes: number | null
+          gps_radius_meters: number | null
+          id: string
+          is_default: boolean | null
+          late_threshold_minutes: number | null
+          name: string
+          overtime_start_after_minutes: number | null
+          require_gps_check: boolean | null
+          status: string | null
+          updated_at: string | null
+          weekend_work_allowed: boolean | null
+          work_end_time: string
+          work_start_time: string
+        }
+        Insert: {
+          break_end_time?: string | null
+          break_start_time?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          early_leave_threshold_minutes?: number | null
+          gps_radius_meters?: number | null
+          id?: string
+          is_default?: boolean | null
+          late_threshold_minutes?: number | null
+          name: string
+          overtime_start_after_minutes?: number | null
+          require_gps_check?: boolean | null
+          status?: string | null
+          updated_at?: string | null
+          weekend_work_allowed?: boolean | null
+          work_end_time?: string
+          work_start_time?: string
+        }
+        Update: {
+          break_end_time?: string | null
+          break_start_time?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          early_leave_threshold_minutes?: number | null
+          gps_radius_meters?: number | null
+          id?: string
+          is_default?: boolean | null
+          late_threshold_minutes?: number | null
+          name?: string
+          overtime_start_after_minutes?: number | null
+          require_gps_check?: boolean | null
+          status?: string | null
+          updated_at?: string | null
+          weekend_work_allowed?: boolean | null
+          work_end_time?: string
+          work_start_time?: string
+        }
+        Relationships: []
       }
       company_policies: {
         Row: {
@@ -402,6 +662,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      holidays: {
+        Row: {
+          created_at: string | null
+          date: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_recurring: boolean | null
+          name: string
+          updated_at: string | null
+          year: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_recurring?: boolean | null
+          name: string
+          updated_at?: string | null
+          year?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_recurring?: boolean | null
+          name?: string
+          updated_at?: string | null
+          year?: number | null
+        }
+        Relationships: []
       }
       kpis: {
         Row: {
@@ -1181,6 +1477,53 @@ export type Database = {
             columns: ["position_id"]
             isOneToOne: false
             referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_shifts: {
+        Row: {
+          attendance_setting_id: string | null
+          break_duration_minutes: number | null
+          created_at: string | null
+          days_of_week: number[]
+          end_time: string
+          id: string
+          is_active: boolean | null
+          name: string
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          attendance_setting_id?: string | null
+          break_duration_minutes?: number | null
+          created_at?: string | null
+          days_of_week: number[]
+          end_time: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          attendance_setting_id?: string | null
+          break_duration_minutes?: number | null
+          created_at?: string | null
+          days_of_week?: number[]
+          end_time?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          start_time?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_shifts_attendance_setting_id_fkey"
+            columns: ["attendance_setting_id"]
+            isOneToOne: false
+            referencedRelation: "attendance_settings"
             referencedColumns: ["id"]
           },
         ]
