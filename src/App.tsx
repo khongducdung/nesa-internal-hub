@@ -9,6 +9,10 @@ import { LoginPage } from "@/components/auth/LoginPage";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import HRM from "./pages/HRM";
+import Performance from "./pages/Performance";
+import OKR from "./pages/OKR";
+import KPI from "./pages/KPI";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +39,38 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <HRM />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/performance" 
+              element={
+                <ProtectedRoute>
+                  <Performance />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/okr" 
+              element={
+                <ProtectedRoute>
+                  <OKR />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/kpi" 
+              element={
+                <ProtectedRoute>
+                  <KPI />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute requiredRole="super_admin">
+                  <Settings />
                 </ProtectedRoute>
               } 
             />
