@@ -714,6 +714,69 @@ export type Database = {
           },
         ]
       }
+      employee_training_assignments: {
+        Row: {
+          assigned_by: string | null
+          assigned_date: string | null
+          completed_at: string | null
+          created_at: string | null
+          due_date: string
+          employee_id: string | null
+          id: string
+          notes: string | null
+          progress_percentage: number | null
+          started_at: string | null
+          status: string | null
+          training_requirement_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_by?: string | null
+          assigned_date?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          due_date: string
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          progress_percentage?: number | null
+          started_at?: string | null
+          status?: string | null
+          training_requirement_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_by?: string | null
+          assigned_date?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          due_date?: string
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          progress_percentage?: number | null
+          started_at?: string | null
+          status?: string | null
+          training_requirement_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_training_assignments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_training_assignments_training_requirement_id_fkey"
+            columns: ["training_requirement_id"]
+            isOneToOne: false
+            referencedRelation: "training_requirements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           address: string | null
@@ -1717,6 +1780,47 @@ export type Database = {
           },
         ]
       }
+      training_notifications: {
+        Row: {
+          created_at: string | null
+          employee_training_assignment_id: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          type: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          employee_training_assignment_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          type: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          employee_training_assignment_id?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_notifications_employee_training_assignment_id_fkey"
+            columns: ["employee_training_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "employee_training_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_participants: {
         Row: {
           certificate_url: string | null
@@ -1798,6 +1902,54 @@ export type Database = {
           start_date?: string
           status?: string | null
           trainer?: string | null
+        }
+        Relationships: []
+      }
+      training_requirements: {
+        Row: {
+          auto_assign_after_days: number | null
+          course_url: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          duration_days: number
+          id: string
+          is_active: boolean | null
+          name: string
+          reason: string | null
+          target_ids: string[] | null
+          target_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          auto_assign_after_days?: number | null
+          course_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_days?: number
+          id?: string
+          is_active?: boolean | null
+          name: string
+          reason?: string | null
+          target_ids?: string[] | null
+          target_type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          auto_assign_after_days?: number | null
+          course_url?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_days?: number
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          reason?: string | null
+          target_ids?: string[] | null
+          target_type?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1932,6 +2084,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_assign_training_requirements: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       has_permission: {
         Args: { _user_id: string; _permission_name: string }
         Returns: boolean
