@@ -16,7 +16,7 @@ export function PerformanceDashboard() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Đang tải...</div>
+        <div className="text-gray-500">Đang tải dữ liệu dashboard...</div>
       </div>
     );
   }
@@ -32,24 +32,31 @@ export function PerformanceDashboard() {
   if (!assignments || assignments.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Chưa có dữ liệu phân công</div>
+        <div className="text-center">
+          <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có dữ liệu</h3>
+          <p className="text-gray-500">
+            Chưa có nhân viên nào được phân công công việc hoặc bạn chưa là quản lý
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Calculate stats safely
+  // Tính toán stats an toàn
   const totalAssignments = assignments.length;
   const completedAssignments = assignments.filter(a => a.status === 'evaluated').length;
   const pendingAssignments = assignments.filter(a => a.status === 'assigned').length;
-  const inProgressAssignments = assignments.filter(a => a.status === 'in_progress' || a.status === 'submitted').length;
+  const inProgressAssignments = assignments.filter(a => a.status === 'submitted').length;
 
+  // Tính điểm trung bình
   const evaluatedAssignments = assignments.filter(a => 
-    a.performance_evaluations && Array.isArray(a.performance_evaluations) && a.performance_evaluations.length > 0
+    Array.isArray(a.performance_evaluations) && a.performance_evaluations.length > 0
   );
   
   const avgScore = evaluatedAssignments.length > 0 
     ? evaluatedAssignments.reduce((sum, a) => {
-        const latestEval = a.performance_evaluations?.[0];
+        const latestEval = a.performance_evaluations[0];
         return sum + (latestEval?.final_score || 0);
       }, 0) / evaluatedAssignments.length
     : 0;
@@ -67,6 +74,9 @@ export function PerformanceDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalAssignments}</div>
+            <p className="text-xs text-muted-foreground">
+              Công việc đã phân công
+            </p>
           </CardContent>
         </Card>
 
@@ -77,16 +87,22 @@ export function PerformanceDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{completedAssignments}</div>
+            <p className="text-xs text-muted-foreground">
+              Đã đánh giá xong
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Đang thực hiện</CardTitle>
+            <CardTitle className="text-sm font-medium">Chờ đánh giá</CardTitle>
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{inProgressAssignments}</div>
+            <div className="text-2xl font-bold text-orange-600">{inProgressAssignments}</div>
+            <p className="text-xs text-muted-foreground">
+              Đã nộp báo cáo
+            </p>
           </CardContent>
         </Card>
 
@@ -97,8 +113,11 @@ export function PerformanceDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {avgScore ? avgScore.toFixed(1) : '0.0'}
+              {avgScore > 0 ? avgScore.toFixed(1) : '0.0'}
             </div>
+            <p className="text-xs text-muted-foreground">
+              Từ {evaluatedAssignments.length} đánh giá
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -118,7 +137,22 @@ export function PerformanceDashboard() {
                 <span>Tỷ lệ hoàn thành</span>
                 <span>{completionRate.toFixed(1)}%</span>
               </div>
-              <Progress value={completionRate} className="h-2" />
+              <Progress value={completionRate} className="h-3" />
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-600">{pendingAssignments}</div>
+                <div className="text-gray-500">Chưa bắt đầu</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">{inProgressAssignments}</div>
+                <div className="text-gray-500">Chờ đánh giá</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">{completedAssignments}</div>
+                <div className="text-gray-500">Hoàn thành</div>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -129,14 +163,19 @@ export function PerformanceDashboard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Danh sách nhân viên được quản lý
+            Danh sách nhân viên ({assignments.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {assignments.map((assignment) => {
-              const latestReport = assignment.performance_reports?.[0];
-              const latestEvaluation = assignment.performance_evaluations?.[0];
+              const latestReport = Array.isArray(assignment.performance_reports) && assignment.performance_reports.length > 0 
+                ? assignment.performance_reports[0] 
+                : null;
+              const latestEvaluation = Array.isArray(assignment.performance_evaluations) && assignment.performance_evaluations.length > 0 
+                ? assignment.performance_evaluations[0] 
+                : null;
+              
               const kpiProgress = latestReport && assignment.kpi_target > 0 
                 ? (latestReport.actual_quantity / assignment.kpi_target) * 100 
                 : 0;
@@ -145,7 +184,8 @@ export function PerformanceDashboard() {
                 <div key={assignment.id} className="border rounded-lg p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-medium text-gray-900">
+                      <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                        <Users className="h-4 w-4" />
                         {assignment.employees?.full_name || 'Chưa có tên'}
                       </h4>
                       <p className="text-sm text-gray-500">
@@ -158,7 +198,7 @@ export function PerformanceDashboard() {
                       assignment.status === 'in_progress' ? 'outline' : 'destructive'
                     }>
                       {assignment.status === 'evaluated' ? 'Đã đánh giá' :
-                       assignment.status === 'submitted' ? 'Đã nộp báo cáo' :
+                       assignment.status === 'submitted' ? 'Chờ đánh giá' :
                        assignment.status === 'in_progress' ? 'Đang thực hiện' : 'Chưa bắt đầu'}
                     </Badge>
                   </div>
@@ -167,34 +207,36 @@ export function PerformanceDashboard() {
                     <div>
                       <span className="text-gray-500">KPI Target:</span>
                       <div className="font-medium">
-                        {assignment.kpi_target} {assignment.kpi_unit || ''}
+                        {assignment.kpi_target} {assignment.kpi_unit || 'đơn vị'}
                       </div>
                     </div>
                     <div>
                       <span className="text-gray-500">Thực tế:</span>
                       <div className="font-medium">
-                        {latestReport?.actual_quantity || 0} {assignment.kpi_unit || ''}
+                        {latestReport?.actual_quantity || 0} {assignment.kpi_unit || 'đơn vị'}
                       </div>
                     </div>
                     <div>
                       <span className="text-gray-500">Điểm số:</span>
                       <div className="font-medium">
-                        {latestEvaluation?.final_score ? latestEvaluation.final_score.toFixed(1) : 'Chưa đánh giá'}
+                        {latestEvaluation?.final_score ? `${latestEvaluation.final_score.toFixed(1)} điểm` : 'Chưa đánh giá'}
                       </div>
                     </div>
                   </div>
 
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Tiến độ KPI</span>
-                      <span>{kpiProgress.toFixed(1)}%</span>
+                  {assignment.kpi_target > 0 && (
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Tiến độ KPI</span>
+                        <span>{Math.min(kpiProgress, 100).toFixed(1)}%</span>
+                      </div>
+                      <Progress value={Math.min(kpiProgress, 100)} className="h-2" />
                     </div>
-                    <Progress value={Math.min(kpiProgress, 100)} className="h-2" />
-                  </div>
+                  )}
 
                   <div className="flex justify-between text-sm text-gray-500">
                     <span>Chu kỳ: {assignment.performance_cycles?.name || 'N/A'}</span>
-                    <span>Tỷ lệ lương: {assignment.salary_percentage}%</span>
+                    <span>Ngày giao: {new Date(assignment.assigned_at).toLocaleDateString('vi-VN')}</span>
                   </div>
                 </div>
               );

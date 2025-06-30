@@ -9,6 +9,7 @@ import {
   PerformanceEvaluation,
   PerformanceAssignmentWithDetails 
 } from '@/types/performance';
+import { useAuth } from '@/hooks/useAuth';
 
 // Work Groups
 export const useWorkGroups = () => {
@@ -82,19 +83,26 @@ export const useCreatePerformanceCycle = () => {
   });
 };
 
-// Performance Assignments
+// Performance Assignments - For managers
 export const usePerformanceAssignments = (cycleId?: string) => {
+  const { profile } = useAuth();
+  
   return useQuery({
-    queryKey: ['performance-assignments', cycleId],
+    queryKey: ['performance-assignments', cycleId, profile?.employee_id],
     queryFn: async () => {
+      if (!profile?.employee_id) return [];
+
       let query = supabase
         .from('performance_assignments')
         .select(`
           *,
-          performance_cycles!performance_assignments_performance_cycle_id_fkey(id, name, start_date, end_date, status),
-          employees!performance_assignments_employee_id_fkey(id, full_name, employee_code),
-          work_groups!performance_assignments_work_group_id_fkey(id, name)
-        `);
+          performance_cycles!inner(id, name, start_date, end_date, status),
+          employees!inner(id, full_name, employee_code, manager_id),
+          work_groups!inner(id, name),
+          performance_reports(id, actual_quantity, submitted_at),
+          performance_evaluations(id, final_score, evaluated_at)
+        `)
+        .eq('employees.manager_id', profile.employee_id);
       
       if (cycleId) {
         query = query.eq('performance_cycle_id', cycleId);
@@ -106,8 +114,10 @@ export const usePerformanceAssignments = (cycleId?: string) => {
         console.error('Performance assignments query error:', error);
         throw error;
       }
+      
       return data as any[];
-    }
+    },
+    enabled: !!profile?.employee_id
   });
 };
 
@@ -128,6 +138,38 @@ export const useCreatePerformanceAssignment = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['performance-assignments'] });
     }
+  });
+};
+
+// Employee's assignments - For employees to see their own work
+export const useMyPerformanceAssignments = () => {
+  const { profile } = useAuth();
+  
+  return useQuery({
+    queryKey: ['my-performance-assignments', profile?.employee_id],
+    queryFn: async () => {
+      if (!profile?.employee_id) return [];
+
+      const { data, error } = await supabase
+        .from('performance_assignments')
+        .select(`
+          *,
+          performance_cycles!inner(id, name, start_date, end_date, status),
+          work_groups!inner(id, name),
+          performance_reports(id, actual_quantity, report_content, submitted_at),
+          performance_evaluations(id, final_score, comments, evaluated_at)
+        `)
+        .eq('employee_id', profile.employee_id)
+        .order('assigned_at', { ascending: false });
+      
+      if (error) {
+        console.error('My assignments query error:', error);
+        throw error;
+      }
+      
+      return data as any[];
+    },
+    enabled: !!profile?.employee_id
   });
 };
 
@@ -153,6 +195,7 @@ export const useCreatePerformanceReport = () => {
   
   return useMutation({
     mutationFn: async (data: Omit<PerformanceReport, 'id' | 'created_at' | 'updated_at' | 'submitted_at'>) => {
+      // Khi tạo report, cập nhật status assignment thành 'in_progress' hoặc 'submitted'
       const { data: result, error } = await supabase
         .from('performance_reports')
         .insert(data)
@@ -160,11 +203,20 @@ export const useCreatePerformanceReport = () => {
         .single();
       
       if (error) throw error;
+
+      // Cập nhật status của assignment
+      await supabase
+        .from('performance_assignments')
+        .update({ status: 'submitted' })
+        .eq('id', data.performance_assignment_id);
+      
       return result;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['performance-reports', data.performance_assignment_id] });
       queryClient.invalidateQueries({ queryKey: ['performance-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['my-performance-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['performance-dashboard'] });
     }
   });
 };
@@ -198,58 +250,53 @@ export const useCreatePerformanceEvaluation = () => {
         .single();
       
       if (error) throw error;
+
+      // Cập nhật status của assignment thành 'evaluated'
+      await supabase
+        .from('performance_assignments')
+        .update({ status: 'evaluated' })
+        .eq('id', data.performance_assignment_id);
+      
       return result;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['performance-evaluations', data.performance_assignment_id] });
       queryClient.invalidateQueries({ queryKey: ['performance-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['my-performance-assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['performance-dashboard'] });
     }
   });
 };
 
-// Employee's assignments
-export const useMyPerformanceAssignments = () => {
-  return useQuery({
-    queryKey: ['my-performance-assignments'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('performance_assignments')
-        .select(`
-          *,
-          performance_cycles!performance_assignments_performance_cycle_id_fkey(id, name, start_date, end_date, status),
-          work_groups!performance_assignments_work_group_id_fkey(id, name)
-        `)
-        .order('assigned_at', { ascending: false });
-      
-      if (error) throw error;
-      return data as any[];
-    }
-  });
-};
-
-// Dashboard data
+// Dashboard data - For managers to see overview
 export const usePerformanceDashboard = () => {
+  const { profile } = useAuth();
+  
   return useQuery({
-    queryKey: ['performance-dashboard'],
+    queryKey: ['performance-dashboard', profile?.employee_id],
     queryFn: async () => {
-      // Get managed employees assignments
+      if (!profile?.employee_id) return [];
+
       const { data: assignments, error } = await supabase
         .from('performance_assignments')
         .select(`
           *,
-          performance_cycles!performance_assignments_performance_cycle_id_fkey(id, name, start_date, end_date, status),
-          employees!performance_assignments_employee_id_fkey(id, full_name, employee_code),
-          work_groups!performance_assignments_work_group_id_fkey(id, name),
-          performance_reports!performance_reports_performance_assignment_id_fkey(id, actual_quantity, submitted_at),
-          performance_evaluations!performance_evaluations_performance_assignment_id_fkey(id, final_score, evaluated_at)
+          performance_cycles!inner(id, name, start_date, end_date, status),
+          employees!inner(id, full_name, employee_code, manager_id),
+          work_groups!inner(id, name),
+          performance_reports(id, actual_quantity, submitted_at),
+          performance_evaluations(id, final_score, evaluated_at)
         `)
+        .eq('employees.manager_id', profile.employee_id)
         .order('assigned_at', { ascending: false });
       
       if (error) {
         console.error('Dashboard query error:', error);
         throw error;
       }
+      
       return assignments as any[];
-    }
+    },
+    enabled: !!profile?.employee_id
   });
 };
