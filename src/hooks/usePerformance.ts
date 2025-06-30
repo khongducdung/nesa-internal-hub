@@ -91,9 +91,9 @@ export const usePerformanceAssignments = (cycleId?: string) => {
         .from('performance_assignments')
         .select(`
           *,
-          performance_cycles!inner(id, name, start_date, end_date, status),
-          employees!inner(id, full_name, employee_code),
-          work_groups!inner(id, name, salary_percentage)
+          performance_cycles!performance_assignments_performance_cycle_id_fkey(id, name, start_date, end_date, status),
+          employees!performance_assignments_employee_id_fkey(id, full_name, employee_code),
+          work_groups!performance_assignments_work_group_id_fkey(id, name)
         `);
       
       if (cycleId) {
@@ -102,7 +102,10 @@ export const usePerformanceAssignments = (cycleId?: string) => {
       
       const { data, error } = await query.order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Performance assignments query error:', error);
+        throw error;
+      }
       return data as any[];
     }
   });
@@ -213,8 +216,8 @@ export const useMyPerformanceAssignments = () => {
         .from('performance_assignments')
         .select(`
           *,
-          performance_cycles!inner(id, name, start_date, end_date, status),
-          work_groups!inner(id, name, salary_percentage)
+          performance_cycles!performance_assignments_performance_cycle_id_fkey(id, name, start_date, end_date, status),
+          work_groups!performance_assignments_work_group_id_fkey(id, name)
         `)
         .order('assigned_at', { ascending: false });
       
@@ -234,15 +237,18 @@ export const usePerformanceDashboard = () => {
         .from('performance_assignments')
         .select(`
           *,
-          performance_cycles!inner(id, name, start_date, end_date, status),
-          employees!inner(id, full_name, employee_code),
-          work_groups!inner(id, name, salary_percentage),
-          performance_reports(id, actual_quantity, submitted_at),
-          performance_evaluations(id, final_score, evaluated_at)
+          performance_cycles!performance_assignments_performance_cycle_id_fkey(id, name, start_date, end_date, status),
+          employees!performance_assignments_employee_id_fkey(id, full_name, employee_code),
+          work_groups!performance_assignments_work_group_id_fkey(id, name),
+          performance_reports!performance_reports_performance_assignment_id_fkey(id, actual_quantity, submitted_at),
+          performance_evaluations!performance_evaluations_performance_assignment_id_fkey(id, final_score, evaluated_at)
         `)
         .order('assigned_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Dashboard query error:', error);
+        throw error;
+      }
       return assignments as any[];
     }
   });
