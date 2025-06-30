@@ -120,3 +120,13 @@ export type CompetencyFrameworkWithDetails = CompetencyFramework & {
     name: string;
   } | null;
 };
+
+export type WorkGroup = Database['public']['Tables']['work_groups']['Row'];
+export type PerformanceCycle = Database['public']['Tables']['performance_cycles']['Row'];
+export type PerformanceAssignment = Database['public']['Tables']['performance_assignments']['Row'];
+export type PerformanceReport = Database['public']['Tables']['performance_reports']['Row'];
+export type PerformanceEvaluation = Database['public']['Tables']['performance_evaluations']['Row'];
+
+export type PayrollPeriod = Database['public']['Tables']['payroll_periods']['Row'];
+export type PayrollDetail = Database['public']['Tables']['payroll_details']['Row'];
+export type SalaryConfig = Database['public']['Tables']['salary_configs']['Row'];

@@ -1316,6 +1316,222 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_assignments: {
+        Row: {
+          assigned_at: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          employee_id: string | null
+          id: string
+          kpi_target: number
+          kpi_unit: string | null
+          performance_cycle_id: string | null
+          salary_percentage: number
+          status: string | null
+          updated_at: string | null
+          work_group_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          employee_id?: string | null
+          id?: string
+          kpi_target: number
+          kpi_unit?: string | null
+          performance_cycle_id?: string | null
+          salary_percentage: number
+          status?: string | null
+          updated_at?: string | null
+          work_group_id?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          employee_id?: string | null
+          id?: string
+          kpi_target?: number
+          kpi_unit?: string | null
+          performance_cycle_id?: string | null
+          salary_percentage?: number
+          status?: string | null
+          updated_at?: string | null
+          work_group_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_assignments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_assignments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_assignments_performance_cycle_id_fkey"
+            columns: ["performance_cycle_id"]
+            isOneToOne: false
+            referencedRelation: "performance_cycles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_assignments_work_group_id_fkey"
+            columns: ["work_group_id"]
+            isOneToOne: false
+            referencedRelation: "work_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_cycles: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          end_date: string
+          id: string
+          name: string
+          start_date: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          end_date: string
+          id?: string
+          name: string
+          start_date: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          end_date?: string
+          id?: string
+          name?: string
+          start_date?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_cycles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_evaluations: {
+        Row: {
+          comments: string | null
+          created_at: string | null
+          evaluated_at: string | null
+          evaluated_by: string
+          final_score: number | null
+          id: string
+          performance_assignment_id: string | null
+          quality_percentage: number | null
+          quality_rating: number | null
+          quantity_score: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string | null
+          evaluated_at?: string | null
+          evaluated_by: string
+          final_score?: number | null
+          id?: string
+          performance_assignment_id?: string | null
+          quality_percentage?: number | null
+          quality_rating?: number | null
+          quantity_score?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string | null
+          evaluated_at?: string | null
+          evaluated_by?: string
+          final_score?: number | null
+          id?: string
+          performance_assignment_id?: string | null
+          quality_percentage?: number | null
+          quality_rating?: number | null
+          quantity_score?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_evaluations_evaluated_by_fkey"
+            columns: ["evaluated_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "performance_evaluations_performance_assignment_id_fkey"
+            columns: ["performance_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "performance_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_reports: {
+        Row: {
+          actual_quantity: number | null
+          attachments: Json | null
+          created_at: string | null
+          id: string
+          performance_assignment_id: string | null
+          report_content: string | null
+          submitted_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          actual_quantity?: number | null
+          attachments?: Json | null
+          created_at?: string | null
+          id?: string
+          performance_assignment_id?: string | null
+          report_content?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          actual_quantity?: number | null
+          attachments?: Json | null
+          created_at?: string | null
+          id?: string
+          performance_assignment_id?: string | null
+          report_content?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_reports_performance_assignment_id_fkey"
+            columns: ["performance_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "performance_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       performance_reviews: {
         Row: {
           comments: string | null
@@ -2335,6 +2551,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      work_groups: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          salary_percentage: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          salary_percentage: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          salary_percentage?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_groups_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       work_history: {
         Row: {
