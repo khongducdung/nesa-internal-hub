@@ -69,8 +69,8 @@ export function LoginPage() {
       });
     } else {
       toast({
-        title: "Email đã được gửi",
-        description: "Vui lòng kiểm tra email để đặt lại mật khẩu. Yêu cầu đã được gửi đến Admin.",
+        title: "NESA Groups - cấp lại mật khẩu",
+        description: "Em ơi, não cá vàng quá, sau nhớ đổi mật khẩu giống như mật khẩu tài khoản ngân hàng đó nhé. Đây là mật khẩu của em để đăng nhập vào hệ thống.",
       });
       setShowResetForm(false);
       setResetEmail('');
@@ -81,17 +81,17 @@ export function LoginPage() {
 
   if (showResetForm) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4">
         <div className="w-full max-w-md">
-          <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
+          <Card className="shadow-xl border-0 bg-white backdrop-blur-sm">
             <CardHeader className="text-center space-y-6 pb-8">
               <div className="flex justify-center mb-6">
                 <div className="relative">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg">
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
                     <img 
-                      src="/lovable-uploads/e6c395cd-68c2-46ec-8fef-ddaecbf68791.png" 
+                      src="/lovable-uploads/ebcd3d17-d92b-4d28-90a3-1cec952be13a.png" 
                       alt="NESA Logo" 
-                      className="h-12 w-auto filter brightness-0 invert"
+                      className="h-12 w-auto"
                     />
                   </div>
                 </div>
@@ -127,7 +127,7 @@ export function LoginPage() {
                 <div className="space-y-3">
                   <Button 
                     type="submit" 
-                    className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 shadow-lg"
+                    className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg"
                     disabled={isResetLoading}
                   >
                     {isResetLoading ? (
@@ -159,28 +159,27 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4">
       <div className="w-full max-w-md">
-        <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
+        <Card className="shadow-xl border-0 bg-white backdrop-blur-sm">
           <CardHeader className="text-center space-y-6 pb-8">
             <div className="flex justify-center mb-6">
               <div className="relative">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl flex items-center justify-center shadow-2xl">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl">
                   <img 
-                    src="/lovable-uploads/e6c395cd-68c2-46ec-8fef-ddaecbf68791.png" 
+                    src="/lovable-uploads/ebcd3d17-d92b-4d28-90a3-1cec952be13a.png" 
                     alt="NESA Logo" 
-                    className="h-14 w-auto filter brightness-0 invert"
+                    className="h-14 w-auto"
                   />
                 </div>
                 <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg"></div>
               </div>
             </div>
             <div>
-              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent mb-3">
+              <CardTitle className="text-3xl font-bold text-gray-800 mb-3">
                 Chào mừng đến với NESA
               </CardTitle>
               <p className="text-gray-600 text-lg font-medium">Nền tảng quản trị nội bộ</p>
-              <p className="text-sm text-gray-500 mt-2">Đăng nhập để tiếp tục</p>
             </div>
           </CardHeader>
           
@@ -244,7 +243,7 @@ export function LoginPage() {
               
               <Button 
                 type="submit" 
-                className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 shadow-lg transform transition-all duration-200 hover:scale-[1.02]"
+                className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg transform transition-all duration-200 hover:scale-[1.02]"
                 disabled={isLoading}
               >
                 {isLoading ? (
