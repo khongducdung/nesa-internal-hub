@@ -11,3 +11,11 @@ export type KPI = Database['public']['Tables']['kpis']['Row'];
 export type SystemRole = Database['public']['Enums']['system_role'];
 export type EmployeeLevel = Database['public']['Enums']['employee_level'];
 export type Status = Database['public']['Enums']['status'];
+
+// Extended types for joined data
+export type ProcessWithDetails = Process & {
+  departments: Department | null;
+  positions: Position | null;
+  assigned_user: Profile | null;
+  created_by_user: Profile | null;
+};
