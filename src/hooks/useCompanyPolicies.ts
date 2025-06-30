@@ -8,13 +8,15 @@ export interface CompanyPolicy {
   title: string;
   content: string;
   category: string;
-  status: 'active' | 'inactive' | 'draft';
+  status: 'active' | 'inactive' | 'draft' | 'archived';
   effective_date: string;
   expiry_date?: string;
   created_by: string;
   updated_by?: string;
   created_at: string;
   updated_at: string;
+  description?: string;
+  version?: string;
 }
 
 export function useCompanyPolicies() {

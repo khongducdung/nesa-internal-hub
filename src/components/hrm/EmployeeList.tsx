@@ -6,7 +6,7 @@ import { useEmployees } from '@/hooks/useEmployees';
 export function EmployeeList() {
   const { data: employees, isLoading } = useEmployees();
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | undefined) => {
     switch (status) {
       case 'active':
         return <Badge className="status-active">Hoạt động</Badge>;
@@ -35,7 +35,7 @@ export function EmployeeList() {
             <div className="flex-1">
               <div className="flex items-center space-x-3 mb-2">
                 <h3 className="font-semibold text-blue-900">{employee.full_name}</h3>
-                {getStatusBadge(employee.status || 'active')}
+                {getStatusBadge(employee.work_status || 'active')}
               </div>
               <div className="text-sm text-blue-700 space-y-1">
                 <p>Mã NV: <span className="font-medium">{employee.employee_code}</span></p>
@@ -43,7 +43,7 @@ export function EmployeeList() {
                 {employee.phone && <p>SĐT: {employee.phone}</p>}
                 {employee.departments && <p>Phòng ban: {employee.departments.name}</p>}
                 {employee.positions && <p>Vị trí: {employee.positions.name}</p>}
-                <p>Ngày tham gia: {new Date(employee.hire_date).toLocaleDateString('vi-VN')}</p>
+                {employee.hire_date && <p>Ngày tham gia: {new Date(employee.hire_date).toLocaleDateString('vi-VN')}</p>}
               </div>
             </div>
           </div>

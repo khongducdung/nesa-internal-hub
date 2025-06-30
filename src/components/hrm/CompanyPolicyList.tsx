@@ -54,10 +54,10 @@ export function CompanyPolicyList() {
                 {getStatusBadge(policy.status)}
               </div>
               <div className="text-sm text-blue-700 space-y-1">
-                {policy.description && <p className="line-clamp-2">{policy.description}</p>}
+                {policy.content && <p className="line-clamp-2">{policy.content.substring(0, 100)}...</p>}
                 <div className="flex items-center space-x-4">
-                  <span>Phiên bản: {policy.version}</span>
                   <span>Ngày hiệu lực: {new Date(policy.effective_date).toLocaleDateString('vi-VN')}</span>
+                  {policy.expiry_date && <span>Ngày hết hạn: {new Date(policy.expiry_date).toLocaleDateString('vi-VN')}</span>}
                 </div>
                 <p>Cập nhật: {new Date(policy.updated_at).toLocaleDateString('vi-VN')}</p>
               </div>
