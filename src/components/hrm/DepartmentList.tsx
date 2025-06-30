@@ -110,7 +110,7 @@ export function DepartmentList() {
                           <DialogTitle>Chỉnh sửa phòng ban</DialogTitle>
                         </DialogHeader>
                         <DepartmentForm 
-                          department={editingDepartment} 
+                          departmentId={editingDepartment?.id} 
                           onClose={() => setEditingDepartment(null)} 
                         />
                       </DialogContent>

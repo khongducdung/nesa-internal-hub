@@ -16,8 +16,8 @@ export function AttendanceList() {
   const [editingAttendance, setEditingAttendance] = useState(null);
 
   const filteredAttendance = attendance?.filter(record =>
-    record.employee?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.employee?.employee_code?.toLowerCase().includes(searchTerm.toLowerCase())
+    record.employees?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.employees?.employee_code?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusColor = (status: string) => {
@@ -109,8 +109,8 @@ export function AttendanceList() {
                       <div className="flex items-center">
                         <User className="h-5 w-5 mr-2 text-gray-400" />
                         <div>
-                          <h3 className="font-semibold">{record.employee?.full_name || 'N/A'}</h3>
-                          <p className="text-sm text-gray-600">{record.employee?.employee_code || 'N/A'}</p>
+                          <h3 className="font-semibold">{record.employees?.full_name || 'N/A'}</h3>
+                          <p className="text-sm text-gray-600">{record.employees?.employee_code || 'N/A'}</p>
                         </div>
                       </div>
                       <div className="flex items-center">
@@ -133,7 +133,7 @@ export function AttendanceList() {
                             <DialogTitle>Chỉnh sửa chấm công</DialogTitle>
                           </DialogHeader>
                           <AttendanceForm 
-                            attendance={editingAttendance} 
+                            attendanceId={editingAttendance?.id} 
                             onClose={() => setEditingAttendance(null)} 
                           />
                         </DialogContent>

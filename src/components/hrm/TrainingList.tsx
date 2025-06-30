@@ -26,6 +26,7 @@ export function TrainingList() {
       case 'active': return 'bg-green-100 text-green-800';
       case 'completed': return 'bg-blue-100 text-blue-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -35,6 +36,7 @@ export function TrainingList() {
       case 'active': return 'Đang diễn ra';
       case 'completed': return 'Hoàn thành';
       case 'cancelled': return 'Đã hủy';
+      case 'pending': return 'Chờ bắt đầu';
       default: return 'Chưa xác định';
     }
   };
@@ -45,7 +47,7 @@ export function TrainingList() {
         <CardHeader>
           <CardTitle className="flex items-center">
             <GraduationCap className="h-5 w-5 mr-2" />
-            Danh sách đào tạo
+            Chương trình đào tạo
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -63,7 +65,7 @@ export function TrainingList() {
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center">
             <GraduationCap className="h-5 w-5 mr-2" />
-            Danh sách đào tạo ({programs?.length || 0})
+            Chương trình đào tạo ({programs?.length || 0})
           </div>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
@@ -99,7 +101,7 @@ export function TrainingList() {
             {searchTerm ? 'Không tìm thấy chương trình đào tạo nào' : 'Chưa có chương trình đào tạo nào'}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-4">
             {filteredPrograms?.map((program) => (
               <Card key={program.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
@@ -110,47 +112,59 @@ export function TrainingList() {
                         <p className="text-sm text-gray-600 mt-1">{program.description}</p>
                       )}
                     </div>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="ghost" size="sm" onClick={() => setEditingProgram(program)}>
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                          <DialogTitle>Chỉnh sửa chương trình đào tạo</DialogTitle>
-                        </DialogHeader>
-                        <TrainingProgramForm 
-                          program={editingProgram} 
-                          onClose={() => setEditingProgram(null)} 
-                        />
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-
-                  <div className="space-y-2">
-                    {program.trainer && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <User className="h-4 w-4 mr-2" />
-                        Giảng viên: {program.trainer}
-                      </div>
-                    )}
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      {new Date(program.start_date).toLocaleDateString('vi-VN')} - {new Date(program.end_date).toLocaleDateString('vi-VN')}
+                    <div className="flex items-center space-x-2">
+                      <Badge className={getStatusColor(program.status)}>
+                        {getStatusLabel(program.status)}
+                      </Badge>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="ghost" size="sm" onClick={() => setEditingProgram(program)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                          <DialogHeader>
+                            <DialogTitle>Chỉnh sửa chương trình</DialogTitle>
+                          </DialogHeader>
+                          <TrainingProgramForm 
+                            programId={editingProgram?.id}
+                            onClose={() => setEditingProgram(null)} 
+                          />
+                        </DialogContent>
+                      </Dialog>
                     </div>
-                    {program.max_participants && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Users className="h-4 w-4 mr-2" />
-                        Tối đa: {program.max_participants} người
-                      </div>
-                    )}
                   </div>
 
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                    <Badge className={getStatusColor(program.status)}>
-                      {getStatusLabel(program.status)}
-                    </Badge>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                      <div>
+                        <div className="text-gray-500">Thời gian</div>
+                        <div className="font-medium">
+                          {new Date(program.start_date).toLocaleDateString('vi-VN')} - {new Date(program.end_date).toLocaleDateString('vi-VN')}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {program.trainer && (
+                      <div className="flex items-center">
+                        <User className="h-4 w-4 mr-2 text-gray-400" />
+                        <div>
+                          <div className="text-gray-500">Giảng viên</div>
+                          <div className="font-medium">{program.trainer}</div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {program.max_participants && (
+                      <div className="flex items-center">
+                        <Users className="h-4 w-4 mr-2 text-gray-400" />
+                        <div>
+                          <div className="text-gray-500">Số lượng</div>
+                          <div className="font-medium">Tối đa {program.max_participants} người</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

@@ -120,7 +120,7 @@ export function PositionList() {
                           <DialogTitle>Chỉnh sửa vị trí</DialogTitle>
                         </DialogHeader>
                         <PositionForm 
-                          position={editingPosition} 
+                          positionId={editingPosition?.id} 
                           onClose={() => setEditingPosition(null)} 
                         />
                       </DialogContent>

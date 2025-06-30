@@ -120,7 +120,7 @@ export function EmployeeList() {
                             <DialogTitle>Chỉnh sửa nhân viên</DialogTitle>
                           </DialogHeader>
                           <EmployeeForm 
-                            employee={editingEmployee} 
+                            employeeId={editingEmployee?.id} 
                             onClose={() => setEditingEmployee(null)} 
                           />
                         </DialogContent>
