@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -64,19 +63,23 @@ export function WorkShiftForm({ onClose, editingShift }: WorkShiftFormProps) {
 
   const onSubmit = async (data: WorkShiftFormData) => {
     try {
+      const shiftData = {
+        name: data.name,
+        start_time: data.start_time,
+        end_time: data.end_time,
+        break_duration_minutes: data.break_duration_minutes,
+        days_of_week: data.days_of_week,
+        attendance_setting_id: data.attendance_setting_id || null,
+        is_active: data.is_active,
+      };
+
       if (editingShift) {
         await updateMutation.mutateAsync({
           id: editingShift.id,
-          data: {
-            ...data,
-            attendance_setting_id: data.attendance_setting_id || null,
-          },
+          data: shiftData,
         });
       } else {
-        await createMutation.mutateAsync({
-          ...data,
-          attendance_setting_id: data.attendance_setting_id || null,
-        });
+        await createMutation.mutateAsync(shiftData);
       }
       onClose();
     } catch (error) {
