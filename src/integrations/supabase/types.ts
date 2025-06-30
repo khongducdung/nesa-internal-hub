@@ -312,6 +312,7 @@ export type Database = {
       employees: {
         Row: {
           address: string | null
+          auth_user_id: string | null
           avatar_url: string | null
           created_at: string | null
           department_id: string | null
@@ -334,6 +335,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          auth_user_id?: string | null
           avatar_url?: string | null
           created_at?: string | null
           department_id?: string | null
@@ -356,6 +358,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          auth_user_id?: string | null
           avatar_url?: string | null
           created_at?: string | null
           department_id?: string | null
@@ -870,6 +873,7 @@ export type Database = {
           department_id: string | null
           email: string
           employee_code: string | null
+          employee_id: string | null
           employee_level: Database["public"]["Enums"]["employee_level"] | null
           full_name: string
           hire_date: string | null
@@ -886,6 +890,7 @@ export type Database = {
           department_id?: string | null
           email: string
           employee_code?: string | null
+          employee_id?: string | null
           employee_level?: Database["public"]["Enums"]["employee_level"] | null
           full_name: string
           hire_date?: string | null
@@ -902,6 +907,7 @@ export type Database = {
           department_id?: string | null
           email?: string
           employee_code?: string | null
+          employee_id?: string | null
           employee_level?: Database["public"]["Enums"]["employee_level"] | null
           full_name?: string
           hire_date?: string | null
@@ -918,6 +924,13 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
           {

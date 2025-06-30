@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -21,6 +20,7 @@ export interface EmployeeWithDetails {
   profile_id?: string;
   manager_id?: string;
   avatar_url?: string;
+  auth_user_id?: string;
   created_at: string;
   updated_at: string;
   departments?: {
@@ -43,7 +43,6 @@ export const useEmployees = () => {
     queryFn: async (): Promise<EmployeeWithDetails[]> => {
       console.log('Fetching employees...');
       
-      // First, get basic employee data
       const { data: employeeData, error: employeeError } = await supabase
         .from('employees')
         .select('*')
@@ -54,17 +53,14 @@ export const useEmployees = () => {
         throw employeeError;
       }
 
-      // Then get departments
       const { data: departmentData } = await supabase
         .from('departments')
         .select('id, name');
 
-      // Then get positions
       const { data: positionData } = await supabase
         .from('positions')
         .select('id, name');
 
-      // Combine the data with proper type casting
       const enrichedEmployees: EmployeeWithDetails[] = (employeeData || []).map(employee => ({
         ...employee,
         employee_level: (employee.employee_level as 'level_1' | 'level_2' | 'level_3') || 'level_3',
@@ -75,7 +71,7 @@ export const useEmployees = () => {
         positions: employee.position_id 
           ? positionData?.find(pos => pos.id === employee.position_id) || null
           : null,
-        manager: null, // We can add manager lookup later if needed
+        manager: null,
       }));
 
       console.log('Employees fetched successfully:', enrichedEmployees);

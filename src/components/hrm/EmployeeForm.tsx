@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,6 +5,7 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,6 +27,8 @@ const employeeFormSchema = z.object({
   emergency_contact_name: z.string().optional(),
   emergency_contact_phone: z.string().optional(),
   notes: z.string().optional(),
+  create_account: z.boolean().default(false),
+  password: z.string().optional(),
 });
 
 type EmployeeFormData = z.infer<typeof employeeFormSchema>;
@@ -48,8 +50,11 @@ export function EmployeeForm({ onClose, employeeId }: EmployeeFormProps) {
     defaultValues: {
       employee_level: 'level_3',
       work_status: 'active',
+      create_account: false,
     },
   });
+
+  const createAccount = form.watch('create_account');
 
   React.useEffect(() => {
     loadDepartmentsAndPositions();
@@ -121,6 +126,28 @@ export function EmployeeForm({ onClose, employeeId }: EmployeeFormProps) {
   const onSubmit = async (data: EmployeeFormData) => {
     setIsLoading(true);
     try {
+      let authUserId = null;
+
+      // Tạo tài khoản đăng nhập nếu được yêu cầu
+      if (data.create_account && data.password && !employeeId) {
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+          email: data.email,
+          password: data.password,
+          email_confirm: true,
+          user_metadata: {
+            full_name: data.full_name,
+            employee_code: data.employee_code,
+          }
+        });
+
+        if (authError) {
+          throw new Error(`Lỗi tạo tài khoản: ${authError.message}`);
+        }
+
+        authUserId = authData.user?.id;
+      }
+
+      // Chuẩn bị dữ liệu employee
       const employeeData = {
         employee_code: data.employee_code,
         full_name: data.full_name,
@@ -136,6 +163,7 @@ export function EmployeeForm({ onClose, employeeId }: EmployeeFormProps) {
         emergency_contact_name: data.emergency_contact_name || null,
         emergency_contact_phone: data.emergency_contact_phone || null,
         notes: data.notes || null,
+        auth_user_id: authUserId,
       };
 
       if (employeeId) {
@@ -159,7 +187,7 @@ export function EmployeeForm({ onClose, employeeId }: EmployeeFormProps) {
         
         toast({
           title: 'Thành công',
-          description: 'Thêm nhân viên mới thành công',
+          description: `Thêm nhân viên mới thành công${authUserId ? ' và tạo tài khoản đăng nhập' : ''}`,
         });
       }
 
@@ -362,6 +390,51 @@ export function EmployeeForm({ onClose, employeeId }: EmployeeFormProps) {
             )}
           />
         </div>
+
+        {!employeeId && (
+          <div className="md:col-span-2">
+            <FormField
+              control={form.control}
+              name="create_account"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Tạo tài khoản đăng nhập cho nhân viên
+                    </FormLabel>
+                    <p className="text-sm text-muted-foreground">
+                      Nhân viên sẽ có thể đăng nhập vào hệ thống bằng email và mật khẩu
+                    </p>
+                  </div>
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
+
+        {createAccount && !employeeId && (
+          <div className="md:col-span-2">
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mật khẩu đăng nhập *</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="Nhập mật khẩu cho nhân viên" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
 
         <FormField
           control={form.control}
