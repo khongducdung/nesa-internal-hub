@@ -44,10 +44,16 @@ export function useCreatePosition() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (positionData: Omit<Position, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (positionData: Omit<Position, 'id' | 'created_at' | 'updated_at' | 'departments'>) => {
       const { data, error } = await supabase
         .from('positions')
-        .insert(positionData)
+        .insert({
+          name: positionData.name,
+          description: positionData.description,
+          department_id: positionData.department_id,
+          level: positionData.level,
+          status: positionData.status,
+        })
         .select()
         .single();
 

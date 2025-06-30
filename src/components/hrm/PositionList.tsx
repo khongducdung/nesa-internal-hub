@@ -1,10 +1,17 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Edit, Trash2 } from 'lucide-react';
 import { usePositions } from '@/hooks/usePositions';
+import { useDeletePosition } from '@/hooks/usePositionMutations';
+import { PositionEditDialog } from './PositionEditDialog';
 
 export function PositionList() {
   const { data: positions, isLoading } = usePositions();
+  const deletePosition = useDeletePosition();
+  const [editingPosition, setEditingPosition] = useState<string | null>(null);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -32,6 +39,10 @@ export function PositionList() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    await deletePosition.mutateAsync(id);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -41,25 +52,73 @@ export function PositionList() {
   }
 
   return (
-    <div className="space-y-4">
-      {positions?.map((position) => (
-        <div key={position.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-2">
-                <h3 className="font-semibold">{position.name}</h3>
-                {getLevelBadge(position.level)}
-                {getStatusBadge(position.status || 'active')}
+    <>
+      <div className="space-y-4">
+        {positions?.map((position) => (
+          <div key={position.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center space-x-3 mb-2">
+                  <h3 className="font-semibold">{position.name}</h3>
+                  {getLevelBadge(position.level)}
+                  {getStatusBadge(position.status || 'active')}
+                </div>
+                <div className="text-sm text-gray-600 space-y-1">
+                  {position.description && (
+                    <div 
+                      className="prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: position.description }}
+                    />
+                  )}
+                  {position.departments && <p>Phòng ban: {position.departments.name}</p>}
+                  <p>Ngày tạo: {new Date(position.created_at).toLocaleDateString('vi-VN')}</p>
+                </div>
               </div>
-              <div className="text-sm text-gray-600 space-y-1">
-                {position.description && <p>{position.description}</p>}
-                {position.departments && <p>Phòng ban: {position.departments.name}</p>}
-                <p>Ngày tạo: {new Date(position.created_at).toLocaleDateString('vi-VN')}</p>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingPosition(position.id)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Bạn có chắc chắn muốn xóa vị trí "{position.name}" không? Hành động này không thể hoàn tác.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Hủy</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleDelete(position.id)}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        Xóa
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+
+      {editingPosition && (
+        <PositionEditDialog
+          positionId={editingPosition}
+          open={!!editingPosition}
+          onClose={() => setEditingPosition(null)}
+        />
+      )}
+    </>
   );
 }

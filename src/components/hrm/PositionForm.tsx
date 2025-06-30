@@ -5,9 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { useDepartments } from '@/hooks/useDepartments';
 import { useCreatePosition } from '@/hooks/usePositions';
 
@@ -38,16 +38,18 @@ export function PositionForm({ onClose }: PositionFormProps) {
   });
 
   const onSubmit = async (data: PositionFormData) => {
-    const positionData = {
-      name: data.name,
-      description: data.description,
-      department_id: data.department_id,
-      level: data.level,
-      status: data.status,
-    };
-
-    await createPosition.mutateAsync(positionData);
-    onClose();
+    try {
+      await createPosition.mutateAsync({
+        name: data.name,
+        description: data.description || '',
+        department_id: data.department_id || null,
+        level: data.level,
+        status: data.status,
+      });
+      onClose();
+    } catch (error) {
+      console.error('Error creating position:', error);
+    }
   };
 
   return (
@@ -73,7 +75,7 @@ export function PositionForm({ onClose }: PositionFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Phòng ban</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || ""}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn phòng ban" />
@@ -99,7 +101,7 @@ export function PositionForm({ onClose }: PositionFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Cấp độ</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn cấp độ" />
@@ -122,7 +124,7 @@ export function PositionForm({ onClose }: PositionFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Trạng thái</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn trạng thái" />
@@ -146,7 +148,11 @@ export function PositionForm({ onClose }: PositionFormProps) {
             <FormItem>
               <FormLabel>Mô tả</FormLabel>
               <FormControl>
-                <Textarea placeholder="Mô tả về vị trí công việc..." {...field} />
+                <RichTextEditor 
+                  value={field.value || ''} 
+                  onChange={field.onChange}
+                  placeholder="Mô tả về vị trí công việc..."
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
