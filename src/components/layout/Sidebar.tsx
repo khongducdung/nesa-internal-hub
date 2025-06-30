@@ -1,103 +1,78 @@
-
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { 
-  Users, 
-  Building2, 
-  Settings, 
-  LogOut, 
-  X,
-  Home,
-  FileText,
-  TrendingUp,
-  Target,
-  BarChart3
-} from 'lucide-react';
+import { Users, Building2, Settings, LogOut, X, Home, FileText, TrendingUp, Target, BarChart3 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-
 interface SidebarProps {
   isOpen: boolean;
   toggleSidebar: () => void;
 }
-
-export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
-  const { signOut, profile, isSuperAdmin, isAdmin } = useAuth();
+export function Sidebar({
+  isOpen,
+  toggleSidebar
+}: SidebarProps) {
+  const {
+    signOut,
+    profile,
+    isSuperAdmin,
+    isAdmin
+  } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
-  const menuItems = [
-    { 
-      icon: Home, 
-      label: 'Dashboard', 
-      path: '/dashboard',
-      access: 'all'
-    },
-    { 
-      icon: Users, 
-      label: 'Quản lý nhân sự', 
-      path: '/hrm',
-      access: 'admin'
-    },
-    { 
-      icon: FileText, 
-      label: 'Quản lý quy trình', 
-      path: '/processes',
-      access: 'admin'
-    },
-    { 
-      icon: TrendingUp, 
-      label: 'Đánh giá hiệu suất', 
-      path: '/performance',
-      access: 'all'
-    },
-    { 
-      icon: Target, 
-      label: 'OKR', 
-      path: '/okr',
-      access: 'all'
-    },
-    { 
-      icon: BarChart3, 
-      label: 'KPI', 
-      path: '/kpi',
-      access: 'all'
-    },
-    { 
-      icon: Settings, 
-      label: 'Cài đặt hệ thống', 
-      path: '/settings',
-      access: 'super_admin'
-    }
-  ];
-
+  const menuItems = [{
+    icon: Home,
+    label: 'Dashboard',
+    path: '/dashboard',
+    access: 'all'
+  }, {
+    icon: Users,
+    label: 'Quản lý nhân sự',
+    path: '/hrm',
+    access: 'admin'
+  }, {
+    icon: FileText,
+    label: 'Quản lý quy trình',
+    path: '/processes',
+    access: 'admin'
+  }, {
+    icon: TrendingUp,
+    label: 'Đánh giá hiệu suất',
+    path: '/performance',
+    access: 'all'
+  }, {
+    icon: Target,
+    label: 'OKR',
+    path: '/okr',
+    access: 'all'
+  }, {
+    icon: BarChart3,
+    label: 'KPI',
+    path: '/kpi',
+    access: 'all'
+  }, {
+    icon: Settings,
+    label: 'Cài đặt hệ thống',
+    path: '/settings',
+    access: 'super_admin'
+  }];
   const handleNavigation = (path: string) => {
     navigate(path);
     if (window.innerWidth < 1024) {
       toggleSidebar();
     }
   };
-
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
   };
-
   const hasAccess = (access: string) => {
     if (access === 'all') return true;
     if (access === 'admin') return isAdmin || isSuperAdmin;
     if (access === 'super_admin') return isSuperAdmin;
     return false;
   };
-
-  return (
-    <>
+  return <>
       {/* Mobile overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={toggleSidebar}
-        />
-      )}
+      {isOpen && <div className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" onClick={toggleSidebar} />}
 
       {/* Sidebar */}
       <div className={`
@@ -118,73 +93,34 @@ export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
             </div>
           </div>
           
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={toggleSidebar}
-            className="lg:hidden text-white hover:bg-white/20"
-          >
+          <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden text-white hover:bg-white/20">
             <X className="h-5 w-5" />
           </Button>
         </div>
 
         {/* User Info */}
-        <div className="p-4 border-b border-gray-100 bg-gray-50">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-sm font-bold text-white">
-                {profile?.full_name?.charAt(0) || 'U'}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">
-                {profile?.full_name || 'Người dùng'}
-              </p>
-              <p className="text-xs text-gray-500 truncate">
-                {isSuperAdmin ? 'Super Admin' : isAdmin ? 'Admin' : 'Nhân viên'}
-              </p>
-            </div>
-          </div>
-        </div>
+        
 
         {/* Navigation Menu */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {menuItems.map((item) => {
-            if (!hasAccess(item.access)) return null;
-            
-            const isActive = location.pathname === item.path;
-            const Icon = item.icon;
-            
-            return (
-              <Button
-                key={item.path}
-                variant="ghost"
-                className={`w-full justify-start space-x-3 h-11 text-left ${
-                  isActive 
-                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600 font-medium' 
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-                onClick={() => handleNavigation(item.path)}
-              >
+          {menuItems.map(item => {
+          if (!hasAccess(item.access)) return null;
+          const isActive = location.pathname === item.path;
+          const Icon = item.icon;
+          return <Button key={item.path} variant="ghost" className={`w-full justify-start space-x-3 h-11 text-left ${isActive ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600 font-medium' : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'}`} onClick={() => handleNavigation(item.path)}>
                 <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
                 <span className="text-sm">{item.label}</span>
-              </Button>
-            );
-          })}
+              </Button>;
+        })}
         </nav>
 
         {/* Sign Out */}
         <div className="p-4 border-t border-gray-200">
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start space-x-3 h-11 text-gray-700 hover:bg-red-50 hover:text-red-600"
-            onClick={handleSignOut}
-          >
+          <Button variant="ghost" className="w-full justify-start space-x-3 h-11 text-gray-700 hover:bg-red-50 hover:text-red-600" onClick={handleSignOut}>
             <LogOut className="h-5 w-5" />
             <span className="text-sm">Đăng xuất</span>
           </Button>
         </div>
       </div>
-    </>
-  );
+    </>;
 }
