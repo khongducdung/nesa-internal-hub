@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface ProcessTemplate {
   id: string;
@@ -60,10 +61,29 @@ export const useProcessTemplates = () => {
 export const useCreateProcessTemplate = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (newTemplate: Omit<ProcessTemplate, 'id' | 'created_at' | 'updated_at'>) => {
-      // Get category name from category_id
+    mutationFn: async (newTemplate: Omit<ProcessTemplate, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => {
+      // Kiểm tra user đã đăng nhập chưa
+      if (!user) {
+        throw new Error('Bạn cần đăng nhập để thực hiện chức năng này');
+      }
+
+      // Validate dữ liệu đầu vào
+      if (!newTemplate.name || newTemplate.name.trim() === '') {
+        throw new Error('Tiêu đề tài liệu không được để trống');
+      }
+
+      if (!newTemplate.category_id) {
+        throw new Error('Vui lòng chọn danh mục cho tài liệu');
+      }
+
+      if (!newTemplate.content || newTemplate.content.trim() === '') {
+        throw new Error('Nội dung hướng dẫn không được để trống');
+      }
+
+      // Lấy thông tin category để có category name
       const { data: categoryData, error: categoryError } = await supabase
         .from('process_categories')
         .select('name')
@@ -78,15 +98,20 @@ export const useCreateProcessTemplate = () => {
         throw new Error('Danh mục không tồn tại');
       }
 
-      // Add the category name to the template
-      const templateWithCategory = {
+      // Chuẩn bị dữ liệu để insert
+      const templateData = {
         ...newTemplate,
-        category: categoryData.name
+        category: categoryData.name,
+        created_by: user.id, // Sử dụng user.id thay vì UUID cố định
+        is_active: true,
+        version: 1
       };
+
+      console.log('Creating template with data:', templateData);
 
       const { data, error } = await supabase
         .from('process_templates')
-        .insert([templateWithCategory])
+        .insert([templateData])
         .select()
         .single();
       
@@ -94,6 +119,7 @@ export const useCreateProcessTemplate = () => {
         console.error('Database error:', error);
         throw new Error(`Lỗi cơ sở dữ liệu: ${error.message}`);
       }
+      
       return data;
     },
     onSuccess: () => {
@@ -117,11 +143,27 @@ export const useCreateProcessTemplate = () => {
 export const useUpdateProcessTemplate = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<ProcessTemplate> & { id: string }) => {
-      // If category_id is being updated, get the category name
+      // Kiểm tra user đã đăng nhập chưa
+      if (!user) {
+        throw new Error('Bạn cần đăng nhập để thực hiện chức năng này');
+      }
+
+      // Validate dữ liệu đầu vào
+      if (updates.name !== undefined && (!updates.name || updates.name.trim() === '')) {
+        throw new Error('Tiêu đề tài liệu không được để trống');
+      }
+
+      if (updates.content !== undefined && (!updates.content || updates.content.trim() === '')) {
+        throw new Error('Nội dung hướng dẫn không được để trống');
+      }
+
       let updatesWithCategory = { ...updates };
+      
+      // Nếu có cập nhật category_id, lấy category name
       if (updates.category_id) {
         const { data: categoryData, error: categoryError } = await supabase
           .from('process_categories')
@@ -140,6 +182,8 @@ export const useUpdateProcessTemplate = () => {
         updatesWithCategory.category = categoryData.name;
       }
 
+      console.log('Updating template with data:', updatesWithCategory);
+
       const { data, error } = await supabase
         .from('process_templates')
         .update(updatesWithCategory)
@@ -151,6 +195,7 @@ export const useUpdateProcessTemplate = () => {
         console.error('Database error:', error);
         throw new Error(`Lỗi cơ sở dữ liệu: ${error.message}`);
       }
+      
       return data;
     },
     onSuccess: () => {

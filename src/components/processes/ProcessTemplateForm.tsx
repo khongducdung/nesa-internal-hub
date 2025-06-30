@@ -12,6 +12,7 @@ import { CategorySelector } from './CategorySelector';
 import { TargetSelector } from './TargetSelector';
 import { FileAttachments } from './FileAttachments';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ProcessTemplateFormProps {
   open: boolean;
@@ -39,6 +40,7 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
   const [newLink, setNewLink] = useState({ title: '', url: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Update form data when initialData changes
   useEffect(() => {
@@ -73,6 +75,16 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
   }, [initialData]);
 
   const validateForm = () => {
+    // Kiểm tra user đã đăng nhập chưa
+    if (!user) {
+      toast({
+        title: "Lỗi xác thực",
+        description: "Bạn cần đăng nhập để thực hiện chức năng này",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     if (!formData.name.trim()) {
       toast({
         title: "Lỗi validation",
@@ -125,7 +137,7 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
       } catch {
         toast({
           title: "Lỗi validation",
-          description: `URL không hợp lệ cho liên kết thứ ${i + 1}`,
+          description: `URL không hợp lệ cho liên kết thứ ${i + 1}: ${link.url}`,
           variant: "destructive",
         });
         return false;
@@ -148,15 +160,8 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
 
     setIsSubmitting(true);
 
-    const processData = {
-      ...formData,
-      steps: [{ title: 'Nội dung hướng dẫn', description: formData.content, required: true }]
-    };
-    
-    console.log('Submitting process data:', processData);
-    
     try {
-      await onSubmit(processData);
+      await onSubmit(formData);
       
       if (!inline) {
         onOpenChange(false);
@@ -234,6 +239,16 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
       external_links: prev.external_links.filter((_, i) => i !== index)
     }));
   };
+
+  // Kiểm tra user đã đăng nhập chưa
+  if (!user) {
+    return (
+      <div className="text-center py-12">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Cần đăng nhập</h3>
+        <p className="text-gray-500">Bạn cần đăng nhập để sử dụng chức năng này</p>
+      </div>
+    );
+  }
 
   const formContent = (
     <form onSubmit={handleSubmit} className="space-y-6">

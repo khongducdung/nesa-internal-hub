@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +18,7 @@ import { ProcessTemplateForm } from '@/components/processes/ProcessTemplateForm'
 import { ProcessTemplateList } from '@/components/processes/ProcessTemplateList';
 import { ProcessTemplateViewDialog } from '@/components/processes/ProcessTemplateViewDialog';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function Processes() {
   const [activeTab, setActiveTab] = useState('list');
@@ -30,6 +32,7 @@ export default function Processes() {
   const createMutation = useCreateProcessTemplate();
   const updateMutation = useUpdateProcessTemplate();
   const { toast } = useToast();
+  const { user, isLoading: authLoading } = useAuth();
 
   // Thống kê
   const documentStats = [
@@ -69,9 +72,19 @@ export default function Processes() {
 
   const handleSubmit = async (data: any) => {
     try {
+      // Kiểm tra user đã đăng nhập chưa
+      if (!user) {
+        toast({
+          title: "Lỗi xác thực",
+          description: "Bạn cần đăng nhập để thực hiện chức năng này",
+          variant: "destructive",
+        });
+        return;
+      }
+
       console.log('Submitting form data:', data);
       
-      // Validate required fields with clear error messages
+      // Validate các trường bắt buộc
       if (!data.name || data.name.trim() === '') {
         toast({
           title: "Lỗi validation",
@@ -99,6 +112,39 @@ export default function Processes() {
         return;
       }
 
+      // Validate external links nếu có
+      if (data.external_links && data.external_links.length > 0) {
+        for (let i = 0; i < data.external_links.length; i++) {
+          const link = data.external_links[i];
+          if (!link.title || !link.title.trim()) {
+            toast({
+              title: "Lỗi validation",
+              description: `Vui lòng nhập tiêu đề cho liên kết thứ ${i + 1}`,
+              variant: "destructive",
+            });
+            return;
+          }
+          if (!link.url || !link.url.trim()) {
+            toast({
+              title: "Lỗi validation",
+              description: `Vui lòng nhập URL cho liên kết thứ ${i + 1}`,
+              variant: "destructive",
+            });
+            return;
+          }
+          try {
+            new URL(link.url);
+          } catch {
+            toast({
+              title: "Lỗi validation",
+              description: `URL không hợp lệ cho liên kết thứ ${i + 1}: ${link.url}`,
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+      }
+
       if (editingTemplate) {
         await updateMutation.mutateAsync({ ...data, id: editingTemplate.id });
         setEditingTemplate(null);
@@ -106,18 +152,17 @@ export default function Processes() {
       } else {
         const processData = {
           ...data,
-          created_by: '00000000-0000-0000-0000-000000000000',
-          is_active: true,
-          version: 1
+          steps: [{ title: 'Nội dung hướng dẫn', description: data.content, required: true }]
         };
         
-        console.log('Creating new template with data:', processData);
+        console.log('Creating new template with processed data:', processData);
         await createMutation.mutateAsync(processData);
-        // Stay on create tab after successful creation
+        // Sau khi tạo thành công, chuyển về tab list
+        setActiveTab('list');
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      // Error is already handled by the mutation's onError callback
+      // Lỗi đã được xử lý trong mutation's onError callback
     }
   };
 
@@ -137,6 +182,29 @@ export default function Processes() {
     const matchesCategory = selectedCategory === 'all' || template.category_id === selectedCategory;
     return matchesSearch && matchesCategory;
   }) || [];
+
+  // Hiển thị loading khi đang kiểm tra auth
+  if (authLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Hiển thị thông báo nếu chưa đăng nhập
+  if (!user) {
+    return (
+      <DashboardLayout>
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Cần đăng nhập</h2>
+          <p className="text-gray-600">Bạn cần đăng nhập để sử dụng chức năng quản lý tài liệu hướng dẫn.</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
