@@ -51,10 +51,13 @@ export function LeaveRequestForm({ onClose }: LeaveRequestFormProps) {
     const days_count = calculateDays(data.start_date, data.end_date);
     
     const leaveRequestData = {
-      ...data,
+      employee_id: data.employee_id,
+      leave_type: data.leave_type,
+      start_date: data.start_date,
+      end_date: data.end_date,
       days_count,
       status: 'pending' as const,
-      reason: data.reason || undefined,
+      reason: data.reason,
     };
 
     await createLeaveRequest.mutateAsync(leaveRequestData);

@@ -39,9 +39,11 @@ export function PositionForm({ onClose }: PositionFormProps) {
 
   const onSubmit = async (data: PositionFormData) => {
     const positionData = {
-      ...data,
-      department_id: data.department_id || undefined,
-      description: data.description || undefined,
+      name: data.name,
+      description: data.description,
+      department_id: data.department_id,
+      level: data.level,
+      status: data.status,
     };
 
     await createPosition.mutateAsync(positionData);

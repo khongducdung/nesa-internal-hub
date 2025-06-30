@@ -1,7 +1,41 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { EmployeeWithDetails } from '@/types/database';
+
+export interface EmployeeWithDetails {
+  id: string;
+  employee_code: string;
+  full_name: string;
+  email: string;
+  phone?: string;
+  department_id?: string;
+  position_id?: string;
+  hire_date?: string;
+  salary?: number;
+  employee_level?: 'level_1' | 'level_2' | 'level_3';
+  work_status?: 'active' | 'inactive' | 'pending';
+  address?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  notes?: string;
+  profile_id?: string;
+  manager_id?: string;
+  avatar_url?: string;
+  created_at: string;
+  updated_at: string;
+  departments?: {
+    id: string;
+    name: string;
+  } | null;
+  positions?: {
+    id: string;
+    name: string;
+  } | null;
+  manager?: {
+    id: string;
+    full_name: string;
+  } | null;
+}
 
 export const useEmployees = () => {
   return useQuery({
@@ -34,7 +68,7 @@ export const useEmployees = () => {
       }
 
       console.log('Employees fetched successfully:', data);
-      return data || [];
+      return (data || []) as EmployeeWithDetails[];
     },
   });
 };

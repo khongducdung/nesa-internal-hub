@@ -20,11 +20,11 @@ export interface LeaveRequest {
     id: string;
     full_name: string;
     employee_code: string;
-  };
+  } | null;
   approved_by_employee?: {
     id: string;
     full_name: string;
-  };
+  } | null;
 }
 
 export function useLeaveRequests() {
@@ -48,7 +48,7 @@ export function useLeaveRequests() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as LeaveRequest[];
+      return (data || []) as LeaveRequest[];
     },
   });
 }
@@ -58,7 +58,15 @@ export function useCreateLeaveRequest() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (leaveData: Omit<LeaveRequest, 'id' | 'created_at' | 'updated_at' | 'employees' | 'approved_by_employee'>) => {
+    mutationFn: async (leaveData: {
+      employee_id: string;
+      leave_type: 'annual' | 'sick' | 'personal' | 'emergency';
+      start_date: string;
+      end_date: string;
+      days_count: number;
+      status: 'pending';
+      reason?: string;
+    }) => {
       const { data, error } = await supabase
         .from('leave_requests')
         .insert(leaveData)

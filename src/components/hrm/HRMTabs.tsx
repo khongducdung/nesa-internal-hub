@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,7 +60,7 @@ export function HRMTabs() {
       }
     };
 
-    const config = statusConfig[type][status as keyof typeof statusConfig[typeof type]];
+    const config = statusConfig[type]?.[status as keyof typeof statusConfig[typeof type]];
     if (!config) return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
 
     return <Badge className={config.className}>{config.label}</Badge>;
@@ -452,7 +451,7 @@ export function HRMTabs() {
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                           <h3 className="font-semibold">
-                            {record.employees?.full_name} ({record.employees?.employee_code})
+                            Nhân viên ID: {record.employee_id}
                           </h3>
                           {getStatusBadge(record.status || 'present')}
                         </div>
