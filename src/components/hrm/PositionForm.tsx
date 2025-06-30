@@ -34,18 +34,22 @@ export function PositionForm({ onClose }: PositionFormProps) {
     defaultValues: {
       level: 'level_3',
       status: 'active',
+      description: '',
+      department_id: '',
     },
   });
 
   const onSubmit = async (data: PositionFormData) => {
     try {
+      console.log('Submitting position data:', data);
       await createPosition.mutateAsync({
         name: data.name,
         description: data.description || '',
-        department_id: data.department_id || null,
+        department_id: data.department_id || undefined,
         level: data.level,
         status: data.status,
       });
+      form.reset();
       onClose();
     } catch (error) {
       console.error('Error creating position:', error);
@@ -82,7 +86,7 @@ export function PositionForm({ onClose }: PositionFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Không có</SelectItem>
+                  <SelectItem value="no_department">Không có</SelectItem>
                   {departments?.map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name}

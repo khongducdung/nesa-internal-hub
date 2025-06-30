@@ -45,19 +45,29 @@ export function useCreatePosition() {
 
   return useMutation({
     mutationFn: async (positionData: Omit<Position, 'id' | 'created_at' | 'updated_at' | 'departments'>) => {
+      console.log('Creating position with data:', positionData);
+      
+      // Xử lý department_id - nếu là "no_department" thì set thành null
+      const departmentId = positionData.department_id === 'no_department' || !positionData.department_id 
+        ? null 
+        : positionData.department_id;
+
       const { data, error } = await supabase
         .from('positions')
         .insert({
           name: positionData.name,
-          description: positionData.description,
-          department_id: positionData.department_id,
+          description: positionData.description || null,
+          department_id: departmentId,
           level: positionData.level,
           status: positionData.status,
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
@@ -68,6 +78,7 @@ export function useCreatePosition() {
       });
     },
     onError: (error: any) => {
+      console.error('Mutation error:', error);
       toast({
         title: 'Lỗi',
         description: error.message || 'Có lỗi xảy ra khi thêm vị trí công việc',

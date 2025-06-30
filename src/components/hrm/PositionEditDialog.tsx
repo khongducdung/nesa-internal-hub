@@ -46,11 +46,15 @@ export function PositionEditDialog({ positionId, open, onClose }: PositionEditDi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    const departmentId = formData.department_id === 'no_department' || !formData.department_id 
+      ? null 
+      : formData.department_id;
+    
     await updatePosition.mutateAsync({ 
       id: positionId, 
       data: {
         ...formData,
-        department_id: formData.department_id || null
+        department_id: departmentId
       }
     });
     onClose();
@@ -84,7 +88,7 @@ export function PositionEditDialog({ positionId, open, onClose }: PositionEditDi
                 <SelectValue placeholder="Chọn phòng ban" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Không có</SelectItem>
+                <SelectItem value="no_department">Không có</SelectItem>
                 {departments?.map((dept) => (
                   <SelectItem key={dept.id} value={dept.id}>
                     {dept.name}
