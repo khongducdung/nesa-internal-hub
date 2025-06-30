@@ -31,24 +31,29 @@ export function useLeaveRequests() {
   return useQuery({
     queryKey: ['leave-requests'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get leave requests
+      const { data: leaveData, error: leaveError } = await supabase
         .from('leave_requests')
-        .select(`
-          *,
-          employees:employee_id (
-            id,
-            full_name,
-            employee_code
-          ),
-          approved_by_employee:approved_by (
-            id,
-            full_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return (data || []) as LeaveRequest[];
+      if (leaveError) throw leaveError;
+
+      // Get employee data
+      const { data: employeeData } = await supabase
+        .from('employees')
+        .select('id, full_name, employee_code');
+
+      // Combine the data
+      const enrichedLeaveRequests: LeaveRequest[] = (leaveData || []).map(request => ({
+        ...request,
+        employees: employeeData?.find(emp => emp.id === request.employee_id) || null,
+        approved_by_employee: request.approved_by 
+          ? employeeData?.find(emp => emp.id === request.approved_by) || null
+          : null,
+      }));
+
+      return enrichedLeaveRequests;
     },
   });
 }

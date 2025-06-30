@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -58,10 +59,17 @@ export function HRMTabs() {
         completed: { label: 'Hoàn thành', className: 'bg-green-100 text-green-800' },
         cancelled: { label: 'Đã hủy', className: 'bg-red-100 text-red-800' },
       }
-    };
+    } as const;
 
-    const config = statusConfig[type]?.[status as keyof typeof statusConfig[typeof type]];
-    if (!config) return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
+    const typeConfig = statusConfig[type];
+    if (!typeConfig) {
+      return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
+    }
+
+    const config = typeConfig[status as keyof typeof typeConfig];
+    if (!config) {
+      return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
+    }
 
     return <Badge className={config.className}>{config.label}</Badge>;
   };
@@ -337,7 +345,7 @@ export function HRMTabs() {
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                           <h3 className="font-semibold">
-                            {request.employees?.full_name} ({request.employees?.employee_code})
+                            {request.employees?.full_name || 'N/A'} ({request.employees?.employee_code || 'N/A'})
                           </h3>
                           {getLeaveTypeBadge(request.leave_type)}
                           {getStatusBadge(request.status, 'leave')}

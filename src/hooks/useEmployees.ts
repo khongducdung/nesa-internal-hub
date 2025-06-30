@@ -43,32 +43,41 @@ export const useEmployees = () => {
     queryFn: async (): Promise<EmployeeWithDetails[]> => {
       console.log('Fetching employees...');
       
-      const { data, error } = await supabase
+      // First, get basic employee data
+      const { data: employeeData, error: employeeError } = await supabase
         .from('employees')
-        .select(`
-          *,
-          departments:department_id (
-            id,
-            name
-          ),
-          positions:position_id (
-            id,
-            name
-          ),
-          manager:manager_id (
-            id,
-            full_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching employees:', error);
-        throw error;
+      if (employeeError) {
+        console.error('Error fetching employees:', employeeError);
+        throw employeeError;
       }
 
-      console.log('Employees fetched successfully:', data);
-      return (data || []) as EmployeeWithDetails[];
+      // Then get departments
+      const { data: departmentData } = await supabase
+        .from('departments')
+        .select('id, name');
+
+      // Then get positions
+      const { data: positionData } = await supabase
+        .from('positions')
+        .select('id, name');
+
+      // Combine the data
+      const enrichedEmployees: EmployeeWithDetails[] = (employeeData || []).map(employee => ({
+        ...employee,
+        departments: employee.department_id 
+          ? departmentData?.find(dept => dept.id === employee.department_id) || null
+          : null,
+        positions: employee.position_id 
+          ? positionData?.find(pos => pos.id === employee.position_id) || null
+          : null,
+        manager: null, // We can add manager lookup later if needed
+      }));
+
+      console.log('Employees fetched successfully:', enrichedEmployees);
+      return enrichedEmployees;
     },
   });
 };
