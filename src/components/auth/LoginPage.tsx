@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -81,20 +80,16 @@ export function LoginPage() {
 
   if (showResetForm) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 p-4">
         <div className="w-full max-w-md">
           <Card className="shadow-xl border-0 bg-white backdrop-blur-sm">
             <CardHeader className="text-center space-y-6 pb-8">
               <div className="flex justify-center mb-6">
-                <div className="relative">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <img 
-                      src="/lovable-uploads/ebcd3d17-d92b-4d28-90a3-1cec952be13a.png" 
-                      alt="NESA Logo" 
-                      className="h-12 w-auto"
-                    />
-                  </div>
-                </div>
+                <img 
+                  src="/lovable-uploads/ebcd3d17-d92b-4d28-90a3-1cec952be13a.png" 
+                  alt="NESA Logo" 
+                  className="h-16 w-auto"
+                />
               </div>
               <div>
                 <CardTitle className="text-2xl font-bold text-gray-800 mb-2">
@@ -159,21 +154,16 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 p-4">
       <div className="w-full max-w-md">
         <Card className="shadow-xl border-0 bg-white backdrop-blur-sm">
           <CardHeader className="text-center space-y-6 pb-8">
             <div className="flex justify-center mb-6">
-              <div className="relative">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl">
-                  <img 
-                    src="/lovable-uploads/ebcd3d17-d92b-4d28-90a3-1cec952be13a.png" 
-                    alt="NESA Logo" 
-                    className="h-14 w-auto"
-                  />
-                </div>
-                <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg"></div>
-              </div>
+              <img 
+                src="/lovable-uploads/ebcd3d17-d92b-4d28-90a3-1cec952be13a.png" 
+                alt="NESA Logo" 
+                className="h-20 w-auto"
+              />
             </div>
             <div>
               <CardTitle className="text-3xl font-bold text-gray-800 mb-3">
