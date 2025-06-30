@@ -78,28 +78,28 @@ export function HRMTabs() {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="employees" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-6 bg-muted/50 p-1 rounded-lg">
+          <TabsTrigger value="employees" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <Users className="h-4 w-4" />
             Nhân viên
           </TabsTrigger>
-          <TabsTrigger value="departments" className="flex items-center gap-2">
+          <TabsTrigger value="departments" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <Building2 className="h-4 w-4" />
             Phòng ban
           </TabsTrigger>
-          <TabsTrigger value="positions" className="flex items-center gap-2">
+          <TabsTrigger value="positions" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <Briefcase className="h-4 w-4" />
             Vị trí
           </TabsTrigger>
-          <TabsTrigger value="policies" className="flex items-center gap-2">
+          <TabsTrigger value="policies" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <FileText className="h-4 w-4" />
             Quy định
           </TabsTrigger>
-          <TabsTrigger value="training" className="flex items-center gap-2">
+          <TabsTrigger value="training" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <GraduationCap className="h-4 w-4" />
             Đào tạo
           </TabsTrigger>
-          <TabsTrigger value="attendance" className="flex items-center gap-2">
+          <TabsTrigger value="attendance" className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <Clock className="h-4 w-4" />
             Chấm công
           </TabsTrigger>
@@ -107,12 +107,12 @@ export function HRMTabs() {
 
         {/* Employees Tab */}
         <TabsContent value="employees" className="space-y-6">
-          <Card>
+          <Card className="card-branded">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Danh sách nhân viên</CardTitle>
+              <CardTitle className="text-foreground">Danh sách nhân viên</CardTitle>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="btn-primary">
                     <Plus className="h-4 w-4 mr-2" />
                     Thêm nhân viên
                   </Button>
@@ -125,7 +125,7 @@ export function HRMTabs() {
                 </DialogContent>
               </Dialog>
             </CardHeader>
-            <CardContent>
+            <CardContent className="work-area p-6">
               <EmployeeList />
             </CardContent>
           </Card>
@@ -133,12 +133,12 @@ export function HRMTabs() {
 
         {/* Departments Tab */}
         <TabsContent value="departments" className="space-y-6">
-          <Card>
+          <Card className="card-branded">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Danh sách phòng ban</CardTitle>
+              <CardTitle className="text-foreground">Danh sách phòng ban</CardTitle>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="btn-primary">
                     <Plus className="h-4 w-4 mr-2" />
                     Thêm phòng ban
                   </Button>
@@ -151,7 +151,7 @@ export function HRMTabs() {
                 </DialogContent>
               </Dialog>
             </CardHeader>
-            <CardContent>
+            <CardContent className="work-area p-6">
               <DepartmentList />
             </CardContent>
           </Card>
@@ -159,12 +159,12 @@ export function HRMTabs() {
 
         {/* Positions Tab */}
         <TabsContent value="positions" className="space-y-6">
-          <Card>
+          <Card className="card-branded">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Danh sách vị trí công việc</CardTitle>
+              <CardTitle className="text-foreground">Danh sách vị trí công việc</CardTitle>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="btn-primary">
                     <Plus className="h-4 w-4 mr-2" />
                     Thêm vị trí
                   </Button>
@@ -177,7 +177,7 @@ export function HRMTabs() {
                 </DialogContent>
               </Dialog>
             </CardHeader>
-            <CardContent>
+            <CardContent className="work-area p-6">
               <PositionList />
             </CardContent>
           </Card>
@@ -185,12 +185,12 @@ export function HRMTabs() {
 
         {/* Company Policies Tab */}
         <TabsContent value="policies" className="space-y-6">
-          <Card>
+          <Card className="card-branded">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Quy định công ty</CardTitle>
+              <CardTitle className="text-foreground">Quy định công ty</CardTitle>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="btn-primary">
                     <Plus className="h-4 w-4 mr-2" />
                     Thêm quy định
                   </Button>
@@ -203,7 +203,7 @@ export function HRMTabs() {
                 </DialogContent>
               </Dialog>
             </CardHeader>
-            <CardContent>
+            <CardContent className="work-area p-6">
               <CompanyPolicyList />
             </CardContent>
           </Card>
@@ -211,12 +211,12 @@ export function HRMTabs() {
 
         {/* Training Programs Tab */}
         <TabsContent value="training" className="space-y-6">
-          <Card>
+          <Card className="card-branded">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Chương trình đào tạo</CardTitle>
+              <CardTitle className="text-foreground">Chương trình đào tạo</CardTitle>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="btn-primary">
                     <Plus className="h-4 w-4 mr-2" />
                     Tạo chương trình
                   </Button>
@@ -229,7 +229,7 @@ export function HRMTabs() {
                 </DialogContent>
               </Dialog>
             </CardHeader>
-            <CardContent>
+            <CardContent className="work-area p-6">
               <TrainingList />
             </CardContent>
           </Card>
@@ -237,12 +237,12 @@ export function HRMTabs() {
 
         {/* Attendance Tab */}
         <TabsContent value="attendance" className="space-y-6">
-          <Card>
+          <Card className="card-branded">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Quản lý chấm công</CardTitle>
+              <CardTitle className="text-foreground">Quản lý chấm công</CardTitle>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="btn-primary">
                     <Plus className="h-4 w-4 mr-2" />
                     Chấm công
                   </Button>
@@ -255,7 +255,7 @@ export function HRMTabs() {
                 </DialogContent>
               </Dialog>
             </CardHeader>
-            <CardContent>
+            <CardContent className="work-area p-6">
               <AttendanceList />
             </CardContent>
           </Card>
