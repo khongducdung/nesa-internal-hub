@@ -1,55 +1,59 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Clock, MapPin, Users } from 'lucide-react';
+import { Clock, Calendar, BarChart3, Settings, Users } from 'lucide-react';
+import { AttendanceStats } from './AttendanceStats';
+import { AttendanceCalendar } from './AttendanceCalendar';
+import { AttendanceList } from './AttendanceList';
+import { AttendanceReports } from './AttendanceReports';
 import { AttendanceSettingsList } from './AttendanceSettingsList';
-import { WorkShiftsList } from './WorkShiftsList';
-import { AttendanceLocationsList } from './AttendanceLocationsList';
-import { AttendanceAssignmentsList } from './AttendanceAssignmentsList';
 
 export function AttendanceManagement() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <Settings className="h-6 w-6" />
+        <Clock className="h-6 w-6" />
         <h2 className="text-2xl font-bold">Quản lý chấm công</h2>
       </div>
 
-      <Tabs defaultValue="settings" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+      {/* Thống kê tổng quan */}
+      <AttendanceStats />
+
+      {/* Các tab chức năng */}
+      <Tabs defaultValue="calendar" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="calendar" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Lịch chấm công
+          </TabsTrigger>
+          <TabsTrigger value="list" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Danh sách
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Báo cáo
+          </TabsTrigger>
           <TabsTrigger value="settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Cài đặt
           </TabsTrigger>
-          <TabsTrigger value="shifts" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Ca làm việc
-          </TabsTrigger>
-          <TabsTrigger value="locations" className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
-            Địa điểm
-          </TabsTrigger>
-          <TabsTrigger value="assignments" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Phân công
-          </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="calendar" className="mt-6">
+          <AttendanceCalendar />
+        </TabsContent>
+
+        <TabsContent value="list" className="mt-6">
+          <AttendanceList />
+        </TabsContent>
+
+        <TabsContent value="reports" className="mt-6">
+          <AttendanceReports />
+        </TabsContent>
 
         <TabsContent value="settings" className="mt-6">
           <AttendanceSettingsList />
-        </TabsContent>
-
-        <TabsContent value="shifts" className="mt-6">
-          <WorkShiftsList />
-        </TabsContent>
-
-        <TabsContent value="locations" className="mt-6">
-          <AttendanceLocationsList />
-        </TabsContent>
-
-        <TabsContent value="assignments" className="mt-6">
-          <AttendanceAssignmentsList />
         </TabsContent>
       </Tabs>
     </div>
