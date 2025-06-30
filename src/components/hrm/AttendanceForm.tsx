@@ -64,12 +64,20 @@ export function AttendanceForm({ onClose, attendanceId, selectedDate }: Attendan
 
       if (error) throw error;
       if (data) {
+        // Type-safe status handling
+        const validStatus = ['present', 'absent', 'late', 'half_day'].includes(data.status || '') 
+          ? (data.status as 'present' | 'absent' | 'late' | 'half_day')
+          : 'present';
+
         form.reset({
-          ...data,
+          employee_id: data.employee_id,
+          date: data.date,
           check_in_time: data.check_in_time ? new Date(data.check_in_time).toLocaleTimeString('en-GB', { hour12: false }).slice(0, 5) : '',
           check_out_time: data.check_out_time ? new Date(data.check_out_time).toLocaleTimeString('en-GB', { hour12: false }).slice(0, 5) : '',
           break_time: data.break_time?.toString() || '60',
           overtime_hours: data.overtime_hours?.toString() || '0',
+          status: validStatus,
+          notes: data.notes || '',
         });
       }
     } catch (error) {

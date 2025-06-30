@@ -71,7 +71,17 @@ export function DepartmentForm({ onClose, departmentId }: DepartmentFormProps) {
 
       if (error) throw error;
       if (data) {
-        form.reset(data);
+        // Type-safe status handling
+        const validStatus = ['active', 'inactive', 'pending'].includes(data.status || '') 
+          ? (data.status as 'active' | 'inactive' | 'pending')
+          : 'active';
+
+        form.reset({
+          name: data.name,
+          description: data.description || '',
+          parent_id: data.parent_id || '',
+          status: validStatus,
+        });
       }
     } catch (error) {
       console.error('Error loading department:', error);
@@ -87,8 +97,10 @@ export function DepartmentForm({ onClose, departmentId }: DepartmentFormProps) {
     setIsLoading(true);
     try {
       const departmentData = {
-        ...data,
+        name: data.name,
+        description: data.description || null,
         parent_id: data.parent_id || null,
+        status: data.status,
       };
 
       if (departmentId) {
@@ -106,7 +118,7 @@ export function DepartmentForm({ onClose, departmentId }: DepartmentFormProps) {
       } else {
         const { error } = await supabase
           .from('departments')
-          .insert([departmentData]);
+          .insert(departmentData);
         
         if (error) throw error;
         

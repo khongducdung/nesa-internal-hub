@@ -82,10 +82,30 @@ export function EmployeeForm({ onClose, employeeId }: EmployeeFormProps) {
 
       if (error) throw error;
       if (data) {
+        // Type-safe handling of enum fields
+        const validEmployeeLevel = ['level_1', 'level_2', 'level_3'].includes(data.employee_level || '') 
+          ? (data.employee_level as 'level_1' | 'level_2' | 'level_3')
+          : 'level_3';
+
+        const validWorkStatus = ['active', 'inactive', 'pending'].includes(data.work_status || '') 
+          ? (data.work_status as 'active' | 'inactive' | 'pending')
+          : 'active';
+
         form.reset({
-          ...data,
-          salary: data.salary?.toString() || '',
+          employee_code: data.employee_code,
+          full_name: data.full_name,
+          email: data.email,
+          phone: data.phone || '',
+          department_id: data.department_id || '',
+          position_id: data.position_id || '',
           hire_date: data.hire_date || '',
+          salary: data.salary?.toString() || '',
+          employee_level: validEmployeeLevel,
+          work_status: validWorkStatus,
+          address: data.address || '',
+          emergency_contact_name: data.emergency_contact_name || '',
+          emergency_contact_phone: data.emergency_contact_phone || '',
+          notes: data.notes || '',
         });
       }
     } catch (error) {
@@ -102,9 +122,20 @@ export function EmployeeForm({ onClose, employeeId }: EmployeeFormProps) {
     setIsLoading(true);
     try {
       const employeeData = {
-        ...data,
-        salary: data.salary ? parseFloat(data.salary) : null,
+        employee_code: data.employee_code,
+        full_name: data.full_name,
+        email: data.email,
+        phone: data.phone || null,
+        department_id: data.department_id || null,
+        position_id: data.position_id || null,
         hire_date: data.hire_date || null,
+        salary: data.salary ? parseFloat(data.salary) : null,
+        employee_level: data.employee_level,
+        work_status: data.work_status,
+        address: data.address || null,
+        emergency_contact_name: data.emergency_contact_name || null,
+        emergency_contact_phone: data.emergency_contact_phone || null,
+        notes: data.notes || null,
       };
 
       if (employeeId) {
@@ -122,7 +153,7 @@ export function EmployeeForm({ onClose, employeeId }: EmployeeFormProps) {
       } else {
         const { error } = await supabase
           .from('employees')
-          .insert([employeeData]);
+          .insert(employeeData);
         
         if (error) throw error;
         
