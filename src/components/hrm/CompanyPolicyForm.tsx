@@ -13,6 +13,7 @@ import { TargetSelector } from '@/components/processes/TargetSelector';
 import { useCreateProcessNotifications, useGetTargetUsers } from '@/hooks/useNotifications';
 import { CompanyPolicy } from '@/hooks/useCompanyPolicies';
 import { cn } from '@/lib/utils';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 
 interface CompanyPolicyFormProps {
   open: boolean;
@@ -226,13 +227,11 @@ export function CompanyPolicyForm({ open, onOpenChange, onSubmit, initialData }:
 
             <div className="space-y-2">
               <Label htmlFor="content">Nội dung quy định *</Label>
-              <Textarea
-                id="content"
+              <RichTextEditor
                 value={formData.content}
-                onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
                 placeholder="Nhập nội dung chi tiết của quy định..."
-                rows={8}
-                required
+                minHeight="200px"
               />
             </div>
 
@@ -319,7 +318,7 @@ export function CompanyPolicyForm({ open, onOpenChange, onSubmit, initialData }:
                 <SelectContent>
                   <SelectItem value="general">Toàn công ty</SelectItem>
                   <SelectItem value="department">Phòng ban cụ thể</SelectItem>
-                  <SelectItem value="position">Vị trí cụ thể</SelectItem>
+                  <SelectItem value="position">Chức vụ cụ thể</SelectItem>
                   <SelectItem value="employee">Nhân viên cụ thể</SelectItem>
                 </SelectContent>
               </Select>

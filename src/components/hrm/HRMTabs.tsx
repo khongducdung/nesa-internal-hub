@@ -15,7 +15,7 @@ export function HRMTabs() {
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="employees">Nhân viên</TabsTrigger>
           <TabsTrigger value="departments">Phòng ban</TabsTrigger>
-          <TabsTrigger value="positions">Vị trí</TabsTrigger>
+          <TabsTrigger value="positions">Chức vụ</TabsTrigger>
           <TabsTrigger value="attendance-mgmt">Quản lý chấm công</TabsTrigger>
           <TabsTrigger value="training">Đào tạo</TabsTrigger>
           <TabsTrigger value="policies">Quy định công ty</TabsTrigger>
