@@ -78,28 +78,29 @@ export function HRMTabs() {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="employees" className="flex items-center gap-2">
+        {/* Tabs với màu xanh dương */}
+        <TabsList className="grid w-full grid-cols-6 bg-blue-50 border border-blue-200">
+          <TabsTrigger value="employees" className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-700">
             <Users className="h-4 w-4" />
             Nhân viên
           </TabsTrigger>
-          <TabsTrigger value="departments" className="flex items-center gap-2">
+          <TabsTrigger value="departments" className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-700">
             <Building2 className="h-4 w-4" />
             Phòng ban
           </TabsTrigger>
-          <TabsTrigger value="positions" className="flex items-center gap-2">
+          <TabsTrigger value="positions" className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-700">
             <Briefcase className="h-4 w-4" />
             Vị trí
           </TabsTrigger>
-          <TabsTrigger value="policies" className="flex items-center gap-2">
+          <TabsTrigger value="policies" className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-700">
             <FileText className="h-4 w-4" />
             Quy định
           </TabsTrigger>
-          <TabsTrigger value="training" className="flex items-center gap-2">
+          <TabsTrigger value="training" className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-700">
             <GraduationCap className="h-4 w-4" />
             Đào tạo
           </TabsTrigger>
-          <TabsTrigger value="attendance" className="flex items-center gap-2">
+          <TabsTrigger value="attendance" className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-blue-700">
             <Clock className="h-4 w-4" />
             Chấm công
           </TabsTrigger>
@@ -107,18 +108,18 @@ export function HRMTabs() {
 
         {/* Employees Tab */}
         <TabsContent value="employees" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Danh sách nhân viên</CardTitle>
+          <Card className="card-blue">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-blue-100">
+              <CardTitle className="text-blue-900">Danh sách nhân viên</CardTitle>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="btn-primary">
                     <Plus className="h-4 w-4 mr-2" />
                     Thêm nhân viên
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
+                  <DialogHeader className="dialog-header">
                     <DialogTitle>{getDialogTitle()}</DialogTitle>
                   </DialogHeader>
                   {renderDialogContent()}
@@ -133,18 +134,18 @@ export function HRMTabs() {
 
         {/* Departments Tab */}
         <TabsContent value="departments" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Danh sách phòng ban</CardTitle>
+          <Card className="card-blue">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-blue-100">
+              <CardTitle className="text-blue-900">Danh sách phòng ban</CardTitle>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="btn-primary">
                     <Plus className="h-4 w-4 mr-2" />
                     Thêm phòng ban
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
-                  <DialogHeader>
+                  <DialogHeader className="dialog-header">
                     <DialogTitle>{getDialogTitle()}</DialogTitle>
                   </DialogHeader>
                   {renderDialogContent()}
@@ -159,18 +160,18 @@ export function HRMTabs() {
 
         {/* Positions Tab */}
         <TabsContent value="positions" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Danh sách vị trí công việc</CardTitle>
+          <Card className="card-blue">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-blue-100">
+              <CardTitle className="text-blue-900">Danh sách vị trí công việc</CardTitle>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="btn-primary">
                     <Plus className="h-4 w-4 mr-2" />
                     Thêm vị trí
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
-                  <DialogHeader>
+                  <DialogHeader className="dialog-header">
                     <DialogTitle>{getDialogTitle()}</DialogTitle>
                   </DialogHeader>
                   {renderDialogContent()}
@@ -185,18 +186,18 @@ export function HRMTabs() {
 
         {/* Company Policies Tab */}
         <TabsContent value="policies" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Quy định công ty</CardTitle>
+          <Card className="card-blue">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-blue-100">
+              <CardTitle className="text-blue-900">Quy định công ty</CardTitle>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="btn-primary">
                     <Plus className="h-4 w-4 mr-2" />
                     Thêm quy định
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
+                  <DialogHeader className="dialog-header">
                     <DialogTitle>{getDialogTitle()}</DialogTitle>
                   </DialogHeader>
                   {renderDialogContent()}
@@ -211,18 +212,18 @@ export function HRMTabs() {
 
         {/* Training Programs Tab */}
         <TabsContent value="training" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Chương trình đào tạo</CardTitle>
+          <Card className="card-blue">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-blue-100">
+              <CardTitle className="text-blue-900">Chương trình đào tạo</CardTitle>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="btn-primary">
                     <Plus className="h-4 w-4 mr-2" />
                     Tạo chương trình
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
-                  <DialogHeader>
+                  <DialogHeader className="dialog-header">
                     <DialogTitle>{getDialogTitle()}</DialogTitle>
                   </DialogHeader>
                   {renderDialogContent()}
@@ -237,18 +238,18 @@ export function HRMTabs() {
 
         {/* Attendance Tab */}
         <TabsContent value="attendance" className="space-y-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Quản lý chấm công</CardTitle>
+          <Card className="card-blue">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-blue-100">
+              <CardTitle className="text-blue-900">Quản lý chấm công</CardTitle>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="btn-primary">
                     <Plus className="h-4 w-4 mr-2" />
                     Chấm công
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
-                  <DialogHeader>
+                  <DialogHeader className="dialog-header">
                     <DialogTitle>{getDialogTitle()}</DialogTitle>
                   </DialogHeader>
                   {renderDialogContent()}

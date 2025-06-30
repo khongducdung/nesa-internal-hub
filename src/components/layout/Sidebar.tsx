@@ -18,8 +18,8 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
 
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard', access: 'all' },
-    { icon: Users, label: 'Quản lý nhân sự', path: '/hrm', access: 'all' }, // Thay đổi từ 'admin' thành 'all'
-    { icon: FileText, label: 'Quản lý quy trình', path: '/processes', access: 'all' }, // Thay đổi từ 'admin' thành 'all'
+    { icon: Users, label: 'Quản lý nhân sự', path: '/hrm', access: 'all' },
+    { icon: FileText, label: 'Quản lý quy trình', path: '/processes', access: 'all' },
     { icon: TrendingUp, label: 'Đánh giá hiệu suất', path: '/performance', access: 'all' },
     { icon: Target, label: 'OKR', path: '/okr', access: 'all' },
     { icon: BarChart3, label: 'KPI', path: '/kpi', access: 'all' },
@@ -56,16 +56,16 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar với màu xanh dương */}
       <div className={`
-        fixed top-0 left-0 h-full bg-white shadow-lg z-50 transition-all duration-300 ease-in-out
+        fixed top-0 left-0 h-full bg-white shadow-blue-lg z-50 transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:static lg:shadow-none
         ${isCollapsed ? 'lg:w-16' : 'lg:w-64'}
-        w-64 border-r border-gray-200 flex flex-col
+        w-64 border-r border-blue-200 flex flex-col
       `}>
-        {/* Header với logo NESA - căn chỉnh với header */}
-        <div className={`flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 h-[65px] ${isCollapsed ? 'lg:px-3' : ''}`}>
+        {/* Header với logo NESA - màu xanh gradient */}
+        <div className={`flex items-center justify-between px-4 py-3 border-b border-blue-200 blue-gradient h-[65px] ${isCollapsed ? 'lg:px-3' : ''}`}>
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
               <div className="text-blue-600 font-bold text-lg">N</div>
@@ -88,7 +88,7 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
           </Button>
         </div>
 
-        {/* Navigation Menu */}
+        {/* Navigation Menu với màu xanh */}
         <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
           {menuItems.map(item => {
             if (!hasAccess(item.access)) return null;
@@ -99,10 +99,10 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
               <Button
                 key={item.path}
                 variant="ghost"
-                className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start px-3'} h-10 text-left ${
+                className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start px-3'} h-10 text-left transition-all duration-200 ${
                   isActive 
-                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600 font-medium' 
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'sidebar-menu-item active' 
+                    : 'sidebar-menu-item'
                 }`}
                 onClick={() => handleNavigation(item.path)}
                 title={isCollapsed ? item.label : undefined}
@@ -114,11 +114,11 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
           })}
         </nav>
 
-        {/* Sign Out */}
-        <div className="p-2 border-t border-gray-200">
+        {/* Sign Out với màu xanh */}
+        <div className="p-2 border-t border-blue-200">
           <Button 
             variant="ghost" 
-            className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start px-3'} h-10 text-gray-700 hover:bg-red-50 hover:text-red-600`}
+            className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start px-3'} h-10 text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors`}
             onClick={handleSignOut}
             title={isCollapsed ? 'Đăng xuất' : undefined}
           >
