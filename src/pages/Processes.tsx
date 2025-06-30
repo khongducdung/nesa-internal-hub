@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,10 +16,12 @@ import { useProcessTemplates, useCreateProcessTemplate, useUpdateProcessTemplate
 import { useProcessCategories } from '@/hooks/useProcessCategories';
 import { ProcessTemplateForm } from '@/components/processes/ProcessTemplateForm';
 import { ProcessTemplateList } from '@/components/processes/ProcessTemplateList';
+import { ProcessTemplateViewDialog } from '@/components/processes/ProcessTemplateViewDialog';
 
 export default function Processes() {
   const [activeTab, setActiveTab] = useState('list');
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const [viewingTemplate, setViewingTemplate] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
@@ -66,16 +67,34 @@ export default function Processes() {
   ];
 
   const handleSubmit = async (data: any) => {
-    if (editingTemplate) {
-      await updateMutation.mutateAsync({ ...data, id: editingTemplate.id });
-      setEditingTemplate(null);
-    } else {
-      await createMutation.mutateAsync({
-        ...data,
-        created_by: '00000000-0000-0000-0000-000000000000'
-      });
+    try {
+      console.log('Submitting form data:', data);
+      
+      // Validate required fields
+      if (!data.name || !data.category_id) {
+        console.error('Missing required fields:', { name: data.name, category_id: data.category_id });
+        return;
+      }
+
+      if (editingTemplate) {
+        await updateMutation.mutateAsync({ ...data, id: editingTemplate.id });
+        setEditingTemplate(null);
+        setActiveTab('list');
+      } else {
+        const processData = {
+          ...data,
+          created_by: '00000000-0000-0000-0000-000000000000',
+          is_active: true,
+          version: 1
+        };
+        
+        console.log('Creating new template with data:', processData);
+        await createMutation.mutateAsync(processData);
+        // Stay on create tab after successful creation
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
     }
-    // Không chuyển tab, giữ nguyên tab create
   };
 
   const handleEdit = (template: any) => {
@@ -85,7 +104,7 @@ export default function Processes() {
 
   const handleView = (template: any) => {
     console.log('View template:', template);
-    // TODO: Implement view modal
+    setViewingTemplate(template);
   };
 
   const filteredTemplates = processTemplates?.filter(template => {
@@ -212,6 +231,14 @@ export default function Processes() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* View Dialog */}
+        <ProcessTemplateViewDialog
+          template={viewingTemplate}
+          open={!!viewingTemplate}
+          onOpenChange={(open) => !open && setViewingTemplate(null)}
+          onEdit={handleEdit}
+        />
       </div>
     </DashboardLayout>
   );

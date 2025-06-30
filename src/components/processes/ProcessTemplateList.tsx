@@ -3,8 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { MoreHorizontal, Edit, Eye, Calendar, Users, Link, User, Plus, List } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Edit, Calendar, Users, Link, User, Plus, List } from 'lucide-react';
 import { ProcessTemplateWithDetails } from '@/hooks/useProcessTemplates';
 
 interface ProcessTemplateListProps {
@@ -103,7 +102,12 @@ export function ProcessTemplateList({ templates, isLoading, onEdit, onView, onCr
           <TableRow key={template.id} className="hover:bg-gray-50">
             <TableCell className="font-medium">
               <div>
-                <div className="font-semibold text-gray-900">{template.name}</div>
+                <div 
+                  className="font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                  onClick={() => onView(template)}
+                >
+                  {template.name}
+                </div>
                 {template.tags && template.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1">
                     {template.tags.slice(0, 2).map((tag, index) => (
@@ -161,23 +165,14 @@ export function ProcessTemplateList({ templates, isLoading, onEdit, onView, onCr
               )}
             </TableCell>
             <TableCell className="text-right">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onView(template)}>
-                    <Eye className="h-4 w-4 mr-2" />
-                    Xem nội dung
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onEdit(template)}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Chỉnh sửa
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => onEdit(template)}
+                className="hover:bg-blue-50"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
             </TableCell>
           </TableRow>
         ))}

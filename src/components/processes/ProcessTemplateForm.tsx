@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,32 +22,38 @@ interface ProcessTemplateFormProps {
 
 export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData, inline = false }: ProcessTemplateFormProps) {
   const [formData, setFormData] = useState({
-    name: initialData?.name || '',
-    content: initialData?.content || '',
-    category_id: initialData?.category_id || '',
-    target_type: initialData?.target_type || 'general',
-    target_ids: initialData?.target_ids || [],
-    priority: initialData?.priority || 'medium',
-    tags: initialData?.tags || [],
-    external_links: initialData?.external_links || [],
-    status: initialData?.status || 'published',
-    attachments: initialData?.attachments || []
+    name: '',
+    content: '',
+    category_id: '',
+    target_type: 'general',
+    target_ids: [],
+    priority: 'medium',
+    tags: [],
+    external_links: [],
+    status: 'published',
+    attachments: []
   });
 
   const [newTag, setNewTag] = useState('');
   const [newLink, setNewLink] = useState({ title: '', url: '' });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const processData = {
-      ...formData,
-      steps: [{ title: 'Nội dung hướng dẫn', description: formData.content, required: true }]
-    };
-    onSubmit(processData);
-    if (!inline) {
-      onOpenChange(false);
+  // Update form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || '',
+        content: initialData.content || '',
+        category_id: initialData.category_id || '',
+        target_type: initialData.target_type || 'general',
+        target_ids: initialData.target_ids || [],
+        priority: initialData.priority || 'medium',
+        tags: initialData.tags || [],
+        external_links: initialData.external_links || [],
+        status: initialData.status || 'published',
+        attachments: initialData.attachments || []
+      });
     } else {
-      // Reset form for inline mode
+      // Reset form when no initial data
       setFormData({
         name: '',
         content: '',
@@ -60,8 +66,56 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
         status: 'published',
         attachments: []
       });
-      setNewTag('');
-      setNewLink({ title: '', url: '' });
+    }
+  }, [initialData]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    console.log('Form submission attempted with data:', formData);
+    
+    // Validate required fields
+    if (!formData.name.trim()) {
+      console.error('Name is required');
+      return;
+    }
+    
+    if (!formData.category_id) {
+      console.error('Category is required');
+      return;
+    }
+
+    const processData = {
+      ...formData,
+      steps: [{ title: 'Nội dung hướng dẫn', description: formData.content, required: true }]
+    };
+    
+    console.log('Submitting process data:', processData);
+    
+    try {
+      await onSubmit(processData);
+      
+      if (!inline) {
+        onOpenChange(false);
+      } else if (!initialData) {
+        // Reset form for inline mode only when creating new (not editing)
+        setFormData({
+          name: '',
+          content: '',
+          category_id: '',
+          target_type: 'general',
+          target_ids: [],
+          priority: 'medium',
+          tags: [],
+          external_links: [],
+          status: 'published',
+          attachments: []
+        });
+        setNewTag('');
+        setNewLink({ title: '', url: '' });
+      }
+    } catch (error) {
+      console.error('Form submission error:', error);
     }
   };
 
