@@ -1,7 +1,7 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Users, Building2, Settings, X, Home, FileText, TrendingUp, Target, BarChart3, User } from 'lucide-react';
+import { Users, Building2, Settings, X, Home, FileText, TrendingUp, Target, BarChart3, User, LogOut } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
@@ -12,7 +12,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: SidebarProps) {
-  const { profile, isSuperAdmin, isAdmin } = useAuth();
+  const { profile, isSuperAdmin, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -48,6 +48,11 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
     }
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   return (
     <>
       {/* Mobile overlay */}
@@ -80,30 +85,48 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
 
         {/* Profile Section */}
         <div className={`p-3 border-b border-white/20 ${isCollapsed ? 'px-2' : ''}`}>
-          <Button
-            variant="ghost"
-            className={`w-full ${isCollapsed ? 'justify-center px-0 h-12' : 'justify-start px-3 h-16'} text-white hover:bg-white/10 rounded-lg`}
-            onClick={handleProfileClick}
-          >
-            <div className={`w-8 h-8 bg-white rounded-full flex items-center justify-center flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`}>
-              <span className="text-primary font-bold text-sm">
-                {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : 'DK'}
-              </span>
-            </div>
-            {!isCollapsed && (
-              <div className="flex flex-col items-start">
-                <p className="text-sm font-medium text-white leading-tight">
-                  {profile?.full_name || 'Khổng Đức Dũng'}
-                </p>
-                <p className="text-xs text-white/80 leading-tight">
-                  {profile?.employee_code || 'khongducdzung@gmail...'}
-                </p>
-                <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded mt-1">
-                  Admin
+          <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} bg-white/10 rounded-lg p-3`}>
+            <div className="flex items-center">
+              <div className={`w-10 h-10 bg-white rounded-full flex items-center justify-center flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`}>
+                <span className="text-primary font-bold text-sm">
+                  {profile?.full_name ? profile.full_name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2) : 'DK'}
                 </span>
               </div>
+              {!isCollapsed && (
+                <div className="flex flex-col">
+                  <p className="text-sm font-medium text-white leading-tight">
+                    {profile?.full_name || 'Khổng Đức Dũng'}
+                  </p>
+                  <p className="text-xs text-white/80 leading-tight">
+                    {profile?.employee_code || 'khongducdzung@gmail...'}
+                  </p>
+                  <span className="text-xs bg-primary text-white px-2 py-0.5 rounded mt-1 w-fit">
+                    Admin
+                  </span>
+                </div>
+              )}
+            </div>
+            {!isCollapsed && (
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleProfileClick}
+                  className="text-white hover:bg-white/20 h-8 w-8"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleSignOut}
+                  className="text-white hover:bg-white/20 h-8 w-8"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             )}
-          </Button>
+          </div>
         </div>
 
         {/* Navigation Menu */}
