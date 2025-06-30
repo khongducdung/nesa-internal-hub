@@ -7,7 +7,11 @@ import { usePerformanceDashboard } from '@/hooks/usePerformance';
 import { TrendingUp, Users, Target, Star, Calendar, AlertCircle } from 'lucide-react';
 
 export function PerformanceDashboard() {
-  const { data: assignments, isLoading } = usePerformanceDashboard();
+  const { data: assignments, isLoading, error } = usePerformanceDashboard();
+
+  console.log('Dashboard data:', assignments);
+  console.log('Dashboard loading:', isLoading);
+  console.log('Dashboard error:', error);
 
   if (isLoading) {
     return (
@@ -17,34 +21,40 @@ export function PerformanceDashboard() {
     );
   }
 
-  const stats = React.useMemo(() => {
-    if (!assignments) return null;
-
-    const totalAssignments = assignments.length;
-    const completedAssignments = assignments.filter(a => a.status === 'evaluated').length;
-    const pendingAssignments = assignments.filter(a => a.status === 'assigned').length;
-    const inProgressAssignments = assignments.filter(a => a.status === 'in_progress' || a.status === 'submitted').length;
-
-    const evaluatedAssignments = assignments.filter(a => 
-      a.performance_evaluations && a.performance_evaluations.length > 0
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-500">Lỗi: {error.message}</div>
+      </div>
     );
-    
-    const avgScore = evaluatedAssignments.length > 0 
-      ? evaluatedAssignments.reduce((sum, a) => {
-          const latestEval = a.performance_evaluations?.[0];
-          return sum + (latestEval?.final_score || 0);
-        }, 0) / evaluatedAssignments.length
-      : 0;
+  }
 
-    return {
-      totalAssignments,
-      completedAssignments,
-      pendingAssignments,
-      inProgressAssignments,
-      avgScore,
-      completionRate: totalAssignments > 0 ? (completedAssignments / totalAssignments) * 100 : 0
-    };
-  }, [assignments]);
+  if (!assignments || assignments.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Chưa có dữ liệu phân công</div>
+      </div>
+    );
+  }
+
+  // Calculate stats safely
+  const totalAssignments = assignments.length;
+  const completedAssignments = assignments.filter(a => a.status === 'evaluated').length;
+  const pendingAssignments = assignments.filter(a => a.status === 'assigned').length;
+  const inProgressAssignments = assignments.filter(a => a.status === 'in_progress' || a.status === 'submitted').length;
+
+  const evaluatedAssignments = assignments.filter(a => 
+    a.performance_evaluations && Array.isArray(a.performance_evaluations) && a.performance_evaluations.length > 0
+  );
+  
+  const avgScore = evaluatedAssignments.length > 0 
+    ? evaluatedAssignments.reduce((sum, a) => {
+        const latestEval = a.performance_evaluations?.[0];
+        return sum + (latestEval?.final_score || 0);
+      }, 0) / evaluatedAssignments.length
+    : 0;
+
+  const completionRate = totalAssignments > 0 ? (completedAssignments / totalAssignments) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -56,7 +66,7 @@ export function PerformanceDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalAssignments || 0}</div>
+            <div className="text-2xl font-bold">{totalAssignments}</div>
           </CardContent>
         </Card>
 
@@ -66,7 +76,7 @@ export function PerformanceDashboard() {
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats?.completedAssignments || 0}</div>
+            <div className="text-2xl font-bold text-green-600">{completedAssignments}</div>
           </CardContent>
         </Card>
 
@@ -76,7 +86,7 @@ export function PerformanceDashboard() {
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats?.inProgressAssignments || 0}</div>
+            <div className="text-2xl font-bold text-blue-600">{inProgressAssignments}</div>
           </CardContent>
         </Card>
 
@@ -87,7 +97,7 @@ export function PerformanceDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {stats?.avgScore ? stats.avgScore.toFixed(1) : '0.0'}
+              {avgScore ? avgScore.toFixed(1) : '0.0'}
             </div>
           </CardContent>
         </Card>
@@ -106,9 +116,9 @@ export function PerformanceDashboard() {
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span>Tỷ lệ hoàn thành</span>
-                <span>{stats?.completionRate.toFixed(1)}%</span>
+                <span>{completionRate.toFixed(1)}%</span>
               </div>
-              <Progress value={stats?.completionRate || 0} className="h-2" />
+              <Progress value={completionRate} className="h-2" />
             </div>
           </div>
         </CardContent>
@@ -124,7 +134,7 @@ export function PerformanceDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {assignments?.map((assignment) => {
+            {assignments.map((assignment) => {
               const latestReport = assignment.performance_reports?.[0];
               const latestEvaluation = assignment.performance_evaluations?.[0];
               const kpiProgress = latestReport && assignment.kpi_target > 0 
@@ -136,10 +146,10 @@ export function PerformanceDashboard() {
                   <div className="flex justify-between items-start">
                     <div>
                       <h4 className="font-medium text-gray-900">
-                        {assignment.employees?.full_name}
+                        {assignment.employees?.full_name || 'Chưa có tên'}
                       </h4>
                       <p className="text-sm text-gray-500">
-                        {assignment.employees?.employee_code} • {assignment.work_groups?.name}
+                        {assignment.employees?.employee_code || 'N/A'} • {assignment.work_groups?.name || 'N/A'}
                       </p>
                     </div>
                     <Badge variant={
@@ -157,19 +167,19 @@ export function PerformanceDashboard() {
                     <div>
                       <span className="text-gray-500">KPI Target:</span>
                       <div className="font-medium">
-                        {assignment.kpi_target} {assignment.kpi_unit}
+                        {assignment.kpi_target} {assignment.kpi_unit || ''}
                       </div>
                     </div>
                     <div>
                       <span className="text-gray-500">Thực tế:</span>
                       <div className="font-medium">
-                        {latestReport?.actual_quantity || 0} {assignment.kpi_unit}
+                        {latestReport?.actual_quantity || 0} {assignment.kpi_unit || ''}
                       </div>
                     </div>
                     <div>
                       <span className="text-gray-500">Điểm số:</span>
                       <div className="font-medium">
-                        {latestEvaluation?.final_score?.toFixed(1) || 'Chưa đánh giá'}
+                        {latestEvaluation?.final_score ? latestEvaluation.final_score.toFixed(1) : 'Chưa đánh giá'}
                       </div>
                     </div>
                   </div>
@@ -183,19 +193,12 @@ export function PerformanceDashboard() {
                   </div>
 
                   <div className="flex justify-between text-sm text-gray-500">
-                    <span>Chu kỳ: {assignment.performance_cycles?.name}</span>
+                    <span>Chu kỳ: {assignment.performance_cycles?.name || 'N/A'}</span>
                     <span>Tỷ lệ lương: {assignment.salary_percentage}%</span>
                   </div>
                 </div>
               );
             })}
-
-            {!assignments?.length && (
-              <div className="text-center py-8 text-gray-500">
-                <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p>Chưa có nhân viên nào được phân công công việc</p>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
