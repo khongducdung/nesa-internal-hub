@@ -1,14 +1,14 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { AttendanceWithDetails } from '@/types/database';
+import { Attendance } from '@/types/database';
 
 export const useAttendance = (date?: string) => {
   const targetDate = date || new Date().toISOString().split('T')[0];
   
   return useQuery({
     queryKey: ['attendance', targetDate],
-    queryFn: async (): Promise<AttendanceWithDetails[]> => {
+    queryFn: async (): Promise<(Attendance & { employee_name: string })[]> => {
       console.log('Fetching attendance for date:', targetDate);
       
       const { data, error } = await supabase
@@ -16,9 +16,7 @@ export const useAttendance = (date?: string) => {
         .select(`
           *,
           employees!inner (
-            id,
-            full_name,
-            employee_code
+            full_name
           )
         `)
         .eq('date', targetDate)
@@ -29,8 +27,13 @@ export const useAttendance = (date?: string) => {
         throw error;
       }
 
-      console.log('Attendance fetched successfully:', data);
-      return data || [];
+      const attendanceWithNames = data?.map(record => ({
+        ...record,
+        employee_name: (record as any).employees?.full_name || 'Unknown'
+      })) || [];
+
+      console.log('Attendance fetched successfully:', attendanceWithNames);
+      return attendanceWithNames;
     },
   });
 };

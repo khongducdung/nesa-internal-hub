@@ -1,274 +1,206 @@
+
+import { useAuth } from '@/hooks/useAuth';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Users,
-  Zap,
-  Workflow,
-  TrendingUp,
-  FileText,
-  Briefcase,
-  Clock,
-  GraduationCap,
-  BarChart4,
-  ListChecks,
-  Calendar,
-  User2,
-} from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useEmployees } from '@/hooks/useEmployees';
-import { useDepartments } from '@/hooks/useDepartments';
-import { useProcesses } from '@/hooks/useProcesses';
-import { Link } from 'react-router-dom';
+import { Users, Building2, FileText, TrendingUp, Plus, ArrowRight } from 'lucide-react';
 
 export default function Dashboard() {
-  const [employeeCount, setEmployeeCount] = useState(0);
-  const [departmentCount, setDepartmentCount] = useState(0);
-  const [processCount, setProcessCount] = useState(0);
-  const [activeEmployeeCount, setActiveEmployeeCount] = useState(0);
-  const [newHiresCount, setNewHiresCount] = useState(0);
+  const { profile, isSuperAdmin, isAdmin } = useAuth();
 
-  const { data: employees } = useEmployees();
-  const { data: departments } = useDepartments();
-  const { data: processes } = useProcesses();
+  const stats = [
+    {
+      title: 'Tổng nhân sự',
+      value: '156',
+      icon: Users,
+      color: 'from-blue-500 to-blue-600',
+      change: '+12%',
+      changeType: 'increase'
+    },
+    {
+      title: 'Phòng ban',
+      value: '12',
+      icon: Building2,
+      color: 'from-green-500 to-green-600',
+      change: '+2%',
+      changeType: 'increase'
+    },
+    {
+      title: 'Quy trình hoạt động',
+      value: '24',
+      icon: FileText,
+      color: 'from-orange-500 to-orange-600',
+      change: '+8%',
+      changeType: 'increase'
+    },
+    {
+      title: 'Đánh giá tháng này',
+      value: '42',
+      icon: TrendingUp,
+      color: 'from-purple-500 to-purple-600',
+      change: '+15%',
+      changeType: 'increase'
+    }
+  ];
 
-  useEffect(() => {
-    if (employees) {
-      setEmployeeCount(employees.length);
-      setActiveEmployeeCount(employees.filter(e => e.work_status === 'active').length);
-      setNewHiresCount(employees.filter(e => {
-        const hireDate = new Date(e.hire_date || '');
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        return hireDate > thirtyDaysAgo;
-      }).length);
-    }
-    if (departments) {
-      setDepartmentCount(departments.length);
-    }
-    if (processes) {
-      setProcessCount(processes.length);
-    }
-  }, [employees, departments, processes]);
+  const quickActions = [
+    { label: 'Thêm nhân viên', icon: Plus, path: '/hrm/employees/new', access: 'admin' },
+    { label: 'Tạo quy trình mới', icon: Plus, path: '/processes/new', access: 'admin' },
+    { label: 'Đánh giá OKR', icon: TrendingUp, path: '/okr', access: 'all' },
+    { label: 'Xem KPI', icon: ArrowRight, path: '/kpi', access: 'all' }
+  ];
+
+  const hasAccess = (access: string) => {
+    if (access === 'all') return true;
+    if (access === 'admin') return isAdmin || isSuperAdmin;
+    if (access === 'super_admin') return isSuperAdmin;
+    return false;
+  };
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Tổng quan</h1>
-            <p className="text-gray-600 mt-1">Theo dõi nhanh chóng các chỉ số quan trọng của hệ thống</p>
-          </div>
-          <div className="space-x-2 mt-4 sm:mt-0">
-            <Button>
-              <Calendar className="h-4 w-4 mr-2" />
-              Báo cáo tháng
-            </Button>
-            <Button variant="secondary">
-              <ListChecks className="h-4 w-4 mr-2" />
-              Xem tất cả
-            </Button>
+      <div className="space-y-8">
+        {/* Welcome Section */}
+        <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-2xl p-8 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">
+                Chào mừng trở lại, {profile?.full_name}! 👋
+              </h1>
+              <p className="text-blue-100 text-lg">
+                {isSuperAdmin ? 'Super Admin' : isAdmin ? 'Admin' : 'Nhân viên'} • 
+                Hôm nay là {new Date().toLocaleDateString('vi-VN', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </p>
+            </div>
+            <div className="hidden lg:block">
+              <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                  <span className="text-2xl font-bold text-blue-600">N</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-2">Tổng số nhân viên</p>
-                  <p className="text-3xl font-bold text-gray-900">{employeeCount}</p>
-                  <p className="text-green-600 text-sm mt-1">
-                    <User2 className="h-4 w-4 inline-block mr-1" />
-                    {activeEmployeeCount} đang hoạt động
-                  </p>
-                </div>
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-xl shadow-lg">
-                  <Users className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-2">Tổng số phòng ban</p>
-                  <p className="text-3xl font-bold text-gray-900">{departmentCount}</p>
-                  <p className="text-blue-600 text-sm mt-1">
-                    <Briefcase className="h-4 w-4 inline-block mr-1" />
-                    {departmentCount} phòng ban
-                  </p>
-                </div>
-                <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 rounded-xl shadow-lg">
-                  <Briefcase className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-2">Quy trình đang chạy</p>
-                  <p className="text-3xl font-bold text-gray-900">{processCount}</p>
-                  <p className="text-orange-600 text-sm mt-1">
-                    <Workflow className="h-4 w-4 inline-block mr-1" />
-                    {processCount} quy trình
-                  </p>
-                </div>
-                <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-4 rounded-xl shadow-lg">
-                  <Workflow className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-2">Nhân viên mới (30 ngày)</p>
-                  <p className="text-3xl font-bold text-gray-900">{newHiresCount}</p>
-                  <p className="text-red-600 text-sm mt-1">
-                    <User2 className="h-4 w-4 inline-block mr-1" />
-                    {newHiresCount} nhân viên
-                  </p>
-                </div>
-                <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-4 rounded-xl shadow-lg">
-                  <User2 className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {stats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <Card key={index} className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-600 mb-2">
+                        {stat.title}
+                      </p>
+                      <p className="text-3xl font-bold text-gray-900 mb-1">
+                        {stat.value}
+                      </p>
+                      <p className="text-sm text-green-600 font-medium flex items-center">
+                        {stat.change} so với tháng trước
+                      </p>
+                    </div>
+                    <div className={`bg-gradient-to-br ${stat.color} p-4 rounded-xl shadow-lg`}>
+                      <Icon className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Quick Actions */}
         <Card className="shadow-md border-0">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold text-gray-900 flex items-center">
-              <Zap className="h-5 w-5 mr-2" />
-              Thao tác nhanh
-            </CardTitle>
+            <CardTitle className="text-xl font-semibold text-gray-900">Thao tác nhanh</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <Link to="/hrm">
-                <Button variant="outline" className="w-full h-16 flex flex-col items-center justify-center hover:bg-blue-50 hover:border-blue-200">
-                  <Users className="h-6 w-6 mb-2 text-blue-600" />
-                  <span className="text-sm">Quản lý nhân sự</span>
-                </Button>
-              </Link>
-              
-              <Link to="/processes">
-                <Button variant="outline" className="w-full h-16 flex flex-col items-center justify-center hover:bg-green-50 hover:border-green-200">
-                  <Workflow className="h-6 w-6 mb-2 text-green-600" />
-                  <span className="text-sm">Quy trình</span>
-                </Button>
-              </Link>
-              
-              <Link to="/performance">
-                <Button variant="outline" className="w-full h-16 flex flex-col items-center justify-center hover:bg-purple-50 hover:border-purple-200">
-                  <TrendingUp className="h-6 w-6 mb-2 text-purple-600" />
-                  <span className="text-sm">Đánh giá hiệu suất</span>
-                </Button>
-              </Link>
-
-              <Link to="/company-policies">
-                <Button variant="outline" className="w-full h-16 flex flex-col items-center justify-center hover:bg-orange-50 hover:border-orange-200">
-                  <FileText className="h-6 w-6 mb-2 text-orange-600" />
-                  <span className="text-sm">Xem quy định công ty</span>
-                </Button>
-              </Link>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {quickActions.map((action, index) => {
+                if (!hasAccess(action.access)) return null;
+                const Icon = action.icon;
+                return (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    className="h-20 flex flex-col items-center justify-center space-y-2 hover:bg-blue-50 hover:border-blue-200 transition-colors"
+                    onClick={() => console.log(`Navigate to ${action.path}`)}
+                  >
+                    <Icon className="h-5 w-5 text-blue-600" />
+                    <span className="text-sm font-medium">{action.label}</span>
+                  </Button>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
 
-        {/* Recent Activities */}
-        <Card className="shadow-md border-0">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold text-gray-900 flex items-center">
-              <Clock className="h-5 w-5 mr-2" />
-              Hoạt động gần đây
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="divide-y divide-gray-200">
-              <li className="py-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
-                    <Users className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-gray-700">
-                      <span className="font-medium">Nguyễn Văn A</span> đã được thêm vào phòng ban Kỹ thuật
-                    </p>
-                    <p className="text-gray-500 text-sm">5 phút trước</p>
-                  </div>
-                </div>
-              </li>
-              <li className="py-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
-                    <Workflow className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-gray-700">
-                      Quy trình "Tuyển dụng nhân viên mới" đã được tạo
-                    </p>
-                    <p className="text-gray-500 text-sm">30 phút trước</p>
-                  </div>
-                </div>
-              </li>
-              <li className="py-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center">
-                    <TrendingUp className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-gray-700">
-                      Đánh giá hiệu suất cho <span className="font-medium">Trần Thị B</span> đã hoàn thành
-                    </p>
-                    <p className="text-gray-500 text-sm">1 giờ trước</p>
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
-
-        {/* Charts */}
+        {/* Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Activities */}
           <Card className="shadow-md border-0">
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-gray-900 flex items-center">
-                <BarChart4 className="h-5 w-5 mr-2" />
-                Thống kê nhân viên
-              </CardTitle>
+              <CardTitle className="text-xl font-semibold text-gray-900">Hoạt động gần đây</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* Placeholder for Employee Statistics Chart */}
-              <div className="h-48 bg-gray-50 rounded-md flex items-center justify-center text-gray-400">
-                Biểu đồ thống kê nhân viên
+              <div className="space-y-4">
+                {[
+                  { action: 'Thêm nhân viên mới', user: 'Nguyễn Văn A', time: '2 giờ trước', type: 'add' },
+                  { action: 'Cập nhật quy trình', user: 'Trần Thị B', time: '4 giờ trước', type: 'update' },
+                  { action: 'Hoàn thành đánh giá OKR', user: 'Lê Văn C', time: '1 ngày trước', type: 'complete' },
+                  { action: 'Tạo KPI mới', user: 'Phạm Thị D', time: '2 ngày trước', type: 'create' }
+                ].map((activity, index) => (
+                  <div key={index} className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className={`w-2 h-2 rounded-full ${
+                      activity.type === 'add' ? 'bg-green-500' :
+                      activity.type === 'update' ? 'bg-blue-500' :
+                      activity.type === 'complete' ? 'bg-purple-500' : 'bg-orange-500'
+                    }`} />
+                    <div className="flex-1">
+                      <p className="font-medium text-sm text-gray-900">{activity.action}</p>
+                      <p className="text-xs text-gray-500">bởi {activity.user}</p>
+                    </div>
+                    <p className="text-xs text-gray-400">{activity.time}</p>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
 
+          {/* Important Notifications */}
           <Card className="shadow-md border-0">
             <CardHeader>
-              <CardTitle className="text-xl font-semibold text-gray-900 flex items-center">
-                <Calendar className="h-5 w-5 mr-2" />
-                Lịch làm việc
-              </CardTitle>
+              <CardTitle className="text-xl font-semibold text-gray-900">Thông báo quan trọng</CardTitle>
             </CardHeader>
             <CardContent>
-              {/* Placeholder for Calendar */}
-              <div className="h-48 bg-gray-50 rounded-md flex items-center justify-center text-gray-400">
-                Lịch làm việc
+              <div className="space-y-4">
+                {[
+                  { title: 'Họp tổng kết quý 4', date: '15/01/2024', priority: 'high' },
+                  { title: 'Đánh giá hiệu suất hàng tháng', date: '20/01/2024', priority: 'medium' },
+                  { title: 'Training kỹ năng mềm', date: '25/01/2024', priority: 'low' },
+                  { title: 'Cập nhật quy trình mới', date: '30/01/2024', priority: 'medium' }
+                ].map((notification, index) => (
+                  <div key={index} className="flex items-center space-x-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                    <div className={`w-3 h-3 rounded-full ${
+                      notification.priority === 'high' ? 'bg-red-500' :
+                      notification.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                    }`} />
+                    <div className="flex-1">
+                      <p className="font-medium text-sm text-gray-900">{notification.title}</p>
+                      <p className="text-xs text-gray-500">{notification.date}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800">
+                      Xem
+                    </Button>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>

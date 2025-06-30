@@ -59,48 +59,6 @@ export type Database = {
           },
         ]
       }
-      company_policies: {
-        Row: {
-          category: string
-          content: string
-          created_at: string
-          created_by: string
-          effective_date: string
-          expiry_date: string | null
-          id: string
-          status: string
-          title: string
-          updated_at: string
-          updated_by: string | null
-        }
-        Insert: {
-          category: string
-          content: string
-          created_at?: string
-          created_by: string
-          effective_date?: string
-          expiry_date?: string | null
-          id?: string
-          status?: string
-          title: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Update: {
-          category?: string
-          content?: string
-          created_at?: string
-          created_by?: string
-          effective_date?: string
-          expiry_date?: string | null
-          id?: string
-          status?: string
-          title?: string
-          updated_at?: string
-          updated_by?: string | null
-        }
-        Relationships: []
-      }
       contracts: {
         Row: {
           contract_type: string
