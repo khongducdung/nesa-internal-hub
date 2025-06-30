@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +16,7 @@ import { useProcessCategories } from '@/hooks/useProcessCategories';
 import { ProcessTemplateForm } from '@/components/processes/ProcessTemplateForm';
 import { ProcessTemplateList } from '@/components/processes/ProcessTemplateList';
 import { ProcessTemplateViewDialog } from '@/components/processes/ProcessTemplateViewDialog';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Processes() {
   const [activeTab, setActiveTab] = useState('list');
@@ -29,6 +29,7 @@ export default function Processes() {
   const { data: categories } = useProcessCategories();
   const createMutation = useCreateProcessTemplate();
   const updateMutation = useUpdateProcessTemplate();
+  const { toast } = useToast();
 
   // Thống kê
   const documentStats = [
@@ -70,9 +71,31 @@ export default function Processes() {
     try {
       console.log('Submitting form data:', data);
       
-      // Validate required fields
-      if (!data.name || !data.category_id) {
-        console.error('Missing required fields:', { name: data.name, category_id: data.category_id });
+      // Validate required fields with clear error messages
+      if (!data.name || data.name.trim() === '') {
+        toast({
+          title: "Lỗi validation",
+          description: "Vui lòng nhập tiêu đề tài liệu",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!data.category_id) {
+        toast({
+          title: "Lỗi validation", 
+          description: "Vui lòng chọn danh mục cho tài liệu",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!data.content || data.content.trim() === '') {
+        toast({
+          title: "Lỗi validation",
+          description: "Vui lòng nhập nội dung hướng dẫn",
+          variant: "destructive",
+        });
         return;
       }
 
@@ -94,6 +117,7 @@ export default function Processes() {
       }
     } catch (error) {
       console.error('Error submitting form:', error);
+      // Error is already handled by the mutation's onError callback
     }
   };
 

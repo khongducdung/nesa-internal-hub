@@ -11,6 +11,7 @@ import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { CategorySelector } from './CategorySelector';
 import { TargetSelector } from './TargetSelector';
 import { FileAttachments } from './FileAttachments';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProcessTemplateFormProps {
   open: boolean;
@@ -36,6 +37,8 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
 
   const [newTag, setNewTag] = useState('');
   const [newLink, setNewLink] = useState({ title: '', url: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   // Update form data when initialData changes
   useEffect(() => {
@@ -69,21 +72,81 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
     }
   }, [initialData]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    console.log('Form submission attempted with data:', formData);
-    
-    // Validate required fields
+  const validateForm = () => {
     if (!formData.name.trim()) {
-      console.error('Name is required');
-      return;
+      toast({
+        title: "Lỗi validation",
+        description: "Vui lòng nhập tiêu đề tài liệu",
+        variant: "destructive",
+      });
+      return false;
     }
     
     if (!formData.category_id) {
-      console.error('Category is required');
+      toast({
+        title: "Lỗi validation",
+        description: "Vui lòng chọn danh mục",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!formData.content.trim()) {
+      toast({
+        title: "Lỗi validation",
+        description: "Vui lòng nhập nội dung hướng dẫn",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Validate external links
+    for (let i = 0; i < formData.external_links.length; i++) {
+      const link = formData.external_links[i];
+      if (!link.title.trim()) {
+        toast({
+          title: "Lỗi validation",
+          description: `Vui lòng nhập tiêu đề cho liên kết thứ ${i + 1}`,
+          variant: "destructive",
+        });
+        return false;
+      }
+      if (!link.url.trim()) {
+        toast({
+          title: "Lỗi validation",
+          description: `Vui lòng nhập URL cho liên kết thứ ${i + 1}`,
+          variant: "destructive",
+        });
+        return false;
+      }
+      // Basic URL validation
+      try {
+        new URL(link.url);
+      } catch {
+        toast({
+          title: "Lỗi validation",
+          description: `URL không hợp lệ cho liên kết thứ ${i + 1}`,
+          variant: "destructive",
+        });
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (isSubmitting) return;
+    
+    console.log('Form submission attempted with data:', formData);
+    
+    if (!validateForm()) {
       return;
     }
+
+    setIsSubmitting(true);
 
     const processData = {
       ...formData,
@@ -116,6 +179,9 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
       }
     } catch (error) {
       console.error('Form submission error:', error);
+      // Error handling is done in the parent component and mutations
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -138,11 +204,27 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
 
   const addExternalLink = () => {
     if (newLink.title.trim() && newLink.url.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        external_links: [...prev.external_links, { ...newLink }]
-      }));
-      setNewLink({ title: '', url: '' });
+      // Basic URL validation
+      try {
+        new URL(newLink.url);
+        setFormData(prev => ({
+          ...prev,
+          external_links: [...prev.external_links, { ...newLink }]
+        }));
+        setNewLink({ title: '', url: '' });
+      } catch {
+        toast({
+          title: "Lỗi validation",
+          description: "URL không hợp lệ",
+          variant: "destructive",
+        });
+      }
+    } else {
+      toast({
+        title: "Lỗi validation",
+        description: "Vui lòng nhập đầy đủ tiêu đề và URL",
+        variant: "destructive",
+      });
     }
   };
 
@@ -325,12 +407,12 @@ export function ProcessTemplateForm({ open, onOpenChange, onSubmit, initialData,
 
       <div className="flex justify-end gap-3 pt-4 border-t">
         {!inline && (
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Hủy
           </Button>
         )}
-        <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-          {initialData ? 'Cập nhật' : 'Tạo tài liệu'}
+        <Button type="submit" className="bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
+          {isSubmitting ? 'Đang xử lý...' : (initialData ? 'Cập nhật' : 'Tạo tài liệu')}
         </Button>
       </div>
     </form>

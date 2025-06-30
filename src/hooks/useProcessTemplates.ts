@@ -63,26 +63,51 @@ export const useCreateProcessTemplate = () => {
 
   return useMutation({
     mutationFn: async (newTemplate: Omit<ProcessTemplate, 'id' | 'created_at' | 'updated_at'>) => {
+      // Get category name from category_id
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('process_categories')
+        .select('name')
+        .eq('id', newTemplate.category_id)
+        .single();
+
+      if (categoryError) {
+        throw new Error(`Không thể tìm thấy danh mục: ${categoryError.message}`);
+      }
+
+      if (!categoryData) {
+        throw new Error('Danh mục không tồn tại');
+      }
+
+      // Add the category name to the template
+      const templateWithCategory = {
+        ...newTemplate,
+        category: categoryData.name
+      };
+
       const { data, error } = await supabase
         .from('process_templates')
-        .insert([newTemplate])
+        .insert([templateWithCategory])
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw new Error(`Lỗi cơ sở dữ liệu: ${error.message}`);
+      }
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['process-templates'] });
       toast({
         title: "Thành công",
-        description: "Mẫu quy trình đã được tạo",
+        description: "Tài liệu hướng dẫn đã được tạo thành công",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error('Create template error:', error);
       toast({
-        title: "Lỗi",
-        description: "Không thể tạo mẫu quy trình",
+        title: "Lỗi tạo tài liệu",
+        description: error.message || "Không thể tạo tài liệu hướng dẫn. Vui lòng thử lại.",
         variant: "destructive",
       });
     },
@@ -95,27 +120,51 @@ export const useUpdateProcessTemplate = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<ProcessTemplate> & { id: string }) => {
+      // If category_id is being updated, get the category name
+      let updatesWithCategory = { ...updates };
+      if (updates.category_id) {
+        const { data: categoryData, error: categoryError } = await supabase
+          .from('process_categories')
+          .select('name')
+          .eq('id', updates.category_id)
+          .single();
+
+        if (categoryError) {
+          throw new Error(`Không thể tìm thấy danh mục: ${categoryError.message}`);
+        }
+
+        if (!categoryData) {
+          throw new Error('Danh mục không tồn tại');
+        }
+
+        updatesWithCategory.category = categoryData.name;
+      }
+
       const { data, error } = await supabase
         .from('process_templates')
-        .update(updates)
+        .update(updatesWithCategory)
         .eq('id', id)
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Database error:', error);
+        throw new Error(`Lỗi cơ sở dữ liệu: ${error.message}`);
+      }
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['process-templates'] });
       toast({
         title: "Thành công",
-        description: "Mẫu quy trình đã được cập nhật",
+        description: "Tài liệu hướng dẫn đã được cập nhật thành công",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error('Update template error:', error);
       toast({
-        title: "Lỗi",
-        description: "Không thể cập nhật mẫu quy trình",
+        title: "Lỗi cập nhật tài liệu",
+        description: error.message || "Không thể cập nhật tài liệu hướng dẫn. Vui lòng thử lại.",
         variant: "destructive",
       });
     },
