@@ -24,15 +24,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           toggleCollapse={toggleSidebarCollapse}
         />
         
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           <Header 
             toggleSidebar={toggleSidebar} 
             toggleSidebarCollapse={toggleSidebarCollapse}
             sidebarCollapsed={sidebarCollapsed}
           />
           
-          <main className="flex-1 overflow-y-auto p-4 max-w-7xl mx-auto w-full">
-            <div className="max-w-6xl mx-auto">
+          <main className="flex-1 overflow-y-auto p-6">
+            <div className={`mx-auto transition-all duration-300 ${
+              sidebarCollapsed ? 'max-w-7xl' : 'max-w-6xl'
+            }`}>
               {children}
             </div>
           </main>
