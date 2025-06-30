@@ -3,7 +3,6 @@ export interface WorkGroup {
   id: string;
   name: string;
   description?: string;
-  salary_percentage: number;
   created_by: string;
   created_at: string;
   updated_at: string;

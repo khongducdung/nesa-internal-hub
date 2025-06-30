@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +18,7 @@ export function PerformanceAssignmentManagement() {
   const { data: assignments, isLoading } = usePerformanceAssignments(selectedCycle);
   const { data: cycles } = usePerformanceCycles();
   const { data: workGroups } = useWorkGroups();
-  const { data: employees } = useEmployees();
+  const { data: allEmployees } = useEmployees();
   const createAssignment = useCreatePerformanceAssignment();
   const { profile } = useAuth();
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -32,17 +33,19 @@ export function PerformanceAssignmentManagement() {
   });
 
   const activeCycles = cycles?.filter(c => c.status === 'active') || [];
+  
+  // Lọc nhân viên mà user hiện tại quản lý
+  const managedEmployees = allEmployees?.filter(emp => 
+    emp.manager_id === profile?.employee_id
+  ) || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!profile?.employee_id) return;
 
-    const selectedWorkGroup = workGroups?.find(wg => wg.id === formData.work_group_id);
-    
     await createAssignment.mutateAsync({
       ...formData,
-      salary_percentage: selectedWorkGroup?.salary_percentage || 0,
       status: 'assigned',
       created_by: profile.employee_id
     });
@@ -91,6 +94,27 @@ export function PerformanceAssignmentManagement() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
+                  <Label htmlFor="employee_id">Nhân viên *</Label>
+                  <Select value={formData.employee_id} onValueChange={(value) => setFormData({...formData, employee_id: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn nhân viên" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {managedEmployees?.map((employee) => (
+                        <SelectItem key={employee.id} value={employee.id}>
+                          {employee.full_name} ({employee.employee_code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {managedEmployees?.length === 0 && (
+                    <p className="text-xs text-amber-600">
+                      Bạn chưa có nhân viên nào được gán làm cấp dưới
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="performance_cycle_id">Chu kỳ đánh giá *</Label>
                   <Select value={formData.performance_cycle_id} onValueChange={(value) => setFormData({...formData, performance_cycle_id: value})}>
                     <SelectTrigger>
@@ -107,22 +131,6 @@ export function PerformanceAssignmentManagement() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="employee_id">Nhân viên *</Label>
-                  <Select value={formData.employee_id} onValueChange={(value) => setFormData({...formData, employee_id: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn nhân viên" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {employees?.map((employee) => (
-                        <SelectItem key={employee.id} value={employee.id}>
-                          {employee.full_name} ({employee.employee_code})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="work_group_id">Nhóm công việc *</Label>
                   <Select value={formData.work_group_id} onValueChange={(value) => setFormData({...formData, work_group_id: value})}>
                     <SelectTrigger>
@@ -131,7 +139,7 @@ export function PerformanceAssignmentManagement() {
                     <SelectContent>
                       {workGroups?.map((group) => (
                         <SelectItem key={group.id} value={group.id}>
-                          {group.name} ({group.salary_percentage}%)
+                          {group.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -148,7 +156,7 @@ export function PerformanceAssignmentManagement() {
                   />
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
                   <Label htmlFor="kpi_target">KPI mục tiêu *</Label>
                   <Input
                     id="kpi_target"
@@ -160,6 +168,23 @@ export function PerformanceAssignmentManagement() {
                     placeholder="Nhập số lượng mục tiêu"
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="salary_percentage">Tỉ trọng % lương</Label>
+                  <Input
+                    id="salary_percentage"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.01"
+                    value={formData.salary_percentage}
+                    onChange={(e) => setFormData({...formData, salary_percentage: parseFloat(e.target.value) || 0})}
+                    placeholder="VD: 20"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Để trống nếu muốn đánh giá tổng hợp cuối tháng
+                  </p>
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
@@ -275,9 +300,15 @@ export function PerformanceAssignmentManagement() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="font-semibold">
-                        {assignment.salary_percentage}%
-                      </Badge>
+                      {assignment.salary_percentage > 0 ? (
+                        <Badge variant="outline" className="font-semibold">
+                          {assignment.salary_percentage}%
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">
+                          Đánh giá tổng
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge variant={

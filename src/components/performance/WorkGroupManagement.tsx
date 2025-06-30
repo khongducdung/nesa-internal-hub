@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, Briefcase } from 'lucide-react';
 import { useWorkGroups, useCreateWorkGroup } from '@/hooks/usePerformance';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,29 +17,20 @@ export function WorkGroupManagement() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
-    salary_percentage: 0
+    description: ''
   });
-
-  const totalPercentage = workGroups?.reduce((sum, group) => sum + group.salary_percentage, 0) || 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!profile?.employee_id) return;
 
-    const newTotal = totalPercentage + formData.salary_percentage;
-    if (newTotal > 100) {
-      alert('Tổng tỷ lệ % lương không được vượt quá 100%');
-      return;
-    }
-
     await createWorkGroup.mutateAsync({
       ...formData,
       created_by: profile.employee_id
     });
 
-    setFormData({ name: '', description: '', salary_percentage: 0 });
+    setFormData({ name: '', description: '' });
     setShowCreateForm(false);
   };
 
@@ -59,7 +49,7 @@ export function WorkGroupManagement() {
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Quản lý nhóm công việc</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Tạo và quản lý các nhóm công việc với tỷ lệ % lương tương ứng
+            Tạo và quản lý các nhóm công việc để phân loại nhiệm vụ
           </p>
         </div>
         <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
@@ -94,23 +84,6 @@ export function WorkGroupManagement() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="salary_percentage">Tỷ lệ % lương *</Label>
-                <Input
-                  id="salary_percentage"
-                  type="number"
-                  min="0.01"
-                  max="100"
-                  step="0.01"
-                  value={formData.salary_percentage}
-                  onChange={(e) => setFormData({...formData, salary_percentage: parseFloat(e.target.value) || 0})}
-                  required
-                />
-                <p className="text-xs text-gray-500">
-                  Đã sử dụng: {totalPercentage.toFixed(2)}% | Còn lại: {(100 - totalPercentage).toFixed(2)}%
-                </p>
-              </div>
-
               <div className="flex justify-end space-x-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
                   Hủy
@@ -123,32 +96,6 @@ export function WorkGroupManagement() {
           </DialogContent>
         </Dialog>
       </div>
-
-      {/* Summary Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Tổng quan tỷ lệ lương</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-between items-center">
-            <div className="text-2xl font-bold text-gray-900">
-              {totalPercentage.toFixed(2)}%
-            </div>
-            <Badge variant={totalPercentage === 100 ? 'default' : totalPercentage > 100 ? 'destructive' : 'secondary'}>
-              {totalPercentage === 100 ? 'Hoàn tất' : totalPercentage > 100 ? 'Vượt quá' : 'Chưa đủ'}
-            </Badge>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
-            <div 
-              className={`h-2 rounded-full transition-all ${
-                totalPercentage > 100 ? 'bg-red-500' : 
-                totalPercentage === 100 ? 'bg-green-500' : 'bg-blue-500'
-              }`}
-              style={{ width: `${Math.min(totalPercentage, 100)}%` }}
-            />
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Work Groups List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -174,12 +121,6 @@ export function WorkGroupManagement() {
               {group.description && (
                 <p className="text-sm text-gray-600 mb-3">{group.description}</p>
               )}
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-500">Tỷ lệ lương</span>
-                <Badge variant="outline" className="font-semibold">
-                  {group.salary_percentage}%
-                </Badge>
-              </div>
               <div className="text-xs text-gray-400 mt-2">
                 Tạo: {new Date(group.created_at).toLocaleDateString('vi-VN')}
               </div>

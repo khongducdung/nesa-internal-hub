@@ -30,7 +30,7 @@ export const useCreateWorkGroup = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: Omit<WorkGroup, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (data: Omit<WorkGroup, 'id' | 'created_at' | 'updated_at' | 'salary_percentage'>) => {
       const { data: result, error } = await supabase
         .from('work_groups')
         .insert(data)
