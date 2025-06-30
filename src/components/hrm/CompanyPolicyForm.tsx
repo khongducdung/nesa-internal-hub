@@ -76,7 +76,7 @@ export function CompanyPolicyForm({ open, onOpenChange, onSubmit, initialData }:
       return;
     }
 
-    await submitForm(false);
+    submitForm(false);
   };
 
   const submitForm = async (sendNotification: boolean) => {
@@ -86,7 +86,7 @@ export function CompanyPolicyForm({ open, onOpenChange, onSubmit, initialData }:
       expiry_date: formData.expiry_date ? formData.expiry_date.toISOString().split('T')[0] : null
     };
 
-    await onSubmit(submitData);
+    onSubmit(submitData);
 
     if (sendNotification && formData.status === 'active' && targetUsers?.length) {
       await createNotifications.mutateAsync({
@@ -228,11 +228,25 @@ export function CompanyPolicyForm({ open, onOpenChange, onSubmit, initialData }:
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label>Áp dụng cho</Label>
+              <Select value={formData.target_type} onValueChange={(value: any) => setFormData(prev => ({ ...prev, target_type: value, target_ids: [] }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="general">Toàn công ty</SelectItem>
+                  <SelectItem value="department">Phòng ban cụ thể</SelectItem>
+                  <SelectItem value="position">Vị trí cụ thể</SelectItem>
+                  <SelectItem value="employee">Nhân viên cụ thể</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <TargetSelector
               targetType={formData.target_type}
-              targetIds={formData.target_ids}
-              onTargetTypeChange={(type) => setFormData(prev => ({ ...prev, target_type: type, target_ids: [] }))}
-              onTargetIdsChange={(ids) => setFormData(prev => ({ ...prev, target_ids: ids }))}
+              selectedIds={formData.target_ids}
+              onSelectionChange={(ids) => setFormData(prev => ({ ...prev, target_ids: ids }))}
             />
 
             <DialogFooter>
