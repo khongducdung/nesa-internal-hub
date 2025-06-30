@@ -50,36 +50,22 @@ export const useCreateProcessNotifications = () => {
         is_read: false
       }));
 
-      // Use raw SQL query since the table is not in the TypeScript types yet
+      // Direct insert to process_notifications table
       const { data, error } = await supabase
-        .rpc('insert_process_notifications', {
-          notifications_data: notifications
-        });
-
-      // Fallback: If RPC doesn't exist, try direct insert
-      if (error && error.message.includes('function')) {
-        const { data: directData, error: directError } = await supabase
-          .from('process_notifications' as any)
-          .insert(notifications)
-          .select();
-
-        if (directError) {
-          throw new Error(`Lỗi tạo thông báo: ${directError.message}`);
-        }
-
-        return directData;
-      }
+        .from('process_notifications' as any)
+        .insert(notifications)
+        .select();
 
       if (error) {
         throw new Error(`Lỗi tạo thông báo: ${error.message}`);
       }
 
-      return data;
+      return { data, targetUsersCount: targetUsers.length };
     },
-    onSuccess: (data) => {
+    onSuccess: (result) => {
       toast({
         title: "Thành công",
-        description: `Đã gửi thông báo cho ${Array.isArray(data) ? data.length : targetUsers?.length || 0} nhân viên`,
+        description: `Đã gửi thông báo cho ${result.targetUsersCount} nhân viên`,
       });
     },
     onError: (error: Error) => {
