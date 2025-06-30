@@ -1,8 +1,15 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Users, Building2, Settings, X, Home, FileText, TrendingUp, Target, BarChart3, User, LogOut } from 'lucide-react';
+import { Users, Building2, Settings, X, Home, FileText, TrendingUp, Target, BarChart3, LogOut } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -107,24 +114,31 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
               )}
             </div>
             {!isCollapsed && (
-              <div className="flex gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleProfileClick}
-                  className="text-white hover:bg-white/20 h-8 w-8"
-                >
-                  <User className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleSignOut}
-                  className="text-white hover:bg-white/20 h-8 w-8"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-white/20 h-8 w-8"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={handleProfileClick} className="cursor-pointer">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Cài đặt tài khoản
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleSignOut} 
+                    className="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700 focus:bg-red-50 focus:text-red-700"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Đăng xuất
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </div>
