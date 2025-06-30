@@ -44,17 +44,18 @@ export function CompanyPolicyForm({ onClose, policy }: CompanyPolicyFormProps) {
 
   const onSubmit = async (data: PolicyFormData) => {
     try {
+      const submitData = {
+        ...data,
+        expiry_date: data.expiry_date || undefined,
+      };
+
       if (policy) {
         await updateMutation.mutateAsync({
           id: policy.id,
-          ...data,
-          expiry_date: data.expiry_date || undefined,
+          ...submitData,
         });
       } else {
-        await createMutation.mutateAsync({
-          ...data,
-          expiry_date: data.expiry_date || undefined,
-        });
+        await createMutation.mutateAsync(submitData);
       }
       onClose();
     } catch (error) {

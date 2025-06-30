@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Profile, SystemRole } from '@/types/database';
+import { Navigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -120,3 +121,25 @@ export const useAuth = () => {
   }
   return context;
 };
+
+export function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode; requiredRole?: SystemRole }) {
+  const { user, isLoading, hasRole } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (requiredRole && !hasRole(requiredRole)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+}

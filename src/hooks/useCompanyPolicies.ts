@@ -34,7 +34,7 @@ export const useCompanyPolicies = () => {
       }
 
       console.log('Company policies fetched successfully:', data);
-      return data || [];
+      return (data || []) as CompanyPolicy[];
     },
   });
 };
