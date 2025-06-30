@@ -6,26 +6,26 @@ import {
   Users, 
   Building2, 
   UserCheck,
-  Calendar,
+  FileText,
   TrendingUp,
   AlertTriangle
 } from 'lucide-react';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
-import { useLeaveRequests } from '@/hooks/useLeaveRequests';
+import { useCompanyPolicies } from '@/hooks/useCompanyPolicies';
 import { useAttendance } from '@/hooks/useAttendance';
 
 export default function HRM() {
   const { data: employees } = useEmployees();
   const { data: departments } = useDepartments();
-  const { data: leaveRequests } = useLeaveRequests();
+  const { data: policies } = useCompanyPolicies();
   const { data: attendance } = useAttendance();
 
   // Tính toán thống kê
   const totalEmployees = employees?.length || 0;
   const activeEmployees = employees?.filter(emp => emp.work_status === 'active').length || 0;
   const totalDepartments = departments?.length || 0;
-  const pendingLeaveRequests = leaveRequests?.filter(req => req.status === 'pending').length || 0;
+  const activePolicies = policies?.filter(policy => policy.status === 'active').length || 0;
   
   // Thống kê chấm công hôm nay
   const today = new Date().toISOString().split('T')[0];
@@ -58,12 +58,12 @@ export default function HRM() {
       changeType: 'neutral'
     },
     {
-      title: 'Đơn chờ duyệt',
-      value: pendingLeaveRequests.toString(),
-      icon: Calendar,
-      color: 'from-yellow-500 to-yellow-600',
-      change: 'Cần xử lý',
-      changeType: pendingLeaveRequests > 0 ? 'decrease' : 'neutral'
+      title: 'Quy định hiệu lực',
+      value: activePolicies.toString(),
+      icon: FileText,
+      color: 'from-orange-500 to-orange-600',
+      change: 'Đang áp dụng',
+      changeType: 'increase'
     }
   ];
 

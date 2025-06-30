@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,24 +9,27 @@ import {
   Users, 
   Building2, 
   Briefcase, 
-  Calendar, 
+  FileText, 
   GraduationCap,
   Plus,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertTriangle
+  Clock
 } from 'lucide-react';
 import { EmployeeForm } from './EmployeeForm';
 import { DepartmentForm } from './DepartmentForm';
 import { PositionForm } from './PositionForm';
-import { LeaveRequestForm } from './LeaveRequestForm';
+import { CompanyPolicyForm } from './CompanyPolicyForm';
 import { TrainingProgramForm } from './TrainingProgramForm';
 import { AttendanceForm } from './AttendanceForm';
+import { EmployeeList } from './EmployeeList';
+import { DepartmentList } from './DepartmentList';
+import { PositionList } from './PositionList';
+import { CompanyPolicyList } from './CompanyPolicyList';
+import { TrainingList } from './TrainingList';
+import { AttendanceList } from './AttendanceList';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
 import { usePositions } from '@/hooks/usePositions';
-import { useLeaveRequests, useUpdateLeaveRequestStatus } from '@/hooks/useLeaveRequests';
+import { useCompanyPolicies } from '@/hooks/useCompanyPolicies';
 import { useTrainingPrograms } from '@/hooks/useTrainingPrograms';
 import { useAttendance } from '@/hooks/useAttendance';
 
@@ -36,103 +40,16 @@ export function HRMTabs() {
   const { data: employees, isLoading: loadingEmployees } = useEmployees();
   const { data: departments } = useDepartments();
   const { data: positions } = usePositions();
-  const { data: leaveRequests } = useLeaveRequests();
+  const { data: policies } = useCompanyPolicies();
   const { data: trainingPrograms } = useTrainingPrograms();
   const { data: attendance } = useAttendance();
-  const updateLeaveStatus = useUpdateLeaveRequestStatus();
-
-  const getStatusBadge = (status: string, type: 'employee' | 'leave' | 'training' = 'employee') => {
-    if (type === 'employee') {
-      switch (status) {
-        case 'active':
-          return <Badge className="bg-green-100 text-green-800">Đang làm việc</Badge>;
-        case 'inactive':
-          return <Badge className="bg-red-100 text-red-800">Nghỉ việc</Badge>;
-        case 'pending':
-          return <Badge className="bg-yellow-100 text-yellow-800">Chờ xử lý</Badge>;
-        default:
-          return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
-      }
-    }
-
-    if (type === 'leave') {
-      switch (status) {
-        case 'pending':
-          return <Badge className="bg-yellow-100 text-yellow-800">Chờ duyệt</Badge>;
-        case 'approved':
-          return <Badge className="bg-green-100 text-green-800">Đã duyệt</Badge>;
-        case 'rejected':
-          return <Badge className="bg-red-100 text-red-800">Từ chối</Badge>;
-        default:
-          return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
-      }
-    }
-
-    if (type === 'training') {
-      switch (status) {
-        case 'active':
-          return <Badge className="bg-blue-100 text-blue-800">Đang mở</Badge>;
-        case 'completed':
-          return <Badge className="bg-green-100 text-green-800">Hoàn thành</Badge>;
-        case 'cancelled':
-          return <Badge className="bg-red-100 text-red-800">Đã hủy</Badge>;
-        default:
-          return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
-      }
-    }
-
-    return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
-  };
-
-  const getLevelBadge = (level: string) => {
-    const levelConfig = {
-      level_1: { label: 'Cấp 1', className: 'bg-purple-100 text-purple-800' },
-      level_2: { label: 'Cấp 2', className: 'bg-blue-100 text-blue-800' },
-      level_3: { label: 'Cấp 3', className: 'bg-gray-100 text-gray-800' },
-    };
-
-    const config = levelConfig[level as keyof typeof levelConfig];
-    if (!config) return <Badge className="bg-gray-100 text-gray-800">N/A</Badge>;
-
-    return <Badge className={config.className}>{config.label}</Badge>;
-  };
-
-  const getLeaveTypeBadge = (type: string) => {
-    const typeConfig = {
-      annual: { label: 'Phép năm', className: 'bg-blue-100 text-blue-800' },
-      sick: { label: 'Nghỉ ốm', className: 'bg-red-100 text-red-800' },
-      personal: { label: 'Cá nhân', className: 'bg-yellow-100 text-yellow-800' },
-      emergency: { label: 'Khẩn cấp', className: 'bg-orange-100 text-orange-800' },
-    };
-
-    const config = typeConfig[type as keyof typeof typeConfig];
-    if (!config) return <Badge className="bg-gray-100 text-gray-800">N/A</Badge>;
-
-    return <Badge className={config.className}>{config.label}</Badge>;
-  };
-
-  const handleApproveLeave = async (leaveId: string) => {
-    await updateLeaveStatus.mutateAsync({
-      id: leaveId,
-      status: 'approved',
-      approved_by: 'current_user_id', // Sẽ được thay thế bằng ID người dùng hiện tại
-    });
-  };
-
-  const handleRejectLeave = async (leaveId: string) => {
-    await updateLeaveStatus.mutateAsync({
-      id: leaveId,
-      status: 'rejected',
-      approved_by: 'current_user_id', // Sẽ được thay thế bằng ID người dùng hiện tại
-    });
-  };
 
   const getDialogTitle = () => {
     switch (activeTab) {
       case 'employees': return 'Thêm nhân viên mới';
       case 'departments': return 'Thêm phòng ban mới';
       case 'positions': return 'Thêm vị trí công việc';
-      case 'leave': return 'Tạo đơn nghỉ phép';
+      case 'policies': return 'Thêm quy định công ty';
       case 'training': return 'Tạo chương trình đào tạo';
       case 'attendance': return 'Chấm công';
       default: return 'Thêm mới';
@@ -147,8 +64,8 @@ export function HRMTabs() {
         return <DepartmentForm onClose={() => setIsDialogOpen(false)} />;
       case 'positions': 
         return <PositionForm onClose={() => setIsDialogOpen(false)} />;
-      case 'leave': 
-        return <LeaveRequestForm onClose={() => setIsDialogOpen(false)} />;
+      case 'policies': 
+        return <CompanyPolicyForm onClose={() => setIsDialogOpen(false)} />;
       case 'training': 
         return <TrainingProgramForm onClose={() => setIsDialogOpen(false)} />;
       case 'attendance': 
@@ -174,9 +91,9 @@ export function HRMTabs() {
             <Briefcase className="h-4 w-4" />
             Vị trí
           </TabsTrigger>
-          <TabsTrigger value="leave" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Nghỉ phép
+          <TabsTrigger value="policies" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Quy định
           </TabsTrigger>
           <TabsTrigger value="training" className="flex items-center gap-2">
             <GraduationCap className="h-4 w-4" />
@@ -209,34 +126,7 @@ export function HRMTabs() {
               </Dialog>
             </CardHeader>
             <CardContent>
-              {loadingEmployees ? (
-                <div className="flex items-center justify-center p-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {employees?.map((employee) => (
-                    <div key={employee.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h3 className="font-semibold">{employee.full_name}</h3>
-                            <Badge variant="outline">{employee.employee_code}</Badge>
-                            {getLevelBadge(employee.employee_level || 'level_3')}
-                            {getStatusBadge(employee.work_status || 'active')}
-                          </div>
-                          <div className="text-sm text-gray-600 space-y-1">
-                            <p>Email: {employee.email}</p>
-                            {employee.phone && <p>Điện thoại: {employee.phone}</p>}
-                            {employee.departments && <p>Phòng ban: {employee.departments.name}</p>}
-                            {employee.positions && <p>Vị trí: {employee.positions.name}</p>}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <EmployeeList />
             </CardContent>
           </Card>
         </TabsContent>
@@ -262,23 +152,7 @@ export function HRMTabs() {
               </Dialog>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {departments?.map((department) => (
-                  <div key={department.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="font-semibold">{department.name}</h3>
-                          {getStatusBadge(department.status || 'active')}
-                        </div>
-                        {department.description && (
-                          <p className="text-sm text-gray-600">{department.description}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <DepartmentList />
             </CardContent>
           </Card>
         </TabsContent>
@@ -304,42 +178,24 @@ export function HRMTabs() {
               </Dialog>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {positions?.map((position) => (
-                  <div key={position.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="font-semibold">{position.name}</h3>
-                          {getLevelBadge(position.level)}
-                          {getStatusBadge(position.status)}
-                        </div>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          {position.description && <p>{position.description}</p>}
-                          {position.departments && <p>Phòng ban: {position.departments.name}</p>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <PositionList />
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Leave Requests Tab */}
-        <TabsContent value="leave" className="space-y-6">
+        {/* Company Policies Tab */}
+        <TabsContent value="policies" className="space-y-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Quản lý nghỉ phép</CardTitle>
+              <CardTitle>Quy định công ty</CardTitle>
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
-                    Tạo đơn nghỉ phép
+                    Thêm quy định
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>{getDialogTitle()}</DialogTitle>
                   </DialogHeader>
@@ -348,50 +204,7 @@ export function HRMTabs() {
               </Dialog>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {leaveRequests?.map((request) => (
-                  <div key={request.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="font-semibold">
-                            {request.employees?.full_name || 'N/A'} ({request.employees?.employee_code || 'N/A'})
-                          </h3>
-                          {getLeaveTypeBadge(request.leave_type)}
-                          {getStatusBadge(request.status, 'leave')}
-                        </div>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p>Từ {new Date(request.start_date).toLocaleDateString('vi-VN')} đến {new Date(request.end_date).toLocaleDateString('vi-VN')}</p>
-                          <p>Số ngày: {request.days_count}</p>
-                          {request.reason && <p>Lý do: {request.reason}</p>}
-                        </div>
-                      </div>
-                      {request.status === 'pending' && (
-                        <div className="flex items-center space-x-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleApproveLeave(request.id)}
-                            disabled={updateLeaveStatus.isPending}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1 text-green-600" />
-                            Duyệt
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => handleRejectLeave(request.id)}
-                            disabled={updateLeaveStatus.isPending}
-                          >
-                            <XCircle className="h-4 w-4 mr-1 text-red-600" />
-                            Từ chối
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <CompanyPolicyList />
             </CardContent>
           </Card>
         </TabsContent>
@@ -417,26 +230,7 @@ export function HRMTabs() {
               </Dialog>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {trainingPrograms?.map((program) => (
-                  <div key={program.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="font-semibold">{program.name}</h3>
-                          {getStatusBadge(program.status, 'training')}
-                        </div>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          {program.description && <p>{program.description}</p>}
-                          {program.trainer && <p>Giảng viên: {program.trainer}</p>}
-                          <p>Thời gian: {new Date(program.start_date).toLocaleDateString('vi-VN')} - {new Date(program.end_date).toLocaleDateString('vi-VN')}</p>
-                          {program.max_participants && <p>Số lượng tối đa: {program.max_participants} người</p>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <TrainingList />
             </CardContent>
           </Card>
         </TabsContent>
@@ -462,28 +256,7 @@ export function HRMTabs() {
               </Dialog>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {attendance?.map((record) => (
-                  <div key={record.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="font-semibold">
-                            Nhân viên ID: {record.employee_id}
-                          </h3>
-                          {getStatusBadge(record.status || 'present')}
-                        </div>
-                        <div className="text-sm text-gray-600 space-y-1">
-                          <p>Ngày: {new Date(record.date).toLocaleDateString('vi-VN')}</p>
-                          {record.check_in_time && <p>Giờ vào: {new Date(record.check_in_time).toLocaleTimeString('vi-VN')}</p>}
-                          {record.check_out_time && <p>Giờ ra: {new Date(record.check_out_time).toLocaleTimeString('vi-VN')}</p>}
-                          {record.overtime_hours && record.overtime_hours > 0 && <p>Làm thêm: {record.overtime_hours}h</p>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <AttendanceList />
             </CardContent>
           </Card>
         </TabsContent>
