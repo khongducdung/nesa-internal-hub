@@ -18,8 +18,8 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
 
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard', access: 'all' },
-    { icon: Users, label: 'Quản lý nhân sự', path: '/hrm', access: 'admin' },
-    { icon: FileText, label: 'Quản lý quy trình', path: '/processes', access: 'admin' },
+    { icon: Users, label: 'Quản lý nhân sự', path: '/hrm', access: 'all' }, // Thay đổi từ 'admin' thành 'all'
+    { icon: FileText, label: 'Quản lý quy trình', path: '/processes', access: 'all' }, // Thay đổi từ 'admin' thành 'all'
     { icon: TrendingUp, label: 'Đánh giá hiệu suất', path: '/performance', access: 'all' },
     { icon: Target, label: 'OKR', path: '/okr', access: 'all' },
     { icon: BarChart3, label: 'KPI', path: '/kpi', access: 'all' },
@@ -27,6 +27,7 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
   ];
 
   const handleNavigation = (path: string) => {
+    console.log('Navigating to:', path);
     navigate(path);
     if (window.innerWidth < 1024) {
       toggleSidebar();

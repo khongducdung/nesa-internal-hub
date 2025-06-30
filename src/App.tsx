@@ -38,7 +38,7 @@ const App = () => (
             <Route 
               path="/hrm" 
               element={
-                <ProtectedRoute requiredRole="admin">
+                <ProtectedRoute>
                   <HRM />
                 </ProtectedRoute>
               } 
