@@ -8,6 +8,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { LoginPage } from "@/components/auth/LoginPage";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
+import HRM from "./pages/HRM";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,7 +30,14 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            {/* Thêm các route module khác ở đây */}
+            <Route 
+              path="/hrm" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <HRM />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
