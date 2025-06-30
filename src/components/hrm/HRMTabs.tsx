@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmployeeList } from './EmployeeList';
 import { DepartmentList } from './DepartmentList';
 import { PositionList } from './PositionList';
-import { AttendanceList } from './AttendanceList';
 import { TrainingList } from './TrainingList';
 import { CompanyPolicyList } from './CompanyPolicyList';
 import { AttendanceManagement } from './attendance/AttendanceManagement';
@@ -13,14 +12,13 @@ export function HRMTabs() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="employees" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="employees">Nhân viên</TabsTrigger>
           <TabsTrigger value="departments">Phòng ban</TabsTrigger>
           <TabsTrigger value="positions">Vị trí</TabsTrigger>
-          <TabsTrigger value="attendance">Chấm công</TabsTrigger>
           <TabsTrigger value="attendance-mgmt">Quản lý chấm công</TabsTrigger>
           <TabsTrigger value="training">Đào tạo</TabsTrigger>
-          <TabsTrigger value="policies">Chính sách</TabsTrigger>
+          <TabsTrigger value="policies">Quy định công ty</TabsTrigger>
         </TabsList>
 
         <TabsContent value="employees" className="mt-6">
@@ -33,10 +31,6 @@ export function HRMTabs() {
 
         <TabsContent value="positions" className="mt-6">
           <PositionList />
-        </TabsContent>
-
-        <TabsContent value="attendance" className="mt-6">
-          <AttendanceList />
         </TabsContent>
 
         <TabsContent value="attendance-mgmt" className="mt-6">
