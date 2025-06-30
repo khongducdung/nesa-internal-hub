@@ -361,6 +361,50 @@ export type Database = {
         }
         Relationships: []
       }
+      competency_frameworks: {
+        Row: {
+          competencies: Json
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          position_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          competencies?: Json
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          position_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          competencies?: Json
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          position_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competency_frameworks_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           contract_type: string
@@ -494,6 +538,63 @@ export type Database = {
           {
             foreignKeyName: "disciplinary_actions_issued_by_fkey"
             columns: ["issued_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_competency_assessments: {
+        Row: {
+          assessed_at: string | null
+          assessed_by: string | null
+          assessment_data: Json
+          competency_framework_id: string | null
+          created_at: string | null
+          employee_id: string | null
+          id: string
+          notes: string | null
+          overall_score: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          assessed_at?: string | null
+          assessed_by?: string | null
+          assessment_data?: Json
+          competency_framework_id?: string | null
+          created_at?: string | null
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          overall_score?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          assessed_at?: string | null
+          assessed_by?: string | null
+          assessment_data?: Json
+          competency_framework_id?: string | null
+          created_at?: string | null
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          overall_score?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_competency_assessments_competency_framework_id_fkey"
+            columns: ["competency_framework_id"]
+            isOneToOne: false
+            referencedRelation: "competency_frameworks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_competency_assessments_employee_id_fkey"
+            columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
             referencedColumns: ["id"]
