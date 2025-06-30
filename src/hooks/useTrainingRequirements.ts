@@ -96,7 +96,7 @@ export function useCreateTrainingRequirement() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (data: Omit<TrainingRequirement, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (data: Omit<TrainingRequirement, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => {
       const { data: result, error } = await supabase
         .from('training_requirements')
         .insert(data)
