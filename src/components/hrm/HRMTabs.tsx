@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,35 +42,46 @@ export function HRMTabs() {
   const updateLeaveStatus = useUpdateLeaveRequestStatus();
 
   const getStatusBadge = (status: string, type: 'employee' | 'leave' | 'training' = 'employee') => {
-    const statusConfig = {
-      employee: {
-        active: { label: 'Đang làm việc', className: 'bg-green-100 text-green-800' },
-        inactive: { label: 'Nghỉ việc', className: 'bg-red-100 text-red-800' },
-        pending: { label: 'Chờ xử lý', className: 'bg-yellow-100 text-yellow-800' },
-      },
-      leave: {
-        pending: { label: 'Chờ duyệt', className: 'bg-yellow-100 text-yellow-800' },
-        approved: { label: 'Đã duyệt', className: 'bg-green-100 text-green-800' },
-        rejected: { label: 'Từ chối', className: 'bg-red-100 text-red-800' },
-      },
-      training: {
-        active: { label: 'Đang mở', className: 'bg-blue-100 text-blue-800' },
-        completed: { label: 'Hoàn thành', className: 'bg-green-100 text-green-800' },
-        cancelled: { label: 'Đã hủy', className: 'bg-red-100 text-red-800' },
+    if (type === 'employee') {
+      switch (status) {
+        case 'active':
+          return <Badge className="bg-green-100 text-green-800">Đang làm việc</Badge>;
+        case 'inactive':
+          return <Badge className="bg-red-100 text-red-800">Nghỉ việc</Badge>;
+        case 'pending':
+          return <Badge className="bg-yellow-100 text-yellow-800">Chờ xử lý</Badge>;
+        default:
+          return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
       }
-    };
-
-    const typeConfig = statusConfig[type];
-    if (!typeConfig) {
-      return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
     }
 
-    const config = typeConfig[status as keyof typeof typeConfig];
-    if (!config) {
-      return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
+    if (type === 'leave') {
+      switch (status) {
+        case 'pending':
+          return <Badge className="bg-yellow-100 text-yellow-800">Chờ duyệt</Badge>;
+        case 'approved':
+          return <Badge className="bg-green-100 text-green-800">Đã duyệt</Badge>;
+        case 'rejected':
+          return <Badge className="bg-red-100 text-red-800">Từ chối</Badge>;
+        default:
+          return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
+      }
     }
 
-    return <Badge className={config.className}>{config.label}</Badge>;
+    if (type === 'training') {
+      switch (status) {
+        case 'active':
+          return <Badge className="bg-blue-100 text-blue-800">Đang mở</Badge>;
+        case 'completed':
+          return <Badge className="bg-green-100 text-green-800">Hoàn thành</Badge>;
+        case 'cancelled':
+          return <Badge className="bg-red-100 text-red-800">Đã hủy</Badge>;
+        default:
+          return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
+      }
+    }
+
+    return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
   };
 
   const getLevelBadge = (level: string) => {
