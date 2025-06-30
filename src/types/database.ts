@@ -1,4 +1,5 @@
 
+
 import { Database } from "@/integrations/supabase/types";
 
 export type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -12,10 +13,23 @@ export type SystemRole = Database['public']['Enums']['system_role'];
 export type EmployeeLevel = Database['public']['Enums']['employee_level'];
 export type Status = Database['public']['Enums']['status'];
 
-// Extended types for joined data
+// Extended types for joined data that match the actual query results
 export type ProcessWithDetails = Process & {
-  departments: Department | null;
-  positions: Position | null;
-  assigned_user: Profile | null;
-  created_by_user: Profile | null;
+  departments: {
+    id: string;
+    name: string;
+  } | null;
+  positions: {
+    id: string;
+    name: string;
+  } | null;
+  assigned_user: {
+    id: string;
+    full_name: string;
+  } | null;
+  created_by_user: {
+    id: string;
+    full_name: string;
+  } | null;
 };
+
