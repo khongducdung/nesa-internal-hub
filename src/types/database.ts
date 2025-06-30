@@ -26,6 +26,10 @@ export type Status = Database['public']['Enums']['status'];
 export type CompetencyFramework = Database['public']['Tables']['competency_frameworks']['Row'];
 export type EmployeeCompetencyAssessment = Database['public']['Tables']['employee_competency_assessments']['Row'];
 
+export type PayrollPeriod = Database['public']['Tables']['payroll_periods']['Row'];
+export type PayrollDetail = Database['public']['Tables']['payroll_details']['Row'];
+export type SalaryConfig = Database['public']['Tables']['salary_configs']['Row'];
+
 // Extended types for joined data that match the actual query results
 export type ProcessWithDetails = Process & {
   departments: {

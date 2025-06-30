@@ -1,7 +1,9 @@
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { AttendanceManagement } from '@/components/hrm/attendance/AttendanceManagement';
+import { PayrollManagement } from '@/components/payroll/PayrollManagement';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Clock, 
   Calendar,
@@ -105,8 +107,21 @@ export default function Attendance() {
           })}
         </div>
 
-        {/* Main Attendance Management */}
-        <AttendanceManagement />
+        {/* Main Tabs */}
+        <Tabs defaultValue="attendance" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="attendance">Quản lý chấm công</TabsTrigger>
+            <TabsTrigger value="payroll">Tính lương</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="attendance" className="mt-6">
+            <AttendanceManagement />
+          </TabsContent>
+          
+          <TabsContent value="payroll" className="mt-6">
+            <PayrollManagement />
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

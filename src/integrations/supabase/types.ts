@@ -1082,6 +1082,144 @@ export type Database = {
           },
         ]
       }
+      payroll_details: {
+        Row: {
+          absent_days: number
+          allowances: number
+          base_salary: number
+          bonus: number
+          created_at: string | null
+          deductions: number
+          employee_id: string
+          gross_salary: number
+          id: string
+          insurance_amount: number
+          late_days: number
+          net_salary: number
+          notes: string | null
+          overtime_amount: number
+          overtime_hours: number
+          payroll_period_id: string
+          penalties: number
+          present_days: number
+          tax_amount: number
+          updated_at: string | null
+          working_days: number
+        }
+        Insert: {
+          absent_days?: number
+          allowances?: number
+          base_salary?: number
+          bonus?: number
+          created_at?: string | null
+          deductions?: number
+          employee_id: string
+          gross_salary?: number
+          id?: string
+          insurance_amount?: number
+          late_days?: number
+          net_salary?: number
+          notes?: string | null
+          overtime_amount?: number
+          overtime_hours?: number
+          payroll_period_id: string
+          penalties?: number
+          present_days?: number
+          tax_amount?: number
+          updated_at?: string | null
+          working_days?: number
+        }
+        Update: {
+          absent_days?: number
+          allowances?: number
+          base_salary?: number
+          bonus?: number
+          created_at?: string | null
+          deductions?: number
+          employee_id?: string
+          gross_salary?: number
+          id?: string
+          insurance_amount?: number
+          late_days?: number
+          net_salary?: number
+          notes?: string | null
+          overtime_amount?: number
+          overtime_hours?: number
+          payroll_period_id?: string
+          penalties?: number
+          present_days?: number
+          tax_amount?: number
+          updated_at?: string | null
+          working_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_details_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_details_payroll_period_id_fkey"
+            columns: ["payroll_period_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_periods: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          end_date: string
+          id: string
+          month: number
+          name: string
+          processed_at: string | null
+          processed_by: string | null
+          start_date: string
+          status: string | null
+          total_amount: number | null
+          total_employees: number | null
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          end_date: string
+          id?: string
+          month: number
+          name: string
+          processed_at?: string | null
+          processed_by?: string | null
+          start_date: string
+          status?: string | null
+          total_amount?: number | null
+          total_employees?: number | null
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          end_date?: string
+          id?: string
+          month?: number
+          name?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          start_date?: string
+          status?: string | null
+          total_amount?: number | null
+          total_employees?: number | null
+          updated_at?: string | null
+          year?: number
+        }
+        Relationships: []
+      }
       performance_reviews: {
         Row: {
           comments: string | null
@@ -1725,6 +1863,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      salary_configs: {
+        Row: {
+          absent_penalty_per_day: number | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          insurance_rate: number | null
+          is_active: boolean | null
+          is_default: boolean | null
+          late_penalty_per_hour: number | null
+          min_working_hours_per_day: number | null
+          name: string
+          overtime_rate: number | null
+          standard_working_days_per_month: number | null
+          tax_rate: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          absent_penalty_per_day?: number | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          insurance_rate?: number | null
+          is_active?: boolean | null
+          is_default?: boolean | null
+          late_penalty_per_hour?: number | null
+          min_working_hours_per_day?: number | null
+          name: string
+          overtime_rate?: number | null
+          standard_working_days_per_month?: number | null
+          tax_rate?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          absent_penalty_per_day?: number | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          insurance_rate?: number | null
+          is_active?: boolean | null
+          is_default?: boolean | null
+          late_penalty_per_hour?: number | null
+          min_working_hours_per_day?: number | null
+          name?: string
+          overtime_rate?: number | null
+          standard_working_days_per_month?: number | null
+          tax_rate?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       salary_history: {
         Row: {
