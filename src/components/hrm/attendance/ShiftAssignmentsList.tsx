@@ -74,7 +74,7 @@ export function ShiftAssignmentsList() {
       <div className="p-6">
         {assignments?.length === 0 ? (
           <div className="text-center py-12">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có phân công nào</h3>
             <p className="text-gray-500 text-center max-w-sm mx-auto mb-6">
               Thêm phân công ca làm việc đầu tiên cho nhân viên
