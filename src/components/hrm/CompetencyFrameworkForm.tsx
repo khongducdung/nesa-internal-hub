@@ -48,7 +48,19 @@ export function CompetencyFrameworkForm({ onClose, frameworkId }: CompetencyFram
         position_id: framework.position_id || '',
         status: framework.status as 'draft' | 'active' | 'inactive',
       });
-      setCompetencies(framework.competencies as Competency[] || []);
+      
+      // Safely convert JSON data to Competency array
+      const frameworkCompetencies = framework.competencies;
+      if (Array.isArray(frameworkCompetencies)) {
+        const typedCompetencies = frameworkCompetencies.map((comp: any) => ({
+          id: comp.id || Date.now().toString(),
+          name: comp.name || '',
+          description: comp.description || '',
+          level: comp.level || 'intermediate',
+          weight: comp.weight || 1,
+        })) as Competency[];
+        setCompetencies(typedCompetencies);
+      }
     }
   }, [framework]);
 
