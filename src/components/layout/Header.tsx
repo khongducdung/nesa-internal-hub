@@ -15,8 +15,8 @@ export function Header({ toggleSidebar, toggleSidebarCollapse, sidebarCollapsed 
 
   return (
     <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-30">
-      <div className="flex items-center justify-between px-6 py-3">
-        <div className="flex items-center space-x-4">
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center space-x-2">
           {/* Mobile menu button */}
           <Button 
             variant="ghost" 
@@ -27,7 +27,7 @@ export function Header({ toggleSidebar, toggleSidebarCollapse, sidebarCollapsed 
             <Menu className="h-4 w-4" />
           </Button>
           
-          {/* Desktop sidebar toggle */}
+          {/* Desktop sidebar toggle - positioned closer to sidebar */}
           <Button 
             variant="ghost" 
             size="icon"
@@ -42,13 +42,13 @@ export function Header({ toggleSidebar, toggleSidebarCollapse, sidebarCollapsed 
           </Button>
         </div>
 
-        {/* Centered Search Bar */}
-        <div className="flex-1 max-w-xl mx-8">
+        {/* Centered Compact Search Bar */}
+        <div className="flex-1 max-w-md mx-6">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input 
-              placeholder="Tìm kiếm nhân viên, quy trình, báo cáo..." 
-              className="pl-11 pr-4 py-2 h-9 w-full bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 placeholder:text-gray-500 text-sm"
+              placeholder="Tìm kiếm..." 
+              className="pl-10 pr-4 py-2 h-9 w-full bg-gray-50 border-gray-200 rounded-full focus:bg-white focus:ring-0 focus:border-gray-300 transition-all duration-200 placeholder:text-gray-500 text-sm"
             />
           </div>
         </div>
@@ -68,7 +68,7 @@ export function Header({ toggleSidebar, toggleSidebarCollapse, sidebarCollapsed 
           </Button>
           
           {/* User Profile */}
-          <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer">
+          <div className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer h-10">
             <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
               <User className="h-3 w-3 text-white" />
             </div>
