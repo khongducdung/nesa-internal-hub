@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,6 +43,7 @@ export function PerformanceAssignmentManagement() {
     await createAssignment.mutateAsync({
       ...formData,
       salary_percentage: selectedWorkGroup?.salary_percentage || 0,
+      status: 'assigned',
       created_by: profile.employee_id
     });
 

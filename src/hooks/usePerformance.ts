@@ -103,7 +103,7 @@ export const usePerformanceAssignments = (cycleId?: string) => {
       const { data, error } = await query.order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as PerformanceAssignment[];
+      return data as any[];
     }
   });
 };
@@ -219,7 +219,7 @@ export const useMyPerformanceAssignments = () => {
         .order('assigned_at', { ascending: false });
       
       if (error) throw error;
-      return data as PerformanceAssignment[];
+      return data as any[];
     }
   });
 };
@@ -243,7 +243,7 @@ export const usePerformanceDashboard = () => {
         .order('assigned_at', { ascending: false });
       
       if (error) throw error;
-      return assignments as PerformanceAssignmentWithDetails[];
+      return assignments as any[];
     }
   });
 };
