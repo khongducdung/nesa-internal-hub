@@ -35,6 +35,9 @@ export function DepartmentForm({ onClose, departmentId }: DepartmentFormProps) {
   const form = useForm<DepartmentFormData>({
     resolver: zodResolver(departmentFormSchema),
     defaultValues: {
+      name: '',
+      description: '',
+      parent_id: undefined,
       status: 'active',
     },
   });
@@ -85,7 +88,7 @@ export function DepartmentForm({ onClose, departmentId }: DepartmentFormProps) {
         form.reset({
           name: data.name,
           description: data.description || '',
-          parent_id: data.parent_id || '',
+          parent_id: data.parent_id || undefined,
           status: validStatus,
         });
       }
@@ -183,7 +186,7 @@ export function DepartmentForm({ onClose, departmentId }: DepartmentFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Không có</SelectItem>
+                  <SelectItem value="none">Không có</SelectItem>
                   {departments.map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name}
