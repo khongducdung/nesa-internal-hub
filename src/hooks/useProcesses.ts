@@ -9,6 +9,11 @@ export interface Process {
   status: 'active' | 'inactive';
   created_at: string;
   updated_at: string;
+  created_by: string;
+  steps?: any;
+  assigned_user_id?: string;
+  position_id?: string;
+  department_id?: string;
 }
 
 export const useProcesses = () => {
@@ -28,7 +33,12 @@ export const useProcesses = () => {
       }
 
       console.log('Processes fetched successfully:', data);
-      return data || [];
+      // Filter out any processes with 'pending' status since our interface doesn't support it
+      const filteredData = (data || []).filter(process => 
+        process.status === 'active' || process.status === 'inactive'
+      );
+      
+      return filteredData as Process[];
     },
   });
 };

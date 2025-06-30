@@ -45,8 +45,12 @@ export function CompanyPolicyForm({ onClose, policy }: CompanyPolicyFormProps) {
   const onSubmit = async (data: PolicyFormData) => {
     try {
       const submitData = {
-        ...data,
+        title: data.title,
+        content: data.content,
+        category: data.category,
+        effective_date: data.effective_date,
         expiry_date: data.expiry_date || undefined,
+        status: data.status,
       };
 
       if (policy) {
