@@ -58,7 +58,20 @@ export function TrainingRequirementForm({ onSuccess }: TrainingRequirementFormPr
 
   const onSubmit = async (data: TrainingRequirementFormData) => {
     try {
-      await createTrainingRequirement.mutateAsync(data);
+      // Ensure all required fields are present and properly typed
+      const formattedData = {
+        name: data.name,
+        description: data.description || undefined,
+        reason: data.reason || undefined,
+        course_url: data.course_url || undefined,
+        duration_days: data.duration_days,
+        target_type: data.target_type,
+        target_ids: data.target_ids || undefined,
+        auto_assign_after_days: data.auto_assign_after_days,
+        is_active: data.is_active,
+      };
+      
+      await createTrainingRequirement.mutateAsync(formattedData);
       form.reset();
       onSuccess?.();
     } catch (error) {
