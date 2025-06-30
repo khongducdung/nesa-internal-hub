@@ -12,7 +12,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: SidebarProps) {
-  const { signOut, profile, isSuperAdmin, isAdmin } = useAuth();
+  const { signOut, isSuperAdmin, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -86,27 +86,6 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
             <X className="h-4 w-4" />
           </Button>
         </div>
-
-        {/* User Info - only show when not collapsed */}
-        {!isCollapsed && (
-          <div className="p-4 border-b border-gray-100">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-medium text-sm">
-                  {profile?.full_name?.charAt(0) || 'U'}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {profile?.full_name || 'Người dùng'}
-                </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {profile?.employee_code || 'NV001'}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Navigation Menu */}
         <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
