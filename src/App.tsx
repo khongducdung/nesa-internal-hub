@@ -13,6 +13,7 @@ import Performance from "./pages/Performance";
 import OKR from "./pages/OKR";
 import KPI from "./pages/KPI";
 import Settings from "./pages/Settings";
+import Processes from "./pages/Processes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <HRM />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/processes" 
+              element={
+                <ProtectedRoute>
+                  <Processes />
                 </ProtectedRoute>
               } 
             />

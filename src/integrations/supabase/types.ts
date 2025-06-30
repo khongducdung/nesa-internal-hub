@@ -9,6 +9,56 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      attendance: {
+        Row: {
+          break_time: number | null
+          check_in_time: string | null
+          check_out_time: string | null
+          created_at: string | null
+          date: string
+          employee_id: string
+          id: string
+          notes: string | null
+          overtime_hours: number | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          break_time?: number | null
+          check_in_time?: string | null
+          check_out_time?: string | null
+          created_at?: string | null
+          date: string
+          employee_id: string
+          id?: string
+          notes?: string | null
+          overtime_hours?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          break_time?: number | null
+          check_in_time?: string | null
+          check_out_time?: string | null
+          created_at?: string | null
+          date?: string
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          overtime_hours?: number | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           created_at: string | null
@@ -43,6 +93,104 @@ export type Database = {
             columns: ["parent_id"]
             isOneToOne: false
             referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          address: string | null
+          avatar_url: string | null
+          created_at: string | null
+          department_id: string | null
+          email: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          employee_code: string
+          employee_level: Database["public"]["Enums"]["employee_level"] | null
+          full_name: string
+          hire_date: string | null
+          id: string
+          manager_id: string | null
+          notes: string | null
+          phone: string | null
+          position_id: string | null
+          profile_id: string | null
+          salary: number | null
+          updated_at: string | null
+          work_status: string | null
+        }
+        Insert: {
+          address?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          department_id?: string | null
+          email: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_code: string
+          employee_level?: Database["public"]["Enums"]["employee_level"] | null
+          full_name: string
+          hire_date?: string | null
+          id?: string
+          manager_id?: string | null
+          notes?: string | null
+          phone?: string | null
+          position_id?: string | null
+          profile_id?: string | null
+          salary?: number | null
+          updated_at?: string | null
+          work_status?: string | null
+        }
+        Update: {
+          address?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          department_id?: string | null
+          email?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          employee_code?: string
+          employee_level?: Database["public"]["Enums"]["employee_level"] | null
+          full_name?: string
+          hire_date?: string | null
+          id?: string
+          manager_id?: string | null
+          notes?: string | null
+          phone?: string | null
+          position_id?: string | null
+          profile_id?: string | null
+          salary?: number | null
+          updated_at?: string | null
+          work_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -274,6 +422,124 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      process_instances: {
+        Row: {
+          assigned_user_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          created_by: string
+          current_step: number | null
+          department_id: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          name: string
+          priority: string | null
+          process_template_id: string
+          status: string | null
+          steps_data: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by: string
+          current_step?: number | null
+          department_id?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          name: string
+          priority?: string | null
+          process_template_id: string
+          status?: string | null
+          steps_data?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_user_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string
+          current_step?: number | null
+          department_id?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          name?: string
+          priority?: string | null
+          process_template_id?: string
+          status?: string | null
+          steps_data?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_instances_assigned_user_id_fkey"
+            columns: ["assigned_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_instances_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_instances_process_template_id_fkey"
+            columns: ["process_template_id"]
+            isOneToOne: false
+            referencedRelation: "process_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      process_templates: {
+        Row: {
+          category: string
+          created_at: string | null
+          created_by: string
+          description: string | null
+          estimated_duration: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          priority: string | null
+          steps: Json
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          estimated_duration?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          priority?: string | null
+          steps: Json
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          estimated_duration?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          priority?: string | null
+          steps?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       processes: {
         Row: {
