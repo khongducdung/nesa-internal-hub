@@ -21,7 +21,10 @@ export type Database = {
           check_out_latitude: number | null
           check_out_longitude: number | null
           check_out_time: string | null
+          check_type: string | null
           created_at: string | null
+          daily_end_check_out: string | null
+          daily_start_check_in: string | null
           date: string
           early_leave_minutes: number | null
           employee_id: string
@@ -32,6 +35,11 @@ export type Database = {
           location_id: string | null
           notes: string | null
           overtime_hours: number | null
+          shift_assignment_id: string | null
+          shift_end_check_in: string | null
+          shift_end_check_out: string | null
+          shift_start_check_in: string | null
+          shift_start_check_out: string | null
           status: string | null
           total_work_hours: number | null
           updated_at: string | null
@@ -48,7 +56,10 @@ export type Database = {
           check_out_latitude?: number | null
           check_out_longitude?: number | null
           check_out_time?: string | null
+          check_type?: string | null
           created_at?: string | null
+          daily_end_check_out?: string | null
+          daily_start_check_in?: string | null
           date: string
           early_leave_minutes?: number | null
           employee_id: string
@@ -59,6 +70,11 @@ export type Database = {
           location_id?: string | null
           notes?: string | null
           overtime_hours?: number | null
+          shift_assignment_id?: string | null
+          shift_end_check_in?: string | null
+          shift_end_check_out?: string | null
+          shift_start_check_in?: string | null
+          shift_start_check_out?: string | null
           status?: string | null
           total_work_hours?: number | null
           updated_at?: string | null
@@ -75,7 +91,10 @@ export type Database = {
           check_out_latitude?: number | null
           check_out_longitude?: number | null
           check_out_time?: string | null
+          check_type?: string | null
           created_at?: string | null
+          daily_end_check_out?: string | null
+          daily_start_check_in?: string | null
           date?: string
           early_leave_minutes?: number | null
           employee_id?: string
@@ -86,6 +105,11 @@ export type Database = {
           location_id?: string | null
           notes?: string | null
           overtime_hours?: number | null
+          shift_assignment_id?: string | null
+          shift_end_check_in?: string | null
+          shift_end_check_out?: string | null
+          shift_start_check_in?: string | null
+          shift_start_check_out?: string | null
           status?: string | null
           total_work_hours?: number | null
           updated_at?: string | null
@@ -118,6 +142,13 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "attendance_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_shift_assignment_id_fkey"
+            columns: ["shift_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "shift_assignments"
             referencedColumns: ["id"]
           },
           {
@@ -216,6 +247,47 @@ export type Database = {
             columns: ["work_shift_id"]
             isOneToOne: false
             referencedRelation: "work_shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      attendance_check_locations: {
+        Row: {
+          address: string | null
+          attendance_id: string
+          check_type: string
+          created_at: string | null
+          id: string
+          latitude: number
+          longitude: number
+          timestamp: string | null
+        }
+        Insert: {
+          address?: string | null
+          attendance_id: string
+          check_type: string
+          created_at?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          timestamp?: string | null
+        }
+        Update: {
+          address?: string | null
+          attendance_id?: string
+          check_type?: string
+          created_at?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          timestamp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_check_locations_attendance_id_fkey"
+            columns: ["attendance_id"]
+            isOneToOne: false
+            referencedRelation: "attendance"
             referencedColumns: ["id"]
           },
         ]
@@ -1968,6 +2040,77 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shift_assignments: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          department_id: string | null
+          effective_from: string
+          effective_to: string | null
+          employee_id: string | null
+          id: string
+          is_active: boolean | null
+          position_id: string | null
+          updated_at: string | null
+          work_shift_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          department_id?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          employee_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          position_id?: string | null
+          updated_at?: string | null
+          work_shift_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          department_id?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          employee_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          position_id?: string | null
+          updated_at?: string | null
+          work_shift_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_assignments_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_assignments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_assignments_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shift_assignments_work_shift_id_fkey"
+            columns: ["work_shift_id"]
+            isOneToOne: false
+            referencedRelation: "work_shifts"
             referencedColumns: ["id"]
           },
         ]
