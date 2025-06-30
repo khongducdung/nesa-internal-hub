@@ -1,62 +1,61 @@
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { HRMTabs } from '@/components/hrm/HRMTabs';
+import { AttendanceManagement } from '@/components/hrm/attendance/AttendanceManagement';
 import { 
-  Users, 
-  Building2, 
-  UserCheck,
-  FileText,
+  Clock, 
+  Calendar,
+  DollarSign,
+  Users,
   TrendingUp,
   AlertTriangle
 } from 'lucide-react';
+import { useAttendance } from '@/hooks/useAttendance';
 import { useEmployees } from '@/hooks/useEmployees';
-import { useDepartments } from '@/hooks/useDepartments';
-import { useCompanyPolicies } from '@/hooks/useCompanyPolicies';
 
-export default function HRM() {
+export default function Attendance() {
+  const { data: attendance } = useAttendance();
   const { data: employees } = useEmployees();
-  const { data: departments } = useDepartments();
-  const { data: policies } = useCompanyPolicies();
 
   // Tính toán thống kê
-  const totalEmployees = employees?.length || 0;
-  const activeEmployees = employees?.filter(emp => emp.work_status === 'active').length || 0;
-  const totalDepartments = departments?.length || 0;
-  const activePolicies = policies?.filter(policy => policy.status === 'active').length || 0;
+  const today = new Date().toISOString().split('T')[0];
+  const todayAttendance = attendance?.filter(att => att.date === today).length || 0;
+  const presentToday = attendance?.filter(att => att.date === today && att.status === 'present').length || 0;
+  const lateToday = attendance?.filter(att => att.date === today && att.status === 'late').length || 0;
+  const totalEmployees = employees?.filter(emp => emp.work_status === 'active').length || 0;
 
-  const hrStats = [
+  const attendanceStats = [
     {
-      title: 'Tổng nhân viên',
-      value: totalEmployees.toString(),
+      title: 'Có mặt hôm nay',
+      value: presentToday.toString(),
       icon: Users,
-      color: 'from-blue-500 to-blue-600',
-      change: `${activeEmployees}/${totalEmployees} đang làm việc`,
-      changeType: 'neutral'
-    },
-    {
-      title: 'Phòng ban',
-      value: totalDepartments.toString(),
-      icon: Building2,
       color: 'from-green-500 to-green-600',
-      change: 'Đang hoạt động',
-      changeType: 'increase'
-    },
-    {
-      title: 'Nhân viên hoạt động',
-      value: activeEmployees.toString(),
-      icon: UserCheck,
-      color: 'from-purple-500 to-purple-600',
-      change: 'Đang làm việc',
+      change: `${todayAttendance}/${totalEmployees} đã chấm công`,
       changeType: 'neutral'
     },
     {
-      title: 'Quy định hiệu lực',
-      value: activePolicies.toString(),
-      icon: FileText,
+      title: 'Đi muộn hôm nay',
+      value: lateToday.toString(),
+      icon: Clock,
       color: 'from-orange-500 to-orange-600',
-      change: 'Đang áp dụng',
+      change: 'Cần theo dõi',
+      changeType: 'warning'
+    },
+    {
+      title: 'Tổng số công',
+      value: '22',
+      icon: Calendar,
+      color: 'from-blue-500 to-blue-600',
+      change: 'Trong tháng này',
       changeType: 'increase'
+    },
+    {
+      title: 'Lương tháng',
+      value: '0',
+      icon: DollarSign,
+      color: 'from-purple-500 to-purple-600',
+      change: 'Đang tính toán',
+      changeType: 'neutral'
     }
   ];
 
@@ -66,14 +65,14 @@ export default function HRM() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Quản lý nhân sự</h1>
-            <p className="text-gray-600 mt-1">Quản lý thông tin nhân viên, phòng ban và các chính sách công ty</p>
+            <h1 className="text-2xl font-bold text-gray-900">Chấm công & Tính lương</h1>
+            <p className="text-gray-600 mt-1">Quản lý chấm công và tính toán lương cho nhân viên</p>
           </div>
         </div>
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {hrStats.map((stat, index) => {
+          {attendanceStats.map((stat, index) => {
             const Icon = stat.icon;
             return (
               <Card key={index} className="hover:shadow-lg transition-all duration-200 border-0 shadow-md">
@@ -88,9 +87,10 @@ export default function HRM() {
                       </p>
                       <p className={`text-sm font-medium flex items-center ${
                         stat.changeType === 'increase' ? 'text-green-600' :
+                        stat.changeType === 'warning' ? 'text-orange-600' : 
                         stat.changeType === 'decrease' ? 'text-red-600' : 'text-gray-600'
                       }`}>
-                        {stat.changeType === 'decrease' && <AlertTriangle className="h-4 w-4 mr-1" />}
+                        {stat.changeType === 'warning' && <AlertTriangle className="h-4 w-4 mr-1" />}
                         {stat.changeType === 'increase' && <TrendingUp className="h-4 w-4 mr-1" />}
                         {stat.change}
                       </p>
@@ -105,8 +105,8 @@ export default function HRM() {
           })}
         </div>
 
-        {/* Main HRM Management Tabs */}
-        <HRMTabs />
+        {/* Main Attendance Management */}
+        <AttendanceManagement />
       </div>
     </DashboardLayout>
   );

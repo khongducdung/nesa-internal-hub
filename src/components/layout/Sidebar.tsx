@@ -1,7 +1,6 @@
-
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Users, Building2, Settings, X, Home, FileText, TrendingUp, Target, BarChart3, LogOut } from 'lucide-react';
+import { Users, Building2, Settings, X, Home, FileText, TrendingUp, Target, BarChart3, LogOut, Clock } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   DropdownMenu,
@@ -26,6 +25,7 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard', access: 'all' },
     { icon: Users, label: 'Quản lý nhân sự', path: '/hrm', access: 'all' },
+    { icon: Clock, label: 'Chấm công & Tính lương', path: '/attendance', access: 'all' },
     { icon: FileText, label: 'Quản lý quy trình', path: '/processes', access: 'all' },
     { icon: TrendingUp, label: 'Đánh giá hiệu suất', path: '/performance', access: 'all' },
     { icon: Target, label: 'OKR', path: '/okr', access: 'all' },
@@ -180,4 +180,31 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
       </div>
     </>
   );
+
+  function handleNavigation(path: string) {
+    console.log('Navigating to:', path);
+    navigate(path);
+    if (window.innerWidth < 1024) {
+      toggleSidebar();
+    }
+  }
+
+  function hasAccess(access: string) {
+    if (access === 'all') return true;
+    if (access === 'admin') return isAdmin || isSuperAdmin;
+    if (access === 'super_admin') return isSuperAdmin;
+    return false;
+  }
+
+  function handleProfileClick() {
+    navigate('/profile');
+    if (window.innerWidth < 1024) {
+      toggleSidebar();
+    }
+  }
+
+  function handleSignOut() {
+    signOut();
+    navigate('/');
+  }
 }
