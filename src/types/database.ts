@@ -12,6 +12,14 @@ export type Employee = Database['public']['Tables']['employees']['Row'];
 export type ProcessTemplate = Database['public']['Tables']['process_templates']['Row'];
 export type ProcessInstance = Database['public']['Tables']['process_instances']['Row'];
 export type Attendance = Database['public']['Tables']['attendance']['Row'];
+export type LeaveRequest = Database['public']['Tables']['leave_requests']['Row'];
+export type TrainingProgram = Database['public']['Tables']['training_programs']['Row'];
+export type TrainingParticipant = Database['public']['Tables']['training_participants']['Row'];
+export type Contract = Database['public']['Tables']['contracts']['Row'];
+export type SalaryHistory = Database['public']['Tables']['salary_history']['Row'];
+export type EmployeeEvaluation = Database['public']['Tables']['employee_evaluations']['Row'];
+export type DisciplinaryAction = Database['public']['Tables']['disciplinary_actions']['Row'];
+export type WorkHistory = Database['public']['Tables']['work_history']['Row'];
 export type SystemRole = Database['public']['Enums']['system_role'];
 export type EmployeeLevel = Database['public']['Enums']['employee_level'];
 export type Status = Database['public']['Enums']['status'];
@@ -65,5 +73,37 @@ export type ProcessInstanceWithDetails = ProcessInstance & {
   assigned_user: {
     id: string;
     full_name: string;
+  } | null;
+};
+
+export type LeaveRequestWithDetails = LeaveRequest & {
+  employees: {
+    id: string;
+    full_name: string;
+    employee_code: string;
+  } | null;
+  approved_by_employee: {
+    id: string;
+    full_name: string;
+  } | null;
+};
+
+export type AttendanceWithDetails = Attendance & {
+  employees: {
+    id: string;
+    full_name: string;
+    employee_code: string;
+  } | null;
+};
+
+export type TrainingParticipantWithDetails = TrainingParticipant & {
+  employees: {
+    id: string;
+    full_name: string;
+    employee_code: string;
+  } | null;
+  training_programs: {
+    id: string;
+    name: string;
   } | null;
 };
