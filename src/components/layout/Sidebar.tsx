@@ -55,7 +55,7 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
         />
       )}
 
-      {/* Sidebar - adjusted height to match header */}
+      {/* Sidebar */}
       <div className={`
         fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white shadow-lg z-50 transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -63,7 +63,7 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
         ${isCollapsed ? 'lg:w-16' : 'lg:w-64'}
         w-64 border-r border-gray-200 flex flex-col
       `}>
-        {/* Header với logo NESA - adjusted height */}
+        {/* Header với logo NESA */}
         <div className={`flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700 h-16 ${isCollapsed ? 'lg:px-3' : ''}`}>
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
@@ -113,8 +113,8 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
           })}
         </nav>
 
-        {/* Sign Out */}
-        <div className="p-2 border-t border-gray-200">
+        {/* Sign Out Button */}
+        <div className="p-2 border-t border-gray-200 bg-white">
           <Button 
             variant="ghost" 
             className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start px-3'} h-10 text-gray-700 hover:bg-red-50 hover:text-red-600`}
