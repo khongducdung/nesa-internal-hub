@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   GitBranch, 
   Plus, 
@@ -21,48 +22,25 @@ import {
   Users,
   Calendar,
   Target,
-  Activity
+  Activity,
+  Settings
 } from 'lucide-react';
+import { useProcessTemplates, useCreateProcessTemplate, useUpdateProcessTemplate } from '@/hooks/useProcessTemplates';
+import { useProcessCategories } from '@/hooks/useProcessCategories';
+import { ProcessTemplateForm } from '@/components/processes/ProcessTemplateForm';
+import { ProcessTemplateCard } from '@/components/processes/ProcessTemplateCard';
 
 export default function Processes() {
   const [activeTab, setActiveTab] = useState('templates');
+  const [showForm, setShowForm] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
-  // Mock data cho process templates
-  const processTemplates = [
-    {
-      id: '1',
-      name: 'Quy trình tuyển dụng nhân viên mới',
-      description: 'Quy trình tuyển dụng từ đăng tin đến onboarding',
-      category: 'Nhân sự',
-      steps: 6,
-      estimated_duration: 10080, // phút
-      priority: 'high',
-      is_active: true,
-      created_at: '2024-01-10'
-    },
-    {
-      id: '2',
-      name: 'Quy trình xử lý nghỉ phép',
-      description: 'Quy trình xử lý đơn xin nghỉ phép của nhân viên',
-      category: 'Hành chính',
-      steps: 4,
-      estimated_duration: 1440, // phút
-      priority: 'medium',
-      is_active: true,
-      created_at: '2024-01-08'
-    },
-    {
-      id: '3',
-      name: 'Quy trình mua sắm tài sản',
-      description: 'Quy trình mua sắm tài sản cho công ty',
-      category: 'Tài chính',
-      steps: 5,
-      estimated_duration: 4320, // phút
-      priority: 'medium',
-      is_active: true,
-      created_at: '2024-01-05'
-    }
-  ];
+  const { data: processTemplates, isLoading } = useProcessTemplates();
+  const { data: categories } = useProcessCategories();
+  const createMutation = useCreateProcessTemplate();
+  const updateMutation = useUpdateProcessTemplate();
 
   // Mock data cho process instances
   const processInstances = [
@@ -112,8 +90,8 @@ export default function Processes() {
 
   const processStats = [
     {
-      title: 'Tổng quy trình',
-      value: '24',
+      title: 'Tổng mẫu quy trình',
+      value: processTemplates?.length.toString() || '0',
       icon: GitBranch,
       color: 'from-blue-500 to-blue-600',
       change: '+3',
@@ -145,6 +123,41 @@ export default function Processes() {
     }
   ];
 
+  const handleSubmit = async (data: any) => {
+    if (editingTemplate) {
+      await updateMutation.mutateAsync({ ...data, id: editingTemplate.id });
+      setEditingTemplate(null);
+    } else {
+      await createMutation.mutateAsync({
+        ...data,
+        created_by: '00000000-0000-0000-0000-000000000000' // Temp user ID
+      });
+    }
+    setShowForm(false);
+  };
+
+  const handleEdit = (template: any) => {
+    setEditingTemplate(template);
+    setShowForm(true);
+  };
+
+  const handleView = (template: any) => {
+    console.log('View template:', template);
+    // TODO: Implement view modal
+  };
+
+  const handleRun = (template: any) => {
+    console.log('Run template:', template);
+    // TODO: Implement run process
+  };
+
+  const filteredTemplates = processTemplates?.filter(template => {
+    const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         template.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || template.category_id === selectedCategory;
+    return matchesSearch && matchesCategory;
+  }) || [];
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
@@ -173,15 +186,6 @@ export default function Processes() {
     }
   };
 
-  const formatDuration = (minutes: number) => {
-    const days = Math.floor(minutes / 1440);
-    const hours = Math.floor((minutes % 1440) / 60);
-    if (days > 0) {
-      return `${days} ngày${hours > 0 ? ` ${hours}h` : ''}`;
-    }
-    return `${hours}h`;
-  };
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -191,10 +195,16 @@ export default function Processes() {
             <h1 className="text-2xl font-bold text-gray-900">Quản lý quy trình</h1>
             <p className="text-gray-600 mt-1">Quản lý và theo dõi các quy trình làm việc</p>
           </div>
-          <Button className="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700">
-            <Plus className="h-4 w-4 mr-2" />
-            Tạo quy trình mới
-          </Button>
+          <div className="flex items-center gap-2 mt-4 sm:mt-0">
+            <Button variant="outline" size="sm">
+              <Settings className="h-4 w-4 mr-2" />
+              Danh mục
+            </Button>
+            <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Tạo quy trình mới
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -242,57 +252,58 @@ export default function Processes() {
                   <div className="flex items-center space-x-2 mt-4 sm:mt-0">
                     <div className="relative">
                       <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
-                      <Input placeholder="Tìm kiếm quy trình..." className="pl-10 w-64" />
+                      <Input 
+                        placeholder="Tìm kiếm quy trình..." 
+                        className="pl-10 w-64"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
                     </div>
-                    <Button variant="outline" size="sm">
-                      <Filter className="h-4 w-4 mr-2" />
-                      Lọc
-                    </Button>
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Tất cả danh mục" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tất cả danh mục</SelectItem>
+                        {categories?.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {processTemplates.map((template) => (
-                    <div key={template.id} className="border rounded-lg p-6 hover:bg-gray-50 transition-colors">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h3 className="font-semibold text-gray-900">{template.name}</h3>
-                            <Badge variant="outline" className="text-xs">
-                              {template.category}
-                            </Badge>
-                            {getPriorityBadge(template.priority)}
-                          </div>
-                          <p className="text-sm text-gray-600 mb-3">{template.description}</p>
-                          <div className="flex items-center space-x-6 text-sm text-gray-500">
-                            <div className="flex items-center space-x-1">
-                              <Target className="h-4 w-4" />
-                              <span>{template.steps} bước</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Clock className="h-4 w-4" />
-                              <span>Ước tính: {formatDuration(template.estimated_duration)}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Calendar className="h-4 w-4" />
-                              <span>Tạo: {new Date(template.created_at).toLocaleDateString('vi-VN')}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Button variant="outline" size="sm">
-                            <Play className="h-4 w-4 mr-2" />
-                            Chạy quy trình
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                {isLoading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-2 text-gray-500">Đang tải...</p>
+                  </div>
+                ) : filteredTemplates.length === 0 ? (
+                  <div className="text-center py-8">
+                    <GitBranch className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có mẫu quy trình</h3>
+                    <p className="text-gray-500 mb-4">Bắt đầu bằng cách tạo mẫu quy trình đầu tiên của bạn</p>
+                    <Button onClick={() => setShowForm(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Tạo mẫu quy trình
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredTemplates.map((template) => (
+                      <ProcessTemplateCard
+                        key={template.id}
+                        template={template}
+                        onEdit={handleEdit}
+                        onView={handleView}
+                        onRun={handleRun}
+                      />
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -376,6 +387,19 @@ export default function Processes() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Form Modal */}
+        <ProcessTemplateForm
+          open={showForm}
+          onOpenChange={(open) => {
+            setShowForm(open);
+            if (!open) {
+              setEditingTemplate(null);
+            }
+          }}
+          onSubmit={handleSubmit}
+          initialData={editingTemplate}
+        />
       </div>
     </DashboardLayout>
   );

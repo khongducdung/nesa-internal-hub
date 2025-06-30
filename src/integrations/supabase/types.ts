@@ -987,6 +987,134 @@ export type Database = {
           },
         ]
       }
+      process_attachments: {
+        Row: {
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          is_active: boolean | null
+          process_template_id: string | null
+          uploaded_at: string | null
+          uploaded_by: string
+        }
+        Insert: {
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          is_active?: boolean | null
+          process_template_id?: string | null
+          uploaded_at?: string | null
+          uploaded_by: string
+        }
+        Update: {
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          is_active?: boolean | null
+          process_template_id?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_attachments_process_template_id_fkey"
+            columns: ["process_template_id"]
+            isOneToOne: false
+            referencedRelation: "process_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      process_categories: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      process_completions: {
+        Row: {
+          completed_at: string | null
+          employee_id: string | null
+          feedback: string | null
+          id: string
+          process_template_id: string | null
+          rating: number | null
+          started_at: string | null
+          status: string | null
+          time_spent_minutes: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          employee_id?: string | null
+          feedback?: string | null
+          id?: string
+          process_template_id?: string | null
+          rating?: number | null
+          started_at?: string | null
+          status?: string | null
+          time_spent_minutes?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          employee_id?: string | null
+          feedback?: string | null
+          id?: string
+          process_template_id?: string | null
+          rating?: number | null
+          started_at?: string | null
+          status?: string | null
+          time_spent_minutes?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_completions_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_completions_process_template_id_fkey"
+            columns: ["process_template_id"]
+            isOneToOne: false
+            referencedRelation: "process_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_instances: {
         Row: {
           assigned_user_id: string | null
@@ -1063,47 +1191,123 @@ export type Database = {
           },
         ]
       }
+      process_revisions: {
+        Row: {
+          changes_summary: string | null
+          content: string | null
+          created_at: string | null
+          created_by: string
+          id: string
+          process_template_id: string | null
+          steps: Json | null
+          version: number
+        }
+        Insert: {
+          changes_summary?: string | null
+          content?: string | null
+          created_at?: string | null
+          created_by: string
+          id?: string
+          process_template_id?: string | null
+          steps?: Json | null
+          version: number
+        }
+        Update: {
+          changes_summary?: string | null
+          content?: string | null
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          process_template_id?: string | null
+          steps?: Json | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_revisions_process_template_id_fkey"
+            columns: ["process_template_id"]
+            isOneToOne: false
+            referencedRelation: "process_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_templates: {
         Row: {
+          attachments: Json | null
           category: string
+          category_id: string | null
+          content: string | null
           created_at: string | null
           created_by: string
           description: string | null
           estimated_duration: number | null
+          external_links: Json | null
           id: string
           is_active: boolean | null
           name: string
           priority: string | null
+          status: string | null
           steps: Json
+          tags: string[] | null
+          target_ids: string[] | null
+          target_type: string | null
           updated_at: string | null
+          version: number | null
         }
         Insert: {
+          attachments?: Json | null
           category: string
+          category_id?: string | null
+          content?: string | null
           created_at?: string | null
           created_by: string
           description?: string | null
           estimated_duration?: number | null
+          external_links?: Json | null
           id?: string
           is_active?: boolean | null
           name: string
           priority?: string | null
+          status?: string | null
           steps: Json
+          tags?: string[] | null
+          target_ids?: string[] | null
+          target_type?: string | null
           updated_at?: string | null
+          version?: number | null
         }
         Update: {
+          attachments?: Json | null
           category?: string
+          category_id?: string | null
+          content?: string | null
           created_at?: string | null
           created_by?: string
           description?: string | null
           estimated_duration?: number | null
+          external_links?: Json | null
           id?: string
           is_active?: boolean | null
           name?: string
           priority?: string | null
+          status?: string | null
           steps?: Json
+          tags?: string[] | null
+          target_ids?: string[] | null
+          target_type?: string | null
           updated_at?: string | null
+          version?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "process_templates_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "process_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       processes: {
         Row: {
