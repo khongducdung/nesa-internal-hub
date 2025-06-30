@@ -57,7 +57,6 @@ export type EmployeeWithDetails = Employee & {
     id: string;
     full_name: string;
   } | null;
-  status?: string;
 };
 
 export type ProcessInstanceWithDetails = ProcessInstance & {

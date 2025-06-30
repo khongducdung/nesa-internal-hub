@@ -15,7 +15,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const toggleSidebarCollapse = () => setSidebarCollapsed(!sidebarCollapsed);
 
   return (
-    <div className="min-h-screen bg-blue-25">
+    <div className="min-h-screen bg-gray-50">
       <div className="flex h-screen">
         <Sidebar 
           isOpen={sidebarOpen} 

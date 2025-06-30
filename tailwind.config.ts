@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -62,21 +61,6 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				},
-				// Bảng màu xanh dương chuyên dụng
-				blue: {
-					25: '#f8fafc',
-					50: '#eff6ff',
-					100: '#dbeafe',
-					200: '#bfdbfe',
-					300: '#93c5fd',
-					400: '#60a5fa',
-					500: '#3b82f6',
-					600: '#2563eb',
-					700: '#1d4ed8',
-					800: '#1e40af',
-					900: '#1e3a8a',
-					950: '#172554'
 				}
 			},
 			borderRadius: {
@@ -100,26 +84,11 @@ export default {
 					to: {
 						height: '0'
 					}
-				},
-				'blue-pulse': {
-					'0%, 100%': {
-						opacity: '1',
-						backgroundColor: 'rgb(59 130 246 / 0.1)'
-					},
-					'50%': {
-						opacity: '0.5',
-						backgroundColor: 'rgb(59 130 246 / 0.2)'
-					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out',
-				'blue-pulse': 'blue-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-			},
-			boxShadow: {
-				'blue': '0 4px 6px -1px rgb(59 130 246 / 0.1), 0 2px 4px -2px rgb(59 130 246 / 0.1)',
-				'blue-lg': '0 10px 15px -3px rgb(59 130 246 / 0.1), 0 4px 6px -4px rgb(59 130 246 / 0.1)'
+				'accordion-up': 'accordion-up 0.2s ease-out'
 			}
 		}
 	},
