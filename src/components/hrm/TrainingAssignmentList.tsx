@@ -1,17 +1,17 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useEmployeeTrainingAssignments } from '@/hooks/useTrainingRequirements';
-import { Search, Calendar, User, BookOpen } from 'lucide-react';
+import { Calendar, User, BookOpen } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
-export function TrainingAssignmentList() {
+interface TrainingAssignmentListProps {
+  searchTerm: string;
+}
+
+export function TrainingAssignmentList({ searchTerm }: TrainingAssignmentListProps) {
   const { data: assignments, isLoading } = useEmployeeTrainingAssignments();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
 
   const filteredAssignments = assignments?.filter(assignment => {
     const matchesSearch = 
@@ -19,9 +19,7 @@ export function TrainingAssignmentList() {
       assignment.employees?.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       assignment.employees?.employee_code.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter === 'all' || assignment.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
   const getStatusBadge = (status: string, dueDate: string) => {
@@ -58,30 +56,6 @@ export function TrainingAssignmentList() {
 
   return (
     <div className="space-y-6">
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Tìm kiếm theo tên khóa học hoặc nhân viên..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Lọc theo trạng thái" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tất cả trạng thái</SelectItem>
-            <SelectItem value="pending">Chưa bắt đầu</SelectItem>
-            <SelectItem value="in_progress">Đang học</SelectItem>
-            <SelectItem value="completed">Hoàn thành</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       {/* Assignments Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {filteredAssignments?.map((assignment) => (
@@ -175,7 +149,9 @@ export function TrainingAssignmentList() {
       {filteredAssignments?.length === 0 && (
         <div className="text-center py-8">
           <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">Không tìm thấy phân công đào tạo nào</p>
+          <p className="text-gray-500">
+            {searchTerm ? 'Không tìm thấy phân công đào tạo nào' : 'Chưa có phân công đào tạo nào'}
+          </p>
         </div>
       )}
     </div>

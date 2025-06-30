@@ -156,7 +156,7 @@ export function TrainingManagement() {
         </TabsContent>
         
         <TabsContent value="assignments" className="mt-6 space-y-0">
-          <TrainingAssignmentList />
+          <TrainingAssignmentList searchTerm={searchTerm} />
         </TabsContent>
       </Tabs>
     </div>
