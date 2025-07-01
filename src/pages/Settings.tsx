@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { useSettings } from '@/components/ui/settings-context';
 import { 
   Settings as SettingsIcon, 
   Users, 
@@ -19,10 +20,14 @@ import {
   Plus,
   MoreHorizontal,
   UserCheck,
-  UserX
+  UserX,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export default function Settings() {
+  const { hideDescriptions, toggleDescriptions } = useSettings();
+
   const systemUsers = [
     {
       id: 1,
@@ -54,6 +59,18 @@ export default function Settings() {
   ];
 
   const systemSettings = [
+    {
+      category: 'Giao diện',
+      icon: Eye,
+      settings: [
+        { 
+          name: 'Ẩn mô tả phụ', 
+          enabled: hideDescriptions, 
+          description: 'Ẩn các dòng mô tả dưới tiêu đề để giao diện sạch sẽ hơn',
+          onToggle: toggleDescriptions
+        }
+      ]
+    },
     {
       category: 'Bảo mật',
       icon: Shield,
@@ -114,7 +131,9 @@ export default function Settings() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Cài đặt hệ thống</h1>
-            <p className="text-gray-600 mt-1">Quản lý cấu hình và người dùng hệ thống</p>
+            {!hideDescriptions && (
+              <p className="text-gray-600 mt-1">Quản lý cấu hình và người dùng hệ thống</p>
+            )}
           </div>
         </div>
 
@@ -168,9 +187,14 @@ export default function Settings() {
                         <div key={settingIndex} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                           <div className="flex-1">
                             <h4 className="font-medium text-gray-900 mb-1">{setting.name}</h4>
-                            <p className="text-sm text-gray-600">{setting.description}</p>
+                            {!hideDescriptions && (
+                              <p className="text-sm text-gray-600">{setting.description}</p>
+                            )}
                           </div>
-                          <Switch checked={setting.enabled} />
+                          <Switch 
+                            checked={setting.enabled} 
+                            onCheckedChange={setting.onToggle}
+                          />
                         </div>
                       ))}
                     </div>
@@ -212,9 +236,11 @@ export default function Settings() {
                     <div>
                       <h3 className="font-semibold text-gray-900">{user.name}</h3>
                       <p className="text-sm text-gray-600">{user.email}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Đăng nhập cuối: {new Date(user.lastLogin).toLocaleString('vi-VN')}
-                      </p>
+                      {!hideDescriptions && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Đăng nhập cuối: {new Date(user.lastLogin).toLocaleString('vi-VN')}
+                        </p>
+                      )}
                     </div>
                   </div>
                   
