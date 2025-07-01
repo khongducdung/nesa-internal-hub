@@ -14,57 +14,73 @@ export function OKRManagement() {
   const isManager = true;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative">
-      {/* Header với gradient và typography hiện đại */}
-      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white">
-        <div className="container mx-auto px-6 py-8">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header Section */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">
                 OKR Management
               </h1>
-              <p className="text-indigo-100 text-lg">
+              <p className="text-gray-600">
                 Objectives & Key Results - Định hướng thành công, tạo động lực vượt trội
               </p>
             </div>
-            <div className="hidden md:flex items-center space-x-4">
-              <div className="text-right">
-                <div className="text-2xl font-bold">Q1 2024</div>
-                <div className="text-indigo-200 text-sm">Chu kỳ hiện tại</div>
-              </div>
+            <div className="text-right">
+              <div className="text-lg font-semibold text-blue-600">Q1 2024</div>
+              <div className="text-sm text-gray-500">Chu kỳ hiện tại</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="container mx-auto px-6 py-8">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <Tabs defaultValue="dashboard" className="w-full">
+          {/* Navigation Tabs */}
           <div className="mb-8">
-            <TabsList className="bg-white shadow-sm border border-gray-200 p-1 rounded-2xl">
-              <TabsTrigger value="dashboard" className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md">
-                <BarChart3 className="h-4 w-4" />
+            <TabsList className="inline-flex h-12 items-center justify-center rounded-lg bg-white p-1 shadow-sm border border-gray-200">
+              <TabsTrigger 
+                value="dashboard" 
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
                 Dashboard
               </TabsTrigger>
-              <TabsTrigger value="company-okr" className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md">
-                <Building2 className="h-4 w-4" />
+              
+              <TabsTrigger 
+                value="company-okr" 
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              >
+                <Building2 className="h-4 w-4 mr-2" />
                 OKR Công ty
               </TabsTrigger>
-              <TabsTrigger value="my-okrs" className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md">
-                <Target className="h-4 w-4" />
+              
+              <TabsTrigger 
+                value="my-okrs" 
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+              >
+                <Target className="h-4 w-4 mr-2" />
                 OKR của tôi
               </TabsTrigger>
               
               {isManager && (
-                <TabsTrigger value="progress-reporting" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
-                  <TrendingUp className="h-4 w-4" />
+                <TabsTrigger 
+                  value="progress-reporting" 
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" />
                   Tiến độ & Báo cáo
                 </TabsTrigger>
               )}
 
               {isAdmin && (
-                <TabsTrigger value="settings" className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-gray-500 data-[state=active]:to-gray-600 data-[state=active]:text-white data-[state=active]:shadow-md">
-                  <Settings className="h-4 w-4" />
+                <TabsTrigger 
+                  value="settings" 
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
                   Cài đặt OKR
                 </TabsTrigger>
               )}
@@ -72,28 +88,36 @@ export function OKRManagement() {
           </div>
 
           {/* Tab Contents */}
-          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-            <TabsContent value="dashboard" className="m-0 p-8">
+          <div className="space-y-6">
+            <TabsContent value="dashboard" className="m-0">
               <OKRDashboard />
             </TabsContent>
 
-            <TabsContent value="company-okr" className="m-0 p-8">
-              <CompanyOKRView />
+            <TabsContent value="company-okr" className="m-0">
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <CompanyOKRView />
+              </div>
             </TabsContent>
 
-            <TabsContent value="my-okrs" className="m-0 p-8">
-              <MyOKRTasks />
+            <TabsContent value="my-okrs" className="m-0">
+              <div className="bg-white rounded-lg border border-gray-200 p-6">
+                <MyOKRTasks />
+              </div>
             </TabsContent>
 
             {isManager && (
-              <TabsContent value="progress-reporting" className="m-0 p-8">
-                <OKRProgressAndReporting />
+              <TabsContent value="progress-reporting" className="m-0">
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <OKRProgressAndReporting />
+                </div>
               </TabsContent>
             )}
 
             {isAdmin && (
-              <TabsContent value="settings" className="m-0 p-8">
-                <OKRSettings />
+              <TabsContent value="settings" className="m-0">
+                <div className="bg-white rounded-lg border border-gray-200 p-6">
+                  <OKRSettings />
+                </div>
               </TabsContent>
             )}
           </div>
