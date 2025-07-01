@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Users, Building2, Settings, X, Home, FileText, TrendingUp, Target, BarChart3, LogOut, Clock } from 'lucide-react';
@@ -143,7 +144,7 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
         </div>
 
         {/* Navigation Menu */}
-        <nav className="flex-1 p-3 space-y-2 overflow-y-auto">
+        <nav className="flex-1 p-3 pt-6 space-y-1 overflow-y-auto">
           {menuItems.map(item => {
             if (!hasAccess(item.access)) return null;
             const isActive = location.pathname === item.path;
@@ -153,7 +154,7 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
               <Button
                 key={item.path}
                 variant="ghost"
-                className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start px-4'} h-12 text-left menu-item-hover ${
+                className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start px-4'} h-11 text-left menu-item-hover ${
                   isActive 
                     ? 'bg-white/10 text-white' 
                     : 'text-white/80 hover:bg-white/10 hover:text-white'
