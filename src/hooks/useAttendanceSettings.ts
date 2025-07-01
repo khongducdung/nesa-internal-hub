@@ -19,6 +19,9 @@ export interface AttendanceSetting {
   weekend_work_allowed: boolean;
   is_default: boolean;
   status: string;
+  allow_multiple_checkins: boolean;
+  require_daily_start_checkin: boolean;
+  require_daily_end_checkout: boolean;
   created_at: string;
   updated_at: string;
   created_by: string;

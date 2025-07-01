@@ -52,11 +52,11 @@ export function useAttendanceReportMutations() {
     }) => {
       const { data: result, error } = await supabase
         .from('attendance_reports')
-        .insert([{
+        .insert({
           ...params,
           generated_by: (await supabase.auth.getUser()).data.user?.id || '',
-          filters: params.filters
-        }])
+          filters: params.filters as any
+        })
         .select()
         .single();
 
