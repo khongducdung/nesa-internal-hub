@@ -1,7 +1,7 @@
+
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
-import { queryClient } from '@/lib/react-query';
 
 import Index from '@/pages/Index';
 import Dashboard from '@/pages/Dashboard';
@@ -14,8 +14,10 @@ import Settings from '@/pages/Settings';
 import Profile from '@/pages/Profile';
 import ResetPassword from '@/pages/ResetPassword';
 import NotFound from '@/pages/NotFound';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import KPI from '@/pages/KPI';
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
