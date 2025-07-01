@@ -28,8 +28,9 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
     { icon: Users, label: 'Quản lý nhân sự', path: '/hrm', access: 'all' },
     { icon: Clock, label: 'Chấm công', path: '/attendance', access: 'all' },
     { icon: FileText, label: 'Quản lý quy trình', path: '/processes', access: 'all' },
-    { icon: TrendingUp, label: 'Quản lý KPI', path: '/performance', access: 'all' },
     { icon: Target, label: 'Quản lý OKR', path: '/okr', access: 'all' },
+    { icon: BarChart3, label: 'Quản lý KPI', path: '/kpi', access: 'all' },
+    { icon: TrendingUp, label: 'Quản lý hiệu suất', path: '/performance', access: 'all' },
     { icon: Settings, label: 'Cài đặt hệ thống', path: '/settings', access: 'super_admin' }
   ];
 
