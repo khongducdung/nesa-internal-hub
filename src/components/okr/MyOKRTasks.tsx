@@ -9,60 +9,40 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Target, Calendar, TrendingUp, Edit, Plus, X, Users, Zap } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Target, Calendar, TrendingUp, Edit, Plus, X, Users, Zap, CheckCircle, AlertTriangle, Clock, Building2, User } from 'lucide-react';
+import { useOKRData } from '@/hooks/useOKRData';
+import { useAuth } from '@/hooks/useAuth';
 
 export function MyOKRTasks() {
+  const { myOKRs, companyOKRs, currentCycle, createOKR, updateOKR, updateKeyResult, loading } = useOKRData();
+  const { profile } = useAuth();
   const [createOKROpen, setCreateOKROpen] = useState(false);
+  const [updateProgressOpen, setUpdateProgressOpen] = useState(false);
+  const [selectedOKR, setSelectedOKR] = useState<any>(null);
+  const [selectedKR, setSelectedKR] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    cycle: 'Q1 2024',
-    department: '',
-    collaborators: [] as string[],
-    key_results: [{ title: '', target_value: '', unit: '', weight: 100 }],
-    type: 'individual' // individual, collaborative, department
+    type: 'individual',
+    parent_okr_id: '',
+    key_results: [{ title: '', target_value: '', unit: '', weight: 100 }]
   });
 
-  // Sample data
-  const availableCollaborators = [
-    { id: '1', name: 'Nguyễn Văn A', department: 'Kinh Doanh', avatar: '🧑‍💼' },
-    { id: '2', name: 'Trần Thị B', department: 'Kỹ Thuật', avatar: '👩‍💻' },
-    { id: '3', name: 'Lê Văn C', department: 'Marketing', avatar: '🧑‍🎨' },
-    { id: '4', name: 'Phạm Thị D', department: 'Nhân Sự', avatar: '👩‍💼' }
-  ];
+  const getStatusBadge = (status: string, progress: number) => {
+    if (status === 'completed') return <Badge className="bg-green-100 text-green-800 flex items-center gap-1"><CheckCircle className="h-3 w-3" />Hoàn thành</Badge>;
+    if (progress >= 80) return <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1"><TrendingUp className="h-3 w-3" />Vượt tiến độ</Badge>;
+    if (progress >= 60) return <Badge className="bg-green-100 text-green-800 flex items-center gap-1"><CheckCircle className="h-3 w-3" />Đúng tiến độ</Badge>;
+    if (progress >= 40) return <Badge className="bg-yellow-100 text-yellow-800 flex items-center gap-1"><AlertTriangle className="h-3 w-3" />Cần chú ý</Badge>;
+    return <Badge className="bg-red-100 text-red-800 flex items-center gap-1"><Clock className="h-3 w-3" />Chậm tiến độ</Badge>;
+  };
 
-  const departments = ['Kinh Doanh', 'Kỹ Thuật', 'Marketing', 'Nhân Sự', 'Tài Chính'];
-  const cycles = ['Q1 2024', 'Q2 2024', 'Q3 2024', 'Q4 2024'];
-
-  // Mock data - sẽ thay thế bằng API call
-  const myOKRs = [
-    {
-      id: 1,
-      objective: 'Tăng trưởng doanh thu bán hàng Q1',
-      cycle: 'Q1 2024',
-      progress: 75,
-      status: 'on_track',
-      due_date: '2024-03-31',
-      key_results: [
-        { title: 'Tăng 25% doanh thu so với Q4', progress: 80, target: '25%', current: '20%' },
-        { title: 'Thu hút 100 khách hàng mới', progress: 70, target: '100', current: '70' },
-        { title: 'Tăng tỷ lệ chuyển đổi lên 20%', progress: 75, target: '20%', current: '15%' }
-      ]
-    },
-    {
-      id: 2,
-      objective: 'Cải thiện quy trình làm việc',
-      cycle: 'Q1 2024',
-      progress: 60,
-      status: 'at_risk',
-      due_date: '2024-03-31',
-      key_results: [
-        { title: 'Triển khai 3 quy trình mới', progress: 50, target: '3', current: '1.5' },
-        { title: 'Giảm 30% thời gian xử lý', progress: 65, target: '30%', current: '19.5%' },
-        { title: 'Đạt 95% độ hài lòng nhân viên', progress: 65, target: '95%', current: '87%' }
-      ]
-    }
-  ];
+  const getProgressColor = (progress: number) => {
+    if (progress >= 80) return 'bg-blue-500';
+    if (progress >= 60) return 'bg-green-500';
+    if (progress >= 40) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
 
   const addKeyResult = () => {
     setFormData({
@@ -71,328 +51,330 @@ export function MyOKRTasks() {
     });
   };
 
-  const updateKeyResult = (index: number, field: string, value: string | number) => {
+  const updateKeyResultForm = (index: number, field: string, value: string | number) => {
     const updated = formData.key_results.map((kr, i) => 
       i === index ? { ...kr, [field]: value } : kr
     );
     setFormData({ ...formData, key_results: updated });
   };
 
-  const addCollaborator = (collaboratorId: string) => {
-    if (!formData.collaborators.includes(collaboratorId)) {
-      setFormData({
-        ...formData,
-        collaborators: [...formData.collaborators, collaboratorId]
-      });
-    }
-  };
+  const handleCreateOKR = async () => {
+    if (!formData.title) return;
 
-  const removeCollaborator = (collaboratorId: string) => {
-    setFormData({
+    const keyResults = formData.key_results
+      .filter(kr => kr.title && kr.target_value)
+      .map((kr, index) => ({
+        id: `kr_${Date.now()}_${index}`,
+        title: kr.title,
+        target_value: parseFloat(kr.target_value) || 0,
+        current_value: 0,
+        unit: kr.unit || '',
+        weight: kr.weight || 100,
+        progress: 0,
+        status: 'not_started' as const
+      }));
+
+    await createOKR({
       ...formData,
-      collaborators: formData.collaborators.filter(id => id !== collaboratorId)
+      owner_type: 'individual',
+      owner_id: profile?.id,
+      department_id: profile?.department_id,
+      parent_okr_id: formData.parent_okr_id || undefined,
+      key_results: keyResults
     });
-  };
 
-  const handleCreateOKR = () => {
-    console.log('Creating OKR:', formData);
-    // Reset form
     setFormData({
       title: '',
       description: '',
-      cycle: 'Q1 2024',
-      department: '',
-      collaborators: [],
-      key_results: [{ title: '', target_value: '', unit: '', weight: 100 }],
-      type: 'individual'
+      type: 'individual',
+      parent_okr_id: '',
+      key_results: [{ title: '', target_value: '', unit: '', weight: 100 }]
     });
     setCreateOKROpen(false);
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'on_track':
-        return <Badge className="bg-green-100 text-green-800">Đúng tiến độ</Badge>;
-      case 'at_risk':
-        return <Badge className="bg-orange-100 text-orange-800">Có rủi ro</Badge>;
-      case 'off_track':
-        return <Badge className="bg-red-100 text-red-800">Chậm tiến độ</Badge>;
-      case 'completed':
-        return <Badge className="bg-blue-100 text-blue-800">Hoàn thành</Badge>;
-      default:
-        return <Badge className="bg-gray-100 text-gray-800">Không xác định</Badge>;
-    }
+  const handleUpdateProgress = async (newValue: number, notes?: string) => {
+    if (!selectedOKR || !selectedKR) return;
+
+    const progress = Math.min(100, Math.round((newValue / selectedKR.target_value) * 100));
+    const status = progress >= 100 ? 'completed' : progress >= 70 ? 'on_track' : progress >= 40 ? 'at_risk' : 'not_started';
+    
+    await updateKeyResult(selectedOKR.id, selectedKR.id, {
+      current_value: newValue,
+      progress,
+      status
+    });
+
+    setUpdateProgressOpen(false);
+    setSelectedOKR(null);
+    setSelectedKR(null);
   };
 
-  const getProgressColor = (progress: number) => {
-    if (progress >= 80) return 'bg-green-500';
-    if (progress >= 60) return 'bg-blue-500';
-    if (progress >= 40) return 'bg-yellow-500';
-    return 'bg-red-500';
-  };
+  // Calculate overall performance metrics
+  const totalOKRs = myOKRs.length;
+  const completedOKRs = myOKRs.filter(okr => okr.status === 'completed').length;
+  const averageProgress = totalOKRs > 0 ? Math.round(myOKRs.reduce((sum, okr) => sum + okr.progress, 0) / totalOKRs) : 0;
+  const onTrackOKRs = myOKRs.filter(okr => okr.progress >= 60).length;
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64">Đang tải...</div>;
+  }
 
   return (
     <div className="space-y-6">
+      {/* Header & Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Tổng OKRs</p>
+                <p className="text-2xl font-bold text-gray-900">{totalOKRs}</p>
+              </div>
+              <Target className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Tiến độ trung bình</p>
+                <p className="text-2xl font-bold text-green-600">{averageProgress}%</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Đúng tiến độ</p>
+                <p className="text-2xl font-bold text-blue-600">{onTrackOKRs}</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Hoàn thành</p>
+                <p className="text-2xl font-bold text-orange-600">{completedOKRs}</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-orange-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Header */}
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">OKR của tôi</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Danh sách các Objectives được giao và tiến độ thực hiện
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+            <User className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">OKRs của tôi</h2>
+            <p className="text-sm text-gray-500">
+              Chu kỳ: {currentCycle?.name} • {myOKRs.length} mục tiêu cá nhân
+            </p>
+          </div>
         </div>
+        
         <Dialog open={createOKROpen} onOpenChange={setCreateOKROpen}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button className="bg-green-600 hover:bg-green-700">
               <Plus className="h-4 w-4 mr-2" />
               Tạo OKR
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-orange-500" />
-                Tạo OKR nhanh chóng
+                Tạo OKR cá nhân
               </DialogTitle>
             </DialogHeader>
             
-            <div className="space-y-6 py-4">
-              {/* OKR Type Selection */}
-              <div className="grid grid-cols-3 gap-4">
-                {[
-                  { value: 'individual', label: 'Cá nhân', icon: Target, desc: 'OKR cho riêng tôi' },
-                  { value: 'collaborative', label: 'Cộng tác', icon: Users, desc: 'Làm việc cùng đồng nghiệp' },
-                  { value: 'department', label: 'Phòng ban', icon: TrendingUp, desc: 'Mục tiêu chung phòng ban' }
-                ].map((type) => {
-                  const Icon = type.icon;
-                  return (
-                    <Card 
-                      key={type.value}
-                      className={`cursor-pointer transition-all border-2 ${
-                        formData.type === type.value 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                      onClick={() => setFormData({...formData, type: type.value})}
-                    >
-                      <CardContent className="p-4 text-center">
-                        <Icon className={`h-8 w-8 mx-auto mb-2 ${
-                          formData.type === type.value ? 'text-blue-600' : 'text-gray-500'
-                        }`} />
-                        <div className="font-medium text-sm">{type.label}</div>
-                        <div className="text-xs text-gray-500 mt-1">{type.desc}</div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-
-              {/* Basic Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Tiêu đề OKR *</Label>
-                  <Input
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    placeholder="VD: Tăng doanh thu 50% trong Q1"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Chu kỳ</Label>
-                  <Select value={formData.cycle} onValueChange={(value) => setFormData({...formData, cycle: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cycles.map(cycle => (
-                        <SelectItem key={cycle} value={cycle}>{cycle}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Mô tả (tùy chọn)</Label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
-                  placeholder="Mô tả chi tiết về mục tiêu..."
-                  rows={2}
-                />
-              </div>
-
-              {/* Collaborators for collaborative type */}
-              {formData.type === 'collaborative' && (
-                <div className="space-y-3">
-                  <Label>Người cộng tác</Label>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {formData.collaborators.map(collabId => {
-                      const collaborator = availableCollaborators.find(c => c.id === collabId);
-                      return collaborator ? (
-                        <Badge key={collabId} variant="secondary" className="flex items-center gap-2 px-3 py-1">
-                          <span>{collaborator.avatar}</span>
-                          {collaborator.name}
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-4 w-4 p-0 hover:bg-transparent ml-1"
-                            onClick={() => removeCollaborator(collabId)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </Badge>
-                      ) : null;
-                    })}
+            <Tabs defaultValue="basic" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="basic">Thông tin cơ bản</TabsTrigger>
+                <TabsTrigger value="alignment">Liên kết OKR</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="basic" className="space-y-6 py-4">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Tiêu đề OKR *</Label>
+                    <Input
+                      value={formData.title}
+                      onChange={(e) => setFormData({...formData, title: e.target.value})}
+                      placeholder="VD: Tăng hiệu suất bán hàng cá nhân 40%"
+                    />
                   </div>
-                  <Select onValueChange={addCollaborator}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Thêm người cộng tác" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableCollaborators
-                        .filter(c => !formData.collaborators.includes(c.id))
-                        .map(collaborator => (
-                          <SelectItem key={collaborator.id} value={collaborator.id}>
+
+                  <div className="space-y-2">
+                    <Label>Mô tả</Label>
+                    <Textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      placeholder="Mô tả chi tiết về mục tiêu cá nhân..."
+                      rows={3}
+                    />
+                  </div>
+
+                  {/* Key Results */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label>Key Results (tối đa 5)</Label>
+                      <Button 
+                        type="button" 
+                        onClick={addKeyResult} 
+                        size="sm" 
+                        variant="outline"
+                        disabled={formData.key_results.length >= 5}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Thêm KR
+                      </Button>
+                    </div>
+
+                    {formData.key_results.map((kr, index) => (
+                      <div key={index} className="grid grid-cols-12 gap-3 items-start p-3 bg-gray-50 rounded-lg">
+                        <div className="col-span-6">
+                          <Input
+                            placeholder={`Key Result ${index + 1}`}
+                            value={kr.title}
+                            onChange={(e) => updateKeyResultForm(index, 'title', e.target.value)}
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Input
+                            placeholder="Mục tiêu"
+                            value={kr.target_value}
+                            onChange={(e) => updateKeyResultForm(index, 'target_value', e.target.value)}
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Input
+                            placeholder="Đơn vị"
+                            value={kr.unit}
+                            onChange={(e) => updateKeyResultForm(index, 'unit', e.target.value)}
+                          />
+                        </div>
+                        <div className="col-span-1">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={kr.weight}
+                            onChange={(e) => updateKeyResultForm(index, 'weight', parseInt(e.target.value) || 100)}
+                          />
+                        </div>
+                        {formData.key_results.length > 1 && (
+                          <div className="col-span-1">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setFormData({
+                                ...formData,
+                                key_results: formData.key_results.filter((_, i) => i !== index)
+                              })}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="alignment" className="space-y-6 py-4">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Liên kết với OKR Công ty</Label>
+                    <Select value={formData.parent_okr_id} onValueChange={(value) => setFormData({...formData, parent_okr_id: value})}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chọn OKR Công ty để liên kết (tùy chọn)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Không liên kết</SelectItem>
+                        {companyOKRs.map((okr) => (
+                          <SelectItem key={okr.id} value={okr.id}>
                             <div className="flex items-center gap-2">
-                              <span>{collaborator.avatar}</span>
-                              {collaborator.name} - {collaborator.department}
+                              <Building2 className="h-4 w-4" />
+                              {okr.title}
                             </div>
                           </SelectItem>
                         ))}
-                    </SelectContent>
-                  </Select>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500">
+                      Liên kết OKR cá nhân với mục tiêu công ty để tạo sự đồng bộ
+                    </p>
+                  </div>
                 </div>
-              )}
+              </TabsContent>
+            </Tabs>
 
-              {/* Department for department type */}
-              {formData.type === 'department' && (
-                <div className="space-y-2">
-                  <Label>Phòng ban</Label>
-                  <Select value={formData.department} onValueChange={(value) => setFormData({...formData, department: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Chọn phòng ban" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {departments.map(dept => (
-                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {/* Key Results */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label>Key Results (tối đa 5)</Label>
-                  <Button 
-                    type="button" 
-                    onClick={addKeyResult} 
-                    size="sm" 
-                    variant="outline"
-                    disabled={formData.key_results.length >= 5}
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Thêm KR
-                  </Button>
-                </div>
-
-                {formData.key_results.map((kr, index) => (
-                  <Card key={index} className="p-4 bg-gray-50">
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
-                      <div className="md:col-span-6">
-                        <Input
-                          placeholder={`Key Result ${index + 1}`}
-                          value={kr.title}
-                          onChange={(e) => updateKeyResult(index, 'title', e.target.value)}
-                        />
-                      </div>
-                      <div className="md:col-span-2">
-                        <Input
-                          placeholder="Mục tiêu"
-                          value={kr.target_value}
-                          onChange={(e) => updateKeyResult(index, 'target_value', e.target.value)}
-                        />
-                      </div>
-                      <div className="md:col-span-2">
-                        <Input
-                          placeholder="Đơn vị"
-                          value={kr.unit}
-                          onChange={(e) => updateKeyResult(index, 'unit', e.target.value)}
-                        />
-                      </div>
-                      <div className="md:col-span-1">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={kr.weight}
-                          onChange={(e) => updateKeyResult(index, 'weight', parseInt(e.target.value) || 100)}
-                        />
-                      </div>
-                      {formData.key_results.length > 1 && (
-                        <div className="md:col-span-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setFormData({
-                              ...formData,
-                              key_results: formData.key_results.filter((_, i) => i !== index)
-                            })}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button variant="outline" onClick={() => setCreateOKROpen(false)}>
-                  Hủy
-                </Button>
-                <Button onClick={handleCreateOKR} className="bg-blue-600 hover:bg-blue-700">
-                  <Zap className="h-4 w-4 mr-2" />
-                  Tạo OKR
-                </Button>
-              </div>
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button variant="outline" onClick={() => setCreateOKROpen(false)}>
+                Hủy
+              </Button>
+              <Button onClick={handleCreateOKR} className="bg-green-600 hover:bg-green-700">
+                <Zap className="h-4 w-4 mr-2" />
+                Tạo OKR
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
+      {/* My OKRs */}
       <div className="space-y-6">
         {myOKRs.map((okr) => (
-          <Card key={okr.id} className="hover:shadow-md transition-shadow border-l-4 border-l-blue-500">
+          <Card key={okr.id} className="hover:shadow-md transition-shadow border-l-4 border-l-green-500">
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
                     <Target className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <CardTitle className="text-lg mb-2">{okr.objective}</CardTitle>
+                    <div className="flex items-center gap-2 mb-2">
+                      <CardTitle className="text-lg">{okr.title}</CardTitle>
+                      {getStatusBadge(okr.status, okr.progress)}
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">{okr.description}</p>
                     <div className="flex items-center space-x-4 text-sm text-gray-600">
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-4 w-4" />
                         <span>{okr.cycle}</span>
                       </div>
-                      <span>Hạn: {new Date(okr.due_date).toLocaleDateString('vi-VN')}</span>
+                      {okr.parent_okr_id && (
+                        <div className="flex items-center space-x-1">
+                          <Building2 className="h-4 w-4" />
+                          <span>Liên kết OKR Công ty</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-600 mb-1">{okr.progress}%</div>
+                    <div className="text-2xl font-bold text-green-600 mb-1">{okr.progress}%</div>
                     <Progress value={okr.progress} className="w-20 h-2" />
                   </div>
-                  {getStatusBadge(okr.status)}
                   <Button variant="ghost" size="sm">
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -402,11 +384,11 @@ export function MyOKRTasks() {
             <CardContent className="pt-0">
               <div className="space-y-3 ml-13">
                 <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-blue-600" />
+                  <TrendingUp className="h-4 w-4 text-green-600" />
                   Key Results:
                 </h4>
-                {okr.key_results.map((kr, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                {okr.key_results.map((kr) => (
+                  <div key={kr.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex-1">
                       <p className="font-medium text-gray-800 mb-1">{kr.title}</p>
                       <div className="flex items-center space-x-3">
@@ -415,8 +397,21 @@ export function MyOKRTasks() {
                       </div>
                     </div>
                     <div className="ml-4 text-right">
-                      <p className="text-sm font-medium text-gray-900">{kr.current} / {kr.target}</p>
-                      <div className={`w-3 h-3 rounded-full ${getProgressColor(kr.progress)} mt-1 ml-auto`} />
+                      <p className="text-sm font-medium text-gray-900">
+                        {kr.current_value.toLocaleString()} / {kr.target_value.toLocaleString()} {kr.unit}
+                      </p>
+                      <Button
+                        size="sm" 
+                        variant="outline"
+                        className="mt-1 text-xs"
+                        onClick={() => {
+                          setSelectedOKR(okr);
+                          setSelectedKR(kr);
+                          setUpdateProgressOpen(true);
+                        }}
+                      >
+                        Cập nhật tiến độ
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -429,14 +424,64 @@ export function MyOKRTasks() {
           <Card>
             <CardContent className="text-center py-12">
               <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có OKR nào được giao</h3>
-              <p className="text-gray-500">
-                Bạn chưa được phân công bất kỳ Objectives nào trong chu kỳ hiện tại
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có OKR nào</h3>
+              <p className="text-gray-500 mb-4">
+                Bắt đầu tạo OKR cá nhân để theo dõi mục tiêu và phát triển bản thân
               </p>
+              <Button onClick={() => setCreateOKROpen(true)} className="bg-green-600 hover:bg-green-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Tạo OKR đầu tiên
+              </Button>
             </CardContent>
           </Card>
         )}
       </div>
+
+      {/* Update Progress Dialog */}
+      <Dialog open={updateProgressOpen} onOpenChange={setUpdateProgressOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cập nhật tiến độ</DialogTitle>
+          </DialogHeader>
+          {selectedKR && (
+            <div className="space-y-4">
+              <div>
+                <p className="font-medium">{selectedKR.title}</p>
+                <p className="text-sm text-gray-600">
+                  Hiện tại: {selectedKR.current_value.toLocaleString()} / {selectedKR.target_value.toLocaleString()} {selectedKR.unit}
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Giá trị mới</Label>
+                <Input
+                  type="number"
+                  placeholder="Nhập giá trị hiện tại"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const value = parseFloat((e.target as HTMLInputElement).value) || 0;
+                      handleUpdateProgress(value);
+                    }
+                  }}
+                />
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setUpdateProgressOpen(false)}>
+                  Hủy
+                </Button>
+                <Button onClick={() => {
+                  const input = document.querySelector('input[type="number"]') as HTMLInputElement;
+                  const value = parseFloat(input?.value) || 0;
+                  handleUpdateProgress(value);
+                }}>
+                  Cập nhật
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
