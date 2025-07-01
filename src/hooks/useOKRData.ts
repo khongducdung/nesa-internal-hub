@@ -20,7 +20,7 @@ export interface OKRObjective {
   created_at: string;
   updated_at: string;
   created_by?: string;
-  aligned_okrs?: OKRObjective[]; // Child OKRs that align to this one
+  aligned_okrs?: OKRObjective[];
 }
 
 export interface KeyResult {
@@ -245,7 +245,7 @@ export function useOKRData() {
           owner_id: profile?.id || 'user',
           owner_type: 'individual',
           department_id: profile?.department_id,
-          parent_okr_id: '5', // Links to department OKR
+          parent_okr_id: '5',
           created_by: profile?.id || 'user',
           key_results: [
             {
@@ -318,23 +318,24 @@ export function useOKRData() {
         }
       ];
 
-      // Set up alignment relationships properly
-      const allOKRs = [
-        ...mockCompanyOKRs,
-        ...mockDepartmentOKRs,
-        ...mockMyOKRs
-      ];
+      // Update alignment relationships
+      const updateAlignments = (okrs: OKRObjective[]) => {
+        const allOKRs = [...mockCompanyOKRs, ...mockDepartmentOKRs, ...mockMyOKRs];
+        return okrs.map(okr => ({
+          ...okr,
+          aligned_okrs: allOKRs.filter(child => child.parent_okr_id === okr.id)
+        }));
+      };
 
-      // Build alignment relationships
-      allOKRs.forEach(okr => {
-        okr.aligned_okrs = allOKRs.filter(child => child.parent_okr_id === okr.id);
-      });
+      const updatedCompanyOKRs = updateAlignments(mockCompanyOKRs);
+      const updatedDepartmentOKRs = updateAlignments(mockDepartmentOKRs);
+      const updatedMyOKRs = updateAlignments(mockMyOKRs);
 
       setCycles(mockCycles);
       setCurrentCycle(mockCycles.find(c => c.is_current) || null);
-      setCompanyOKRs(mockCompanyOKRs);
-      setMyOKRs(mockMyOKRs);
-      setDepartmentOKRs(mockDepartmentOKRs);
+      setCompanyOKRs(updatedCompanyOKRs);
+      setMyOKRs(updatedMyOKRs);
+      setDepartmentOKRs(updatedDepartmentOKRs);
       setLoading(false);
     };
 
@@ -346,7 +347,6 @@ export function useOKRData() {
   const refreshAlignments = () => {
     const allOKRs = getAllOKRs();
     
-    // Update all OKRs with fresh alignment data
     const updateOKRs = (okrs: OKRObjective[]) => {
       return okrs.map(okr => ({
         ...okr,
@@ -354,12 +354,16 @@ export function useOKRData() {
       }));
     };
 
-    setCompanyOKRs(updateOKRs);
-    setDepartmentOKRs(updateOKRs);
-    setMyOKRs(updateOKRs);
+    setCompanyOKRs(prev => updateOKRs(prev));
+    setDepartmentOKRs(prev => updateOKRs(prev));
+    setMyOKRs(prev => updateOKRs(prev));
+    
+    console.log('Alignments refreshed');
   };
 
   const createOKR = async (okrData: Partial<OKRObjective>) => {
+    console.log('Creating OKR with data:', okrData);
+    
     const newOKR: OKRObjective = {
       id: Date.now().toString(),
       title: okrData.title || '',
@@ -395,6 +399,8 @@ export function useOKRData() {
   };
 
   const updateOKR = async (id: string, updates: Partial<OKRObjective>) => {
+    console.log('Updating OKR:', id, 'with:', updates);
+    
     const updateOKRInList = (okrs: OKRObjective[]) =>
       okrs.map(okr => {
         if (okr.id === id) {

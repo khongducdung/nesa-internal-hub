@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -39,12 +38,12 @@ type FormData = {
 };
 
 export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogProps) {
-  const { companyOKRs, departmentOKRs, getParentOKR, refreshAlignments } = useOKRData();
+  const { companyOKRs, departmentOKRs, getParentOKR } = useOKRData();
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
     status: 'active',
-    parent_okr_id: '',
+    parent_okr_id: 'none',
     key_results: [{ id: '', title: '', target_value: '', current_value: '', unit: '', weight: 100, progress: 0, status: 'not_started' }]
   });
 
@@ -54,7 +53,7 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
         title: okr.title,
         description: okr.description,
         status: okr.status,
-        parent_okr_id: okr.parent_okr_id || '',
+        parent_okr_id: okr.parent_okr_id || 'none',
         key_results: okr.key_results.map(kr => ({
           id: kr.id,
           title: kr.title,
@@ -72,7 +71,7 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
         title: '',
         description: '',
         status: 'active',
-        parent_okr_id: '',
+        parent_okr_id: 'none',
         key_results: [{ id: '', title: '', target_value: '', current_value: '', unit: '', weight: 100, progress: 0, status: 'not_started' }]
       });
     }
@@ -120,6 +119,8 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
   };
 
   const handleSave = async () => {
+    console.log('Saving OKR with parent_okr_id:', formData.parent_okr_id);
+    
     const keyResults = formData.key_results
       .filter(kr => kr.title && kr.target_value)
       .map(kr => ({
@@ -139,16 +140,13 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
       title: formData.title,
       description: formData.description,
       status: formData.status,
-      parent_okr_id: formData.parent_okr_id || undefined,
+      parent_okr_id: formData.parent_okr_id === 'none' ? undefined : formData.parent_okr_id,
       key_results: keyResults,
       progress: Math.round(totalProgress)
     };
 
+    console.log('Final OKR data:', updatedOKRData);
     await onSave(updatedOKRData);
-    
-    // Refresh alignments after save
-    setTimeout(() => refreshAlignments(), 100);
-    
     onClose();
   };
 
@@ -336,7 +334,7 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
                 <Select 
                   value={formData.parent_okr_id} 
                   onValueChange={(value) => {
-                    console.log('Selected parent OKR:', value);
+                    console.log('Selected parent OKR value:', value);
                     setFormData({ ...formData, parent_okr_id: value });
                   }}
                 >
@@ -344,7 +342,7 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
                     <SelectValue placeholder="Chọn OKR cấp cao để liên kết (tùy chọn)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Không liên kết</SelectItem>
+                    <SelectItem value="none">Không liên kết</SelectItem>
                     {availableParentOKRs.map((parentOKR) => (
                       <SelectItem key={parentOKR.id} value={parentOKR.id}>
                         <div className="flex items-center gap-2">
