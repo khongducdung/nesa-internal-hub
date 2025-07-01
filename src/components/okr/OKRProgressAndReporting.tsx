@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   TrendingUp, BarChart3, Download, FileText, Calendar, Users, Target, 
-  AlertTriangle, CheckCircle, Clock, Filter, Eye, PieChart, LineChart,
+  AlertTriangle, CheckCircle, Clock, Filter, Eye, 
   Building2, User, Award, Zap, Activity, Bell
 } from 'lucide-react';
 import { useOKRAnalytics } from '@/hooks/useOKRAnalytics';
@@ -17,10 +18,6 @@ import { OKRReportGenerator } from './OKRReportGenerator';
 import { OKRRealTimeUpdates } from './OKRRealTimeUpdates';
 import { DepartmentDetailDialog } from './DepartmentDetailDialog';
 import { AdvancedFilterDialog } from './AdvancedFilterDialog';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart as RechartsPieChart, Cell, Area, AreaChart } from 'recharts';
-
-const COLORS = ['#22c55e', '#f59e0b', '#ef4444', '#3b82f6'];
 
 export function OKRProgressAndReporting() {
   const { analytics, loading, period, setPeriod, level, setLevel } = useOKRAnalytics();
@@ -242,107 +239,17 @@ export function OKRProgressAndReporting() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <PieChart className="h-4 w-4" />
-            Tổng quan
-          </TabsTrigger>
+      <Tabs defaultValue="progress" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="progress" className="flex items-center gap-2">
-            <LineChart className="h-4 w-4" />
+            <TrendingUp className="h-4 w-4" />
             Tiến độ
-          </TabsTrigger>
-          <TabsTrigger value="performance" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Hiệu suất
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Báo cáo
           </TabsTrigger>
         </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Status Distribution */}
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PieChart className="h-5 w-5 text-blue-600" />
-                  Phân bố trạng thái OKR
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer
-                  config={{
-                    value: { label: "Phần trăm" },
-                  }}
-                  className="h-64"
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RechartsPieChart>
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <RechartsPieChart data={analytics.statusDistribution} cx="50%" cy="50%" outerRadius={80}>
-                        {analytics.statusDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </RechartsPieChart>
-                    </RechartsPieChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  {analytics.statusDistribution.map((item, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: COLORS[index % COLORS.length] }} 
-                      />
-                      <span className="text-sm">{item.name}</span>
-                      <span className="text-sm font-medium ml-auto">{item.value}%</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Real-time Updates Preview */}
-            <div className="space-y-4">
-              <OKRRealTimeUpdates />
-            </div>
-          </div>
-
-          {/* Progress Trend */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <LineChart className="h-5 w-5 text-green-600" />
-                Xu hướng tiến độ theo thời gian
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                config={{
-                  company: { label: "Công ty", color: "#0088FE" },
-                  department: { label: "Phòng ban", color: "#00C49F" },
-                  individual: { label: "Cá nhân", color: "#FFBB28" },
-                }}
-                className="h-80"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={analytics.progressTrend}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Area type="monotone" dataKey="company" stackId="1" stroke="#0088FE" fill="#0088FE" fillOpacity={0.6} />
-                    <Area type="monotone" dataKey="department" stackId="1" stroke="#00C49F" fill="#00C49F" fillOpacity={0.6} />
-                    <Area type="monotone" dataKey="individual" stackId="1" stroke="#FFBB28" fill="#FFBB28" fillOpacity={0.6} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="progress" className="space-y-6">
           {/* Department Performance Cards */}
@@ -440,40 +347,6 @@ export function OKRProgressAndReporting() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        <TabsContent value="performance" className="space-y-6">
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-purple-600" />
-                So sánh hiệu suất các cấp độ
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer
-                config={{
-                  company: { label: "Công ty", color: "#8884d8" },
-                  department: { label: "Phòng ban", color: "#82ca9d" },
-                  individual: { label: "Cá nhân", color: "#ffc658" },
-                }}
-                className="h-80"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={analytics.progressTrend}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="company" fill="#8884d8" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="department" fill="#82ca9d" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="individual" fill="#ffc658" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
-          </Card>
 
           {/* Performance Insights */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
