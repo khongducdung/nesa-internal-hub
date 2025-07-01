@@ -3,7 +3,6 @@ import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WorkGroupManagement } from './WorkGroupManagement';
 import { PerformanceCycleManagement } from './PerformanceCycleManagement';
-import { PerformanceAssignmentManagement } from './PerformanceAssignmentManagement';
 import { PerformanceDashboard } from './PerformanceDashboard';
 import { PerformanceEvaluationManagement } from './PerformanceEvaluationManagement';
 import { EmployeeReportManagement } from './EmployeeReportManagement';
@@ -23,13 +22,12 @@ export function PerformanceManagement() {
       </div>
 
       <Tabs defaultValue={isManager ? "dashboard" : "my-work"} className="w-full">
-        <TabsList className={`grid w-full ${isManager ? 'grid-cols-6' : 'grid-cols-1'}`}>
+        <TabsList className={`grid w-full ${isManager ? 'grid-cols-5' : 'grid-cols-1'}`}>
           {isManager && (
             <>
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="cycles">Chu kỳ đánh giá</TabsTrigger>
               <TabsTrigger value="workgroups">Nhóm công việc</TabsTrigger>
-              <TabsTrigger value="assignments">Phân công công việc</TabsTrigger>
               <TabsTrigger value="evaluations">Đánh giá</TabsTrigger>
             </>
           )}
@@ -48,10 +46,6 @@ export function PerformanceManagement() {
 
             <TabsContent value="workgroups" className="mt-6">
               <WorkGroupManagement />
-            </TabsContent>
-
-            <TabsContent value="assignments" className="mt-6">
-              <PerformanceAssignmentManagement />
             </TabsContent>
 
             <TabsContent value="evaluations" className="mt-6">
