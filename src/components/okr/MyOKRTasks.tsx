@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -5,11 +6,8 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Target, Calendar, TrendingUp, Edit, Plus, X, Users, Zap, CheckCircle, AlertTriangle, Clock, Building2, User, Eye, Trash2, Link2 } from 'lucide-react';
 import { useOKRData, OKRObjective } from '@/hooks/useOKRData';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,13 +25,6 @@ export function MyOKRTasks() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedOKR, setSelectedOKR] = useState<OKRObjective | null>(null);
   const [selectedKR, setSelectedKR] = useState<any>(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    type: 'individual',
-    parent_okr_id: '',
-    key_results: [{ title: '', target_value: '', unit: '', weight: 100 }]
-  });
 
   const getStatusBadge = (status: string, progress: number) => {
     if (status === 'completed') return <Badge className="bg-green-100 text-green-800 flex items-center gap-1"><CheckCircle className="h-3 w-3" />Hoàn thành</Badge>;
@@ -43,43 +34,12 @@ export function MyOKRTasks() {
     return <Badge className="bg-red-100 text-red-800 flex items-center gap-1"><Clock className="h-3 w-3" />Chậm tiến độ</Badge>;
   };
 
-  const addKeyResult = () => {
-    setFormData({
-      ...formData,
-      key_results: [...formData.key_results, { title: '', target_value: '', unit: '', weight: 100 }]
-    });
-  };
-
-  const updateKeyResultForm = (index: number, field: string, value: string | number) => {
-    const updated = formData.key_results.map((kr, i) => 
-      i === index ? { ...kr, [field]: value } : kr
-    );
-    setFormData({ ...formData, key_results: updated });
-  };
-
-  const handleCreateOKR = async () => {
-    if (!formData.title) return;
-
-    const keyResults = formData.key_results
-      .filter(kr => kr.title && kr.target_value)
-      .map((kr, index) => ({
-        id: `kr_${Date.now()}_${index}`,
-        title: kr.title,
-        target_value: parseFloat(kr.target_value) || 0,
-        current_value: 0,
-        unit: kr.unit || '',
-        weight: kr.weight || 100,
-        progress: 0,
-        status: 'not_started' as const
-      }));
-
+  const handleCreateOKR = async (okrData: Partial<OKRObjective>) => {
     await createOKR({
-      ...formData,
+      ...okrData,
       owner_type: 'individual',
       owner_id: profile?.id,
       department_id: profile?.department_id,
-      parent_okr_id: formData.parent_okr_id || undefined,
-      key_results: keyResults
     });
 
     toast({
@@ -87,13 +47,6 @@ export function MyOKRTasks() {
       description: "Đã tạo OKR cá nhân mới",
     });
 
-    setFormData({
-      title: '',
-      description: '',
-      type: 'individual',
-      parent_okr_id: '',
-      key_results: [{ title: '', target_value: '', unit: '', weight: 100 }]
-    });
     setCreateOKROpen(false);
   };
 
@@ -225,157 +178,10 @@ export function MyOKRTasks() {
           </div>
         </div>
         
-        <Dialog open={createOKROpen} onOpenChange={setCreateOKROpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-green-600 hover:bg-green-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Tạo OKR
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-orange-500" />
-                Tạo OKR cá nhân
-              </DialogTitle>
-            </DialogHeader>
-            
-            <Tabs defaultValue="basic" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="basic">Thông tin cơ bản</TabsTrigger>
-                <TabsTrigger value="alignment">Liên kết OKR</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="basic" className="space-y-6 py-4">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Tiêu đề OKR *</Label>
-                    <Input
-                      value={formData.title}
-                      onChange={(e) => setFormData({...formData, title: e.target.value})}
-                      placeholder="VD: Tăng hiệu suất bán hàng cá nhân 40%"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Mô tả</Label>
-                    <Textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({...formData, description: e.target.value})}
-                      placeholder="Mô tả chi tiết về mục tiêu cá nhân..."
-                      rows={3}
-                    />
-                  </div>
-
-                  {/* Key Results */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label>Key Results (tối đa 5)</Label>
-                      <Button 
-                        type="button" 
-                        onClick={addKeyResult} 
-                        size="sm" 
-                        variant="outline"
-                        disabled={formData.key_results.length >= 5}
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Thêm KR
-                      </Button>
-                    </div>
-
-                    {formData.key_results.map((kr, index) => (
-                      <div key={index} className="grid grid-cols-12 gap-3 items-start p-3 bg-gray-50 rounded-lg">
-                        <div className="col-span-6">
-                          <Input
-                            placeholder={`Key Result ${index + 1}`}
-                            value={kr.title}
-                            onChange={(e) => updateKeyResultForm(index, 'title', e.target.value)}
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <Input
-                            placeholder="Mục tiêu"
-                            value={kr.target_value}
-                            onChange={(e) => updateKeyResultForm(index, 'target_value', e.target.value)}
-                          />
-                        </div>
-                        <div className="col-span-2">
-                          <Input
-                            placeholder="Đơn vị"
-                            value={kr.unit}
-                            onChange={(e) => updateKeyResultForm(index, 'unit', e.target.value)}
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <Input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={kr.weight}
-                            onChange={(e) => updateKeyResultForm(index, 'weight', parseInt(e.target.value) || 100)}
-                          />
-                        </div>
-                        {formData.key_results.length > 1 && (
-                          <div className="col-span-1">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setFormData({
-                                ...formData,
-                                key_results: formData.key_results.filter((_, i) => i !== index)
-                              })}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="alignment" className="space-y-6 py-4">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Liên kết với OKR Công ty</Label>
-                    <Select value={formData.parent_okr_id} onValueChange={(value) => setFormData({...formData, parent_okr_id: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Chọn OKR Công ty để liên kết (tùy chọn)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Không liên kết</SelectItem>
-                        {companyOKRs.map((okr) => (
-                          <SelectItem key={okr.id} value={okr.id}>
-                            <div className="flex items-center gap-2">
-                              <Building2 className="h-4 w-4" />
-                              {okr.title}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-gray-500">
-                      Liên kết OKR cá nhân với mục tiêu công ty để tạo sự đồng bộ
-                    </p>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-
-            <div className="flex justify-end gap-3 pt-4 border-t">
-              <Button variant="outline" onClick={() => setCreateOKROpen(false)}>
-                Hủy
-              </Button>
-              <Button onClick={handleCreateOKR} className="bg-green-600 hover:bg-green-700">
-                <Zap className="h-4 w-4 mr-2" />
-                Tạo OKR
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => setCreateOKROpen(true)} className="bg-green-600 hover:bg-green-700">
+          <Plus className="h-4 w-4 mr-2" />
+          Tạo OKR
+        </Button>
       </div>
 
       {/* My OKRs */}
@@ -530,24 +336,14 @@ export function MyOKRTasks() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Ghi chú (tùy chọn)</Label>
-                <Textarea
-                  placeholder="Thêm ghi chú về tiến độ..."
-                  rows={2}
-                />
-              </div>
-
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => setUpdateProgressOpen(false)}>
                   Hủy
                 </Button>
                 <Button onClick={() => {
                   const input = document.querySelector('input[type="number"]') as HTMLInputElement;
-                  const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
                   const value = parseFloat(input?.value) || 0;
-                  const notes = textarea?.value || '';
-                  handleUpdateProgress(value, notes);
+                  handleUpdateProgress(value);
                 }}>
                   Cập nhật
                 </Button>
@@ -569,6 +365,14 @@ export function MyOKRTasks() {
         isOpen={editDialogOpen} 
         onClose={() => setEditDialogOpen(false)}
         onSave={handleSaveEdit}
+      />
+      
+      {/* Create OKR Dialog using OKREditDialog */}
+      <OKREditDialog 
+        okr={null} 
+        isOpen={createOKROpen} 
+        onClose={() => setCreateOKROpen(false)}
+        onSave={handleCreateOKR}
       />
     </div>
   );
