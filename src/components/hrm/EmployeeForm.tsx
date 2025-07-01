@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -163,7 +162,7 @@ export function EmployeeForm({ onClose, employeeId }: EmployeeFormProps) {
     // Remove all non-numeric characters
     const numericValue = value.replace(/[^\d]/g, '');
     
-    // Format with thousand separators
+    // Format with thousand separators using Vietnamese locale
     if (numericValue) {
       return parseInt(numericValue).toLocaleString('vi-VN');
     }
