@@ -18,6 +18,8 @@ import {
   Zap
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { OKRMini } from './OKRMini';
+import { OKRQuickActions } from './OKRQuickActions';
 
 export function OKRDashboard() {
   const { profile } = useAuth();
@@ -95,24 +97,6 @@ export function OKRDashboard() {
     }
   ];
 
-  // Huy hiệu gần đây
-  const recentAchievements = [
-    {
-      title: 'Vượt mục tiêu',
-      description: 'Đạt 125% mục tiêu Q1',
-      icon: Trophy,
-      color: 'from-yellow-400 to-yellow-600',
-      date: '2024-03-28'
-    },
-    {
-      title: 'Làm việc nhóm xuất sắc',
-      description: 'Hoàn thành 3 OKR cộng tác',
-      icon: Users,
-      color: 'from-blue-400 to-blue-600',
-      date: '2024-03-25'
-    }
-  ];
-
   // Câu nói khích lệ
   const motivationalQuotes = [
     "🎯 Mỗi mục tiêu đạt được là một bước tiến lớn!",
@@ -176,77 +160,48 @@ export function OKRDashboard() {
         })}
       </div>
 
-      {/* Recent Achievements & Progress */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Achievements */}
-        <Card className="shadow-md border-0">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-              <Award className="h-5 w-5 text-yellow-600" />
-              Huy hiệu mới đạt được
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentAchievements.map((achievement, index) => {
-                const Icon = achievement.icon;
-                return (
-                  <div key={index} className="flex items-center space-x-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
-                    <div className={`w-12 h-12 bg-gradient-to-br ${achievement.color} rounded-full flex items-center justify-center shadow-lg`}>
-                      <Icon className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{achievement.title}</h3>
-                      <p className="text-sm text-gray-600">{achievement.description}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {new Date(achievement.date).toLocaleDateString('vi-VN')}
-                      </p>
-                    </div>
-                    <Zap className="h-5 w-5 text-yellow-500" />
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+      {/* OKR Mini - Achievement & Leaderboard */}
+      <OKRMini />
 
-        {/* Current Cycle Info */}
-        <Card className="shadow-md border-0">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-blue-600" />
-              Chu kỳ hiện tại
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center mb-6">
-              <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
-                <span className="text-white text-2xl font-bold">Q1</span>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">Quý 1 - 2024</h3>
-              <p className="text-gray-600">01/01 - 31/03/2024</p>
+      {/* Quick Actions & Activities */}
+      <OKRQuickActions />
+
+      {/* Current Cycle Info */}
+      <Card className="shadow-md border-0">
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-blue-600" />
+            Chu kỳ hiện tại
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center mb-6">
+            <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <span className="text-white text-2xl font-bold">Q1</span>
             </div>
-            
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 px-4 bg-green-50 rounded-lg border border-green-200">
-                <span className="text-sm font-medium text-gray-700">Tổng tiến độ</span>
-                <div className="flex items-center space-x-2">
-                  <Progress value={76} className="w-20 h-2" />
-                  <span className="font-semibold text-green-600">76%</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between py-3 px-4 bg-orange-50 rounded-lg border border-orange-200">
-                <span className="text-sm font-medium text-gray-700">Thời gian còn lại</span>
-                <span className="font-semibold text-orange-600">12 ngày</span>
-              </div>
-              <div className="flex items-center justify-between py-3 px-4 bg-blue-50 rounded-lg border border-blue-200">
-                <span className="text-sm font-medium text-gray-700">Objectives hoàn thành</span>
-                <span className="font-semibold text-blue-600">5/8</span>
+            <h3 className="text-lg font-semibold text-gray-900">Quý 1 - 2024</h3>
+            <p className="text-gray-600">01/01 - 31/03/2024</p>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between py-3 px-4 bg-green-50 rounded-lg border border-green-200">
+              <span className="text-sm font-medium text-gray-700">Tổng tiến độ</span>
+              <div className="flex items-center space-x-2">
+                <Progress value={76} className="w-20 h-2" />
+                <span className="font-semibold text-green-600">76%</span>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="flex items-center justify-between py-3 px-4 bg-orange-50 rounded-lg border border-orange-200">
+              <span className="text-sm font-medium text-gray-700">Thời gian còn lại</span>
+              <span className="font-semibold text-orange-600">12 ngày</span>
+            </div>
+            <div className="flex items-center justify-between py-3 px-4 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-sm font-medium text-gray-700">Objectives hoàn thành</span>
+              <span className="font-semibold text-blue-600">5/8</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Manager-specific sections */}
       {isManager && (
