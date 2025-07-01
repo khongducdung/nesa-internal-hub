@@ -6,6 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { 
   Settings, 
   Coins, 
@@ -18,62 +23,170 @@ import {
   Gift,
   AlertCircle,
   CheckCircle,
-  Save
+  Save,
+  Plus,
+  Edit,
+  Trash2,
+  Bell,
+  Shield,
+  Zap,
+  Clock,
+  TrendingUp
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export function OKRSettings() {
+  const { toast } = useToast();
+  const [loading, setSaving] = useState(false);
+  const [newRuleOpen, setNewRuleOpen] = useState(false);
+  
   const [settings, setSettings] = useState({
     // Reward System Settings
     okr_coins_per_completion: 100,
     trust_points_limit_per_day: 10,
     dedication_points_limit_per_day: 5,
+    bonus_multiplier: 1.5,
+    early_completion_bonus: 50,
     
     // Achievement Settings
     enable_public_leaderboard: true,
     enable_achievements: true,
     enable_emotional_rewards: true,
+    enable_peer_recognition: true,
     
     // Cycle Settings
-    default_cycle_duration: 90, // days
+    default_cycle_duration: 90,
     auto_create_next_cycle: true,
     allow_mid_cycle_changes: false,
+    require_manager_approval: true,
     
     // Notification Settings
     notify_on_okr_completion: true,
     notify_on_rewards_received: true,
-    notify_on_cycle_end: true
+    notify_on_cycle_end: true,
+    daily_reminder: true,
+    weekly_summary: true
+  });
+
+  const [newRule, setNewRule] = useState({
+    category: '',
+    action: '',
+    reward: '',
+    conditions: '',
+    priority: 'medium'
   });
 
   const rewardRules = [
     {
+      id: 1,
       category: 'OKR Completion',
-      rules: [
-        { action: 'Hoàn thành 100% Key Results', reward: '100 OKR Coins + 10 Trust Points', status: 'active' },
-        { action: 'Hoàn thành trước hạn 1 tuần', reward: '150 OKR Coins + 15 Trust Points', status: 'active' },
-        { action: 'Vượt mục tiêu 120%+', reward: '200 OKR Coins + 20 Trust Points + Badge', status: 'active' }
-      ]
+      action: 'Hoàn thành 100% Key Results',
+      reward: '100 OKR Coins + 10 Trust Points',
+      conditions: 'Trong thời hạn quy định',
+      status: 'active',
+      priority: 'high',
+      usage_count: 45
     },
     {
+      id: 2,
+      category: 'OKR Completion',
+      action: 'Hoàn thành trước hạn 1 tuần',
+      reward: '150 OKR Coins + 15 Trust Points + Badge',
+      conditions: 'Hoàn thành ít nhất 7 ngày trước deadline',
+      status: 'active',
+      priority: 'high',
+      usage_count: 23
+    },
+    {
+      id: 3,
+      category: 'Excellence',
+      action: 'Vượt mục tiêu 120%+',
+      reward: '200 OKR Coins + 20 Trust Points + Badge "Xuất sắc"',
+      conditions: 'Đạt từ 120% trở lên so với mục tiêu',
+      status: 'active',
+      priority: 'high',
+      usage_count: 12
+    },
+    {
+      id: 4,
       category: 'Collaboration',
-      rules: [
-        { action: 'Hỗ trợ 3+ OKR của đồng nghiệp', reward: '50 OKR Coins + 5 Dedication Points', status: 'active' },
-        { action: 'Nhận 10+ Trust Points từ team', reward: '75 OKR Coins + Badge "Team Player"', status: 'active' },
-        { action: 'Mentor cho junior', reward: '100 OKR Coins + 10 Dedication Points', status: 'draft' }
-      ]
+      action: 'Hỗ trợ 3+ OKR của đồng nghiệp',
+      reward: '50 OKR Coins + 5 Dedication Points',
+      conditions: 'Được xác nhận bởi người được hỗ trợ',
+      status: 'active',
+      priority: 'medium',
+      usage_count: 31
     },
     {
+      id: 5,
       category: 'Leadership',
-      rules: [
-        { action: 'Team đạt 90%+ OKR', reward: '300 OKR Coins + Leadership Badge', status: 'active' },
-        { action: 'Không có OKR nào bị trễ', reward: '200 OKR Coins + 25 Trust Points', status: 'active' },
-        { action: 'Tạo OKR sáng tạo được nhiều vote', reward: '150 OKR Coins + Innovation Badge', status: 'draft' }
-      ]
+      action: 'Team đạt 90%+ OKR',
+      reward: '300 OKR Coins + Leadership Badge',
+      conditions: 'Tất cả thành viên trong team đạt từ 90% trở lên',
+      status: 'active',
+      priority: 'high',
+      usage_count: 8
     }
   ];
 
-  const handleSaveSettings = () => {
-    console.log('Saving settings:', settings);
-    // Logic lưu cài đặt
+  const achievements = [
+    {
+      id: 1,
+      name: 'First Goal',
+      description: 'Hoàn thành OKR đầu tiên',
+      icon: '🎯',
+      type: 'milestone',
+      points: 50,
+      status: 'active'
+    },
+    {
+      id: 2,
+      name: 'Speed Runner',
+      description: 'Hoàn thành OKR trước hạn 3 lần',
+      icon: '⚡',
+      type: 'achievement',
+      points: 150,
+      status: 'active'
+    },
+    {
+      id: 3,
+      name: 'Team Player',
+      description: 'Hỗ trợ đồng nghiệp 10 lần',
+      icon: '🤝',
+      type: 'collaboration',
+      points: 200,
+      status: 'active'
+    },
+    {
+      id: 4,
+      name: 'Perfectionist',
+      description: 'Đạt 100% trong 5 OKR liên tiếp',
+      icon: '💎',
+      type: 'excellence',
+      points: 500,
+      status: 'draft'
+    }
+  ];
+
+  const handleSaveSettings = async () => {
+    setSaving(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: "Cài đặt đã được lưu",
+        description: "Tất cả thay đổi đã được áp dụng thành công",
+      });
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể lưu cài đặt. Vui lòng thử lại.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSettingChange = (key: string, value: any) => {
@@ -83,36 +196,97 @@ export function OKRSettings() {
     }));
   };
 
+  const handleAddRule = () => {
+    if (!newRule.category || !newRule.action || !newRule.reward) {
+      toast({
+        title: "Thiếu thông tin",
+        description: "Vui lòng điền đầy đủ thông tin quy tắc",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Add rule logic here
+    toast({
+      title: "Quy tắc đã được thêm",
+      description: "Quy tắc mới đã được tạo thành công",
+    });
+    
+    setNewRule({
+      category: '',
+      action: '',
+      reward: '',
+      conditions: '',
+      priority: 'medium'
+    });
+    setNewRuleOpen(false);
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Settings className="h-6 w-6 text-blue-600" />
-            Cài đặt OKR
-          </h2>
+          <h2 className="text-2xl font-semibold text-gray-900">Cài đặt OKR</h2>
           <p className="text-gray-600 mt-1">
             Quản lý hệ thống thưởng, quy tắc và vận hành OKR
           </p>
         </div>
-        <Button onClick={handleSaveSettings} className="bg-blue-600 hover:bg-blue-700">
-          <Save className="h-4 w-4 mr-2" />
-          Lưu cài đặt
+        <Button 
+          onClick={handleSaveSettings} 
+          disabled={loading}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          {loading ? (
+            <>
+              <Clock className="h-4 w-4 mr-2 animate-spin" />
+              Đang lưu...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Lưu cài đặt
+            </>
+          )}
         </Button>
       </div>
 
       <Tabs defaultValue="rewards" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="rewards">Hệ thống thưởng</TabsTrigger>
-          <TabsTrigger value="rules">Quy tắc vận hành</TabsTrigger>
-          <TabsTrigger value="cycles">Chu kỳ OKR</TabsTrigger>
-          <TabsTrigger value="notifications">Thông báo</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5 h-12">
+          <TabsTrigger value="rewards" className="flex items-center gap-2">
+            <Coins className="h-4 w-4" />
+            Hệ thống thưởng
+          </TabsTrigger>
+          <TabsTrigger value="rules" className="flex items-center gap-2">
+            <Award className="h-4 w-4" />
+            Quy tắc thưởng
+          </TabsTrigger>
+          <TabsTrigger value="achievements" className="flex items-center gap-2">
+            <Trophy className="h-4 w-4" />
+            Huy hiệu
+          </TabsTrigger>
+          <TabsTrigger value="cycles" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Chu kỳ OKR
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="flex items-center gap-2">
+            <Bell className="h-4 w-4" />
+            Thông báo
+          </TabsTrigger>
         </TabsList>
 
         {/* Reward System Settings */}
-        <TabsContent value="rewards" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <TabsContent value="rewards" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -122,23 +296,46 @@ export function OKRSettings() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Coins khi hoàn thành OKR
-                  </label>
+                  <Label htmlFor="coins-completion">Coins khi hoàn thành OKR</Label>
                   <Input
+                    id="coins-completion"
                     type="number"
                     value={settings.okr_coins_per_completion}
                     onChange={(e) => handleSettingChange('okr_coins_per_completion', parseInt(e.target.value))}
-                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="early-bonus">Thưởng hoàn thành sớm (%)</Label>
+                  <Input
+                    id="early-bonus"
+                    type="number"
+                    value={settings.early_completion_bonus}
+                    onChange={(e) => handleSettingChange('early_completion_bonus', parseInt(e.target.value))}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bonus-multiplier">Hệ số nhân thưởng</Label>
+                  <Input
+                    id="bonus-multiplier"
+                    type="number"
+                    step="0.1"
+                    value={settings.bonus_multiplier}
+                    onChange={(e) => handleSettingChange('bonus_multiplier', parseFloat(e.target.value))}
                   />
                 </div>
                 
                 <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <h4 className="font-medium text-yellow-800 mb-2">Tỷ giá quy đổi</h4>
+                  <h4 className="font-medium text-yellow-800 mb-2 flex items-center gap-2">
+                    <Gift className="h-4 w-4" />
+                    Tỷ giá quy đổi
+                  </h4>
                   <div className="space-y-1 text-sm text-yellow-700">
-                    <div>1000 Coins = 1 ngày nghỉ phép</div>
-                    <div>500 Coins = Voucher ăn trưa</div>
-                    <div>2000 Coins = Thưởng tiền mặt 500k</div>
+                    <div>• 1000 Coins = 1 ngày nghỉ phép</div>
+                    <div>• 500 Coins = Voucher ăn trưa 100k</div>
+                    <div>• 2000 Coins = Thưởng tiền mặt 500k</div>
+                    <div>• 5000 Coins = Voucher du lịch 2tr</div>
                   </div>
                 </div>
               </CardContent>
@@ -148,93 +345,192 @@ export function OKRSettings() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Trophy className="h-5 w-5 text-purple-600" />
-                  Điểm cảm xúc
+                  Điểm cảm xúc & Tương tác
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Giới hạn Trust Points/ngày
-                  </label>
+                  <Label htmlFor="trust-limit">Giới hạn Trust Points/ngày</Label>
                   <Input
+                    id="trust-limit"
                     type="number"
                     value={settings.trust_points_limit_per_day}
                     onChange={(e) => handleSettingChange('trust_points_limit_per_day', parseInt(e.target.value))}
-                    className="w-full"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Giới hạn Dedication Points/ngày
-                  </label>
+                  <Label htmlFor="dedication-limit">Giới hạn Dedication Points/ngày</Label>
                   <Input
+                    id="dedication-limit"
                     type="number"
                     value={settings.dedication_points_limit_per_day}
                     onChange={(e) => handleSettingChange('dedication_points_limit_per_day', parseInt(e.target.value))}
-                    className="w-full"
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">Hiển thị bảng xếp hạng công khai</span>
-                  <Switch
-                    checked={settings.enable_public_leaderboard}
-                    onCheckedChange={(checked) => handleSettingChange('enable_public_leaderboard', checked)}
-                  />
+                <Separator />
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Bảng xếp hạng công khai</Label>
+                      <p className="text-sm text-gray-500">Hiển thị thành tích của mọi người</p>
+                    </div>
+                    <Switch
+                      checked={settings.enable_public_leaderboard}
+                      onCheckedChange={(checked) => handleSettingChange('enable_public_leaderboard', checked)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Hệ thống huy hiệu</Label>
+                      <p className="text-sm text-gray-500">Kích hoạt achievements</p>
+                    </div>
+                    <Switch
+                      checked={settings.enable_achievements}
+                      onCheckedChange={(checked) => handleSettingChange('enable_achievements', checked)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Thưởng cảm xúc</Label>
+                      <p className="text-sm text-gray-500">Cho phép gửi emoji, sticker</p>
+                    </div>
+                    <Switch
+                      checked={settings.enable_emotional_rewards}
+                      onCheckedChange={(checked) => handleSettingChange('enable_emotional_rewards', checked)}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
-        {/* Operating Rules */}
+        {/* Reward Rules */}
         <TabsContent value="rules" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-green-600" />
-                Quy tắc thưởng và huy hiệu
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {rewardRules.map((category, categoryIndex) => (
-                  <div key={categoryIndex} className="space-y-3">
-                    <h4 className="font-semibold text-gray-900 border-b pb-2">
-                      {category.category}
-                    </h4>
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold">Quy tắc thưởng tự động</h3>
+              <p className="text-gray-600">Quản lý các điều kiện và mức thưởng cho từng hành động</p>
+            </div>
+            <Dialog open={newRuleOpen} onOpenChange={setNewRuleOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-green-600 hover:bg-green-700">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Thêm quy tắc
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Tạo quy tắc thưởng mới</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      {category.rules.map((rule, ruleIndex) => (
-                        <div key={ruleIndex} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div className="flex-1">
-                            <div className="font-medium text-sm text-gray-900">{rule.action}</div>
-                            <div className="text-sm text-gray-600">{rule.reward}</div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Badge className={`${
-                              rule.status === 'active' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-orange-100 text-orange-800'
-                            }`}>
-                              {rule.status === 'active' ? (
-                                <>
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Hoạt động
-                                </>
-                              ) : (
-                                <>
-                                  <AlertCircle className="h-3 w-3 mr-1" />
-                                  Nháp
-                                </>
-                              )}
-                            </Badge>
-                            <Button variant="outline" size="sm">
-                              Sửa
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                      <Label>Danh mục</Label>
+                      <Select value={newRule.category} onValueChange={(value) => setNewRule({...newRule, category: value})}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn danh mục" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="completion">OKR Completion</SelectItem>
+                          <SelectItem value="excellence">Excellence</SelectItem>
+                          <SelectItem value="collaboration">Collaboration</SelectItem>
+                          <SelectItem value="leadership">Leadership</SelectItem>
+                          <SelectItem value="innovation">Innovation</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Độ ưu tiên</Label>
+                      <Select value={newRule.priority} onValueChange={(value) => setNewRule({...newRule, priority: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="high">Cao</SelectItem>
+                          <SelectItem value="medium">Trung bình</SelectItem>
+                          <SelectItem value="low">Thấp</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Hành động kích hoạt</Label>
+                    <Input
+                      value={newRule.action}
+                      onChange={(e) => setNewRule({...newRule, action: e.target.value})}
+                      placeholder="VD: Hoàn thành OKR trước hạn 2 tuần"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Phần thưởng</Label>
+                    <Input
+                      value={newRule.reward}
+                      onChange={(e) => setNewRule({...newRule, reward: e.target.value})}
+                      placeholder="VD: 200 OKR Coins + 20 Trust Points + Badge"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Điều kiện (tùy chọn)</Label>
+                    <Textarea
+                      value={newRule.conditions}
+                      onChange={(e) => setNewRule({...newRule, conditions: e.target.value})}
+                      placeholder="Mô tả điều kiện cụ thể để nhận thưởng..."
+                      rows={3}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-3">
+                  <Button variant="outline" onClick={() => setNewRuleOpen(false)}>
+                    Hủy
+                  </Button>
+                  <Button onClick={handleAddRule}>
+                    Tạo quy tắc
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <Card>
+            <CardContent className="p-0">
+              <div className="space-y-1">
+                {rewardRules.map((rule, index) => (
+                  <div key={rule.id} className="flex items-center justify-between p-4 hover:bg-gray-50 border-b last:border-b-0">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Badge variant="outline" className="text-xs">{rule.category}</Badge>
+                        <Badge className={`text-xs ${getPriorityColor(rule.priority)}`}>
+                          {rule.priority === 'high' ? 'Cao' : rule.priority === 'medium' ? 'TB' : 'Thấp'}
+                        </Badge>
+                        <Badge className={`text-xs ${
+                          rule.status === 'active' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-orange-100 text-orange-800'
+                        }`}>
+                          {rule.status === 'active' ? 'Hoạt động' : 'Nháp'}
+                        </Badge>
+                      </div>
+                      <div className="font-medium text-gray-900 mb-1">{rule.action}</div>
+                      <div className="text-sm text-blue-600 mb-1">🎁 {rule.reward}</div>
+                      <div className="text-xs text-gray-500">{rule.conditions}</div>
+                      <div className="text-xs text-gray-400 mt-2">Đã sử dụng: {rule.usage_count} lần</div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="ghost" size="sm">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -243,8 +539,61 @@ export function OKRSettings() {
           </Card>
         </TabsContent>
 
+        {/* Achievements */}
+        <TabsContent value="achievements" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-semibold">Quản lý huy hiệu</h3>
+              <p className="text-gray-600">Tạo và quản lý các huy hiệu thành tích</p>
+            </div>
+            <Button className="bg-purple-600 hover:bg-purple-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Tạo huy hiệu
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {achievements.map((achievement) => (
+              <Card key={achievement.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="text-2xl">{achievement.icon}</div>
+                    <Badge className={`text-xs ${
+                      achievement.status === 'active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-orange-100 text-orange-800'
+                    }`}>
+                      {achievement.status === 'active' ? 'Hoạt động' : 'Nháp'}
+                    </Badge>
+                  </div>
+                  <h4 className="font-semibold text-gray-900 mb-2">{achievement.name}</h4>
+                  <p className="text-sm text-gray-600 mb-3">{achievement.description}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-sm text-blue-600">
+                      <Star className="h-4 w-4" />
+                      {achievement.points} điểm
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {achievement.type}
+                    </Badge>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <Button variant="ghost" size="sm" className="flex-1">
+                      <Edit className="h-4 w-4 mr-1" />
+                      Sửa
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-red-600">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
         {/* Cycle Settings */}
-        <TabsContent value="cycles" className="space-y-4">
+        <TabsContent value="cycles" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -252,116 +601,223 @@ export function OKRSettings() {
                 Cài đặt chu kỳ OKR
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    Thời gian chu kỳ mặc định (ngày)
-                  </label>
-                  <Input
-                    type="number"
-                    value={settings.default_cycle_duration}
-                    onChange={(e) => handleSettingChange('default_cycle_duration', parseInt(e.target.value))}
-                    className="w-full"
-                  />
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cycle-duration">Thời gian chu kỳ mặc định (ngày)</Label>
+                    <Input
+                      id="cycle-duration"
+                      type="number"
+                      value={settings.default_cycle_duration}
+                      onChange={(e) => handleSettingChange('default_cycle_duration', parseInt(e.target.value))}
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Tự động tạo chu kỳ tiếp theo</Label>
+                        <p className="text-sm text-gray-500">Khi chu kỳ hiện tại kết thúc</p>
+                      </div>
+                      <Switch
+                        checked={settings.auto_create_next_cycle}
+                        onCheckedChange={(checked) => handleSettingChange('auto_create_next_cycle', checked)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Cho phép thay đổi giữa chu kỳ</Label>
+                        <p className="text-sm text-gray-500">Nhân viên có thể sửa OKR</p>
+                      </div>
+                      <Switch
+                        checked={settings.allow_mid_cycle_changes}
+                        onCheckedChange={(checked) => handleSettingChange('allow_mid_cycle_changes', checked)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Yêu cầu phê duyệt quản lý</Label>
+                        <p className="text-sm text-gray-500">Manager phải duyệt mới có hiệu lực</p>
+                      </div>
+                      <Switch
+                        checked={settings.require_manager_approval}
+                        onCheckedChange={(checked) => handleSettingChange('require_manager_approval', checked)}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Tự động tạo chu kỳ tiếp theo</span>
-                    <Switch
-                      checked={settings.auto_create_next_cycle}
-                      onCheckedChange={(checked) => handleSettingChange('auto_create_next_cycle', checked)}
-                    />
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 className="font-medium text-blue-800 mb-2 flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      Nguyên tắc OKR
+                    </h4>
+                    <ul className="space-y-1 text-sm text-blue-700">
+                      <li>• Chu kỳ OKR tiêu chuẩn là 90 ngày (1 quý)</li>
+                      <li>• Mỗi Objective nên có 3-5 Key Results</li>
+                      <li>• Key Results phải có thể đo lường được</li>
+                      <li>• Không nên thay đổi mục tiêu quá 2 lần/chu kỳ</li>
+                      <li>• Đánh giá và review cuối mỗi chu kỳ</li>
+                    </ul>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Cho phép thay đổi giữa chu kỳ</span>
-                    <Switch
-                      checked={settings.allow_mid_cycle_changes}
-                      onCheckedChange={(checked) => handleSettingChange('allow_mid_cycle_changes', checked)}
-                    />
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <h4 className="font-medium text-green-800 mb-2 flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4" />
+                      Thống kê chu kỳ hiện tại
+                    </h4>
+                    <div className="space-y-2 text-sm text-green-700">
+                      <div className="flex justify-between">
+                        <span>Tổng số OKR:</span>
+                        <span className="font-medium">156</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Đã hoàn thành:</span>
+                        <span className="font-medium">89 (57%)</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Đang tiến hành:</span>
+                        <span className="font-medium">52 (33%)</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Chậm tiến độ:</span>
+                        <span className="font-medium">15 (10%)</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <h4 className="font-medium text-blue-800 mb-2">Lưu ý</h4>
-                <ul className="space-y-1 text-sm text-blue-700">
-                  <li>• Chu kỳ OKR thông thường là 90 ngày (1 quý)</li>
-                  <li>• Không nên thay đổi mục tiêu quá nhiều giữa chu kỳ</li>
-                  <li>• Đánh giá và review cuối mỗi chu kỳ để cải thiện</li>
-                </ul>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Notification Settings */}
-        <TabsContent value="notifications" className="space-y-4">
+        <TabsContent value="notifications" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-orange-600" />
+                <Bell className="h-5 w-5 text-orange-600" />
                 Cài đặt thông báo
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-medium text-gray-700">Thông báo khi hoàn thành OKR</div>
-                    <div className="text-xs text-gray-500">Nhận thông báo khi bạn hoặc team hoàn thành OKR</div>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-6">
+                  <h4 className="font-medium text-gray-900">Thông báo hệ thống</h4>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Hoàn thành OKR</Label>
+                        <p className="text-sm text-gray-500">Thông báo khi có OKR được hoàn thành</p>
+                      </div>
+                      <Switch
+                        checked={settings.notify_on_okr_completion}
+                        onCheckedChange={(checked) => handleSettingChange('notify_on_okr_completion', checked)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Nhận thưởng</Label>
+                        <p className="text-sm text-gray-500">Thông báo khi nhận coins, points</p>
+                      </div>
+                      <Switch
+                        checked={settings.notify_on_rewards_received}
+                        onCheckedChange={(checked) => handleSettingChange('notify_on_rewards_received', checked)}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Cuối chu kỳ</Label>
+                        <p className="text-sm text-gray-500">Nhắc nhở đánh giá và chuẩn bị chu kỳ mới</p>
+                      </div>
+                      <Switch
+                        checked={settings.notify_on_cycle_end}
+                        onCheckedChange={(checked) => handleSettingChange('notify_on_cycle_end', checked)}
+                      />
+                    </div>
                   </div>
-                  <Switch
-                    checked={settings.notify_on_okr_completion}
-                    onCheckedChange={(checked) => handleSettingChange('notify_on_okr_completion', checked)}
-                  />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-medium text-gray-700">Thông báo khi nhận thưởng</div>
-                    <div className="text-xs text-gray-500">Nhận thông báo khi có điểm thưởng mới</div>
-                  </div>
-                  <Switch
-                    checked={settings.notify_on_rewards_received}
-                    onCheckedChange={(checked) => handleSettingChange('notify_on_rewards_received', checked)}
-                  />
-                </div>
+                <div className="space-y-6">
+                  <h4 className="font-medium text-gray-900">Nhắc nhở định kỳ</h4>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Nhắc nhở hàng ngày</Label>
+                        <p className="text-sm text-gray-500">Nhắc cập nhật tiến độ OKR</p>
+                      </div>
+                      <Switch
+                        checked={settings.daily_reminder}
+                        onCheckedChange={(checked) => handleSettingChange('daily_reminder', checked)}
+                      />
+                    </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-medium text-gray-700">Thông báo cuối chu kỳ</div>
-                    <div className="text-xs text-gray-500">Nhắc nhở đánh giá và chuẩn bị chu kỳ mới</div>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>Báo cáo tuần</Label>
+                        <p className="text-sm text-gray-500">Tóm tắt tiến độ hàng tuần</p>
+                      </div>
+                      <Switch
+                        checked={settings.weekly_summary}
+                        onCheckedChange={(checked) => handleSettingChange('weekly_summary', checked)}
+                      />
+                    </div>
                   </div>
-                  <Switch
-                    checked={settings.notify_on_cycle_end}
-                    onCheckedChange={(checked) => handleSettingChange('notify_on_cycle_end', checked)}
-                  />
+
+                  <div className="space-y-4">
+                    <h5 className="font-medium text-gray-800">Tần suất thông báo</h5>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm">Nhắc nhở cập nhật tiến độ</Label>
+                        <Select defaultValue="daily">
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="daily">Hàng ngày</SelectItem>
+                            <SelectItem value="weekly">Hàng tuần</SelectItem>
+                            <SelectItem value="never">Không</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm">Báo cáo tổng kết</Label>
+                        <Select defaultValue="weekly">
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="weekly">Hàng tuần</SelectItem>
+                            <SelectItem value="monthly">Hàng tháng</SelectItem>
+                            <SelectItem value="quarterly">Hàng quý</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                <h4 className="font-medium text-gray-800 mb-2">Tần suất thông báo</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Nhắc nhở cập nhật tiến độ</span>
-                    <select className="text-sm border border-gray-300 rounded px-2 py-1">
-                      <option value="daily">Hàng ngày</option>
-                      <option value="weekly">Hàng tuần</option>
-                      <option value="never">Không bao giờ</option>
-                    </select>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Báo cáo tổng kết</span>
-                    <select className="text-sm border border-gray-300 rounded px-2 py-1">
-                      <option value="weekly">Hàng tuần</option>
-                      <option value="monthly">Hàng tháng</option>
-                      <option value="quarterly">Hàng quý</option>
-                    </select>
-                  </div>
-                </div>
+              <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <h4 className="font-medium text-orange-800 mb-2 flex items-center gap-2">
+                  <Zap className="h-4 w-4" />
+                  Thông báo thông minh
+                </h4>
+                <p className="text-sm text-orange-700 mb-3">
+                  Hệ thống sẽ tự động điều chỉnh tần suất thông báo dựa trên:
+                </p>
+                <ul className="space-y-1 text-sm text-orange-700">
+                  <li>• Mức độ tương tác của người dùng</li>
+                  <li>• Tiến độ hoàn thành OKR</li>
+                  <li>• Thời gian còn lại của chu kỳ</li>
+                  <li>• Độ ưu tiên của từng mục tiêu</li>
+                </ul>
               </div>
             </CardContent>
           </Card>
