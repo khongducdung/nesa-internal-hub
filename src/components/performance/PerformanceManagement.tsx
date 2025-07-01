@@ -7,9 +7,11 @@ import { PerformanceDashboard } from './PerformanceDashboard';
 import { PerformanceEvaluationManagement } from './PerformanceEvaluationManagement';
 import { EmployeeReportManagement } from './EmployeeReportManagement';
 import { useAuth } from '@/hooks/useAuth';
+import { useSettings } from '@/components/ui/settings-context';
 
 export function PerformanceManagement() {
   const { profile } = useAuth();
+  const { hideDescriptions } = useSettings();
   
   // Kiểm tra xem user có phải là manager không (có nhân viên dưới quyền)
   const isManager = true; // Tạm thời set true, sau này có thể check thực tế
@@ -18,7 +20,9 @@ export function PerformanceManagement() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Quản lý đánh giá hiệu suất</h1>
-        <p className="text-gray-600 mt-1">Theo dõi và đánh giá hiệu suất làm việc của nhân viên</p>
+        {!hideDescriptions && (
+          <p className="text-gray-600 mt-1">Theo dõi và đánh giá hiệu suất làm việc của nhân viên</p>
+        )}
       </div>
 
       <Tabs defaultValue={isManager ? "dashboard" : "my-work"} className="w-full">

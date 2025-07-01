@@ -1,4 +1,3 @@
-
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { HRMTabs } from '@/components/hrm/HRMTabs';
@@ -14,11 +13,13 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
 import { useCompanyPolicies } from '@/hooks/useCompanyPolicies';
 import { formatNumber } from '@/utils/formatters';
+import { useSettings } from '@/components/ui/settings-context';
 
 export default function HRM() {
   const { data: employees } = useEmployees();
   const { data: departments } = useDepartments();
   const { data: policies } = useCompanyPolicies();
+  const { hideDescriptions } = useSettings();
 
   // Tính toán thống kê
   const totalEmployees = employees?.length || 0;
@@ -68,7 +69,9 @@ export default function HRM() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Quản lý nhân sự</h1>
-            <p className="text-gray-600 mt-1">Quản lý thông tin nhân viên, phòng ban và các chính sách công ty</p>
+            {!hideDescriptions && (
+              <p className="text-gray-600 mt-1">Quản lý thông tin nhân viên, phòng ban và các chính sách công ty</p>
+            )}
           </div>
         </div>
 
@@ -87,14 +90,16 @@ export default function HRM() {
                       <p className="text-3xl font-bold text-gray-900 mb-1">
                         {stat.value}
                       </p>
-                      <p className={`text-sm font-medium flex items-center ${
-                        stat.changeType === 'increase' ? 'text-green-600' :
-                        stat.changeType === 'decrease' ? 'text-red-600' : 'text-gray-600'
-                      }`}>
-                        {stat.changeType === 'decrease' && <AlertTriangle className="h-4 w-4 mr-1" />}
-                        {stat.changeType === 'increase' && <TrendingUp className="h-4 w-4 mr-1" />}
-                        {stat.change}
-                      </p>
+                      {!hideDescriptions && (
+                        <p className={`text-sm font-medium flex items-center ${
+                          stat.changeType === 'increase' ? 'text-green-600' :
+                          stat.changeType === 'decrease' ? 'text-red-600' : 'text-gray-600'
+                        }`}>
+                          {stat.changeType === 'decrease' && <AlertTriangle className="h-4 w-4 mr-1" />}
+                          {stat.changeType === 'increase' && <TrendingUp className="h-4 w-4 mr-1" />}
+                          {stat.change}
+                        </p>
+                      )}
                     </div>
                     <div className={`bg-gradient-to-br ${stat.color} p-4 rounded-xl shadow-lg`}>
                       <Icon className="h-6 w-6 text-white" />
