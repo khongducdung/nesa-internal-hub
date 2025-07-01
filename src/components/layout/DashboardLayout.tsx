@@ -17,7 +17,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="flex h-screen">
-        <Sidebar />
+        <Sidebar 
+          isOpen={sidebarOpen} 
+          toggleSidebar={toggleSidebar}
+          isCollapsed={sidebarCollapsed}
+          toggleCollapse={toggleSidebarCollapse}
+        />
         
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           <Header 
