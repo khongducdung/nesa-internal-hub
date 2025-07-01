@@ -124,7 +124,7 @@ export function EmployeeList() {
                 <TableRow key={employee.id}>
                   <TableCell className="font-medium">{employee.employee_code}</TableCell>
                   <TableCell>{employee.full_name}</TableCell>
-                  <TableCell>{employee.phone || 'N/A'}</TableCell>
+                  <TableCell>{employee.phone || 'Chưa có'}</TableCell>
                   <TableCell>{employee.departments?.name || 'N/A'}</TableCell>
                   <TableCell>{employee.positions?.name || 'N/A'}</TableCell>
                   <TableCell>{getLevelBadge(employee.employee_level || 'level_3')}</TableCell>
