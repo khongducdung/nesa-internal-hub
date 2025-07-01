@@ -92,8 +92,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const hasRole = (role: SystemRole) => userRoles.includes(role);
-  const isAdmin = hasRole('admin');
   const isSuperAdmin = hasRole('super_admin');
+  const isAdmin = hasRole('admin') || isSuperAdmin; // Updated to include super_admin
 
   return (
     <AuthContext.Provider value={{
