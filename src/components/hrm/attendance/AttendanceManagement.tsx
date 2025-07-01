@@ -1,47 +1,15 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Clock, Users, Calendar, FileText, Settings, Building2, ClipboardList, CalendarDays, Coffee, FileCheck } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Clock, Users, Calendar, FileText, Settings, Building2 } from 'lucide-react';
 import { CheckInOutInterface } from './CheckInOutInterface';
 import { ShiftManagement } from './ShiftManagement';
 import { AttendanceList } from './AttendanceList';
 import { AttendanceReports } from './AttendanceReports';
 
 export function AttendanceManagement() {
-  const [activeFeature, setActiveFeature] = useState('checkin');
-  
   // Tạm thời hardcode employee ID - trong thực tế sẽ lấy từ auth
   const currentEmployeeId = '00000000-0000-0000-0000-000000000000';
-
-  const menuItems = [
-    { id: 'checkin', label: 'Chấm công', icon: Clock },
-    { id: 'management', label: 'Quản lý chấm công', icon: Settings },
-    { id: 'schedule', label: 'Thiết kế lịch làm việc', icon: Calendar },
-    { id: 'leave', label: 'Lịch nghỉ', icon: CalendarDays },
-    { id: 'leave-config', label: 'Cấu hình đơn báo', icon: FileCheck },
-    { id: 'overtime', label: 'Quản lý làm thêm', icon: Coffee },
-    { id: 'overtime-design', label: 'Thiết kế làm thêm', icon: ClipboardList },
-    { id: 'overtime-config', label: 'Cấu hình đơn báo', icon: FileText },
-  ];
-
-  const renderContent = () => {
-    switch (activeFeature) {
-      case 'checkin':
-        return <CheckInOutInterface employeeId={currentEmployeeId} />;
-      case 'management':
-        return <ShiftManagement />;
-      case 'schedule':
-        return <AttendanceList />;
-      case 'leave':
-      case 'leave-config':
-      case 'overtime':
-      case 'overtime-design':
-      case 'overtime-config':
-        return <AttendanceReports />;
-      default:
-        return <CheckInOutInterface employeeId={currentEmployeeId} />;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -103,38 +71,65 @@ export function AttendanceManagement() {
         </div>
       </div>
 
-      {/* Main Content with Sidebar */}
-      <div className="flex">
-        {/* Sidebar Menu */}
-        <div className="w-64 bg-white border-r border-gray-200 min-h-screen">
-          <div className="p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Tính năng</h3>
-            <nav className="space-y-2">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveFeature(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                      activeFeature === item.id
-                        ? 'bg-[#2563EB] text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span className="text-sm font-medium">{item.label}</span>
-                  </button>
-                );
-              })}
-            </nav>
+      {/* Main Content - Simple 4 Tab Layout */}
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <Tabs defaultValue="checkin" className="w-full">
+          {/* Simple 4 Tab Navigation */}
+          <div className="mb-8">
+            <TabsList className="grid grid-cols-4 w-full h-14 bg-white border border-gray-200 p-1 rounded-xl shadow-sm">
+              <TabsTrigger 
+                value="checkin" 
+                className="h-12 rounded-lg text-sm font-medium data-[state=active]:bg-[#2563EB] data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+              >
+                <Clock className="h-4 w-4 mr-2" />
+                Chấm công
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="shifts"
+                className="h-12 rounded-lg text-sm font-medium data-[state=active]:bg-[#2563EB] data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Quản lý ca
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="list"
+                className="h-12 rounded-lg text-sm font-medium data-[state=active]:bg-[#2563EB] data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Danh sách
+              </TabsTrigger>
+              
+              <TabsTrigger 
+                value="reports"
+                className="h-12 rounded-lg text-sm font-medium data-[state=active]:bg-[#2563EB] data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Báo cáo
+              </TabsTrigger>
+            </TabsList>
           </div>
-        </div>
 
-        {/* Main Content Area */}
-        <div className="flex-1 p-6">
-          {renderContent()}
-        </div>
+          {/* Tab Contents */}
+          <div className="space-y-6">
+            <TabsContent value="checkin" className="m-0">
+              <CheckInOutInterface employeeId={currentEmployeeId} />
+            </TabsContent>
+
+            <TabsContent value="shifts" className="m-0">
+              <ShiftManagement />
+            </TabsContent>
+
+            <TabsContent value="list" className="m-0">
+              <AttendanceList />
+            </TabsContent>
+
+            <TabsContent value="reports" className="m-0">
+              <AttendanceReports />
+            </TabsContent>
+          </div>
+        </Tabs>
       </div>
     </div>
   );
