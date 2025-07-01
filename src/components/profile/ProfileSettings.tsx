@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { User, Camera, Lock, Upload } from 'lucide-react';
+import { User, Camera, Lock, Upload, Save } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const profileFormSchema = z.object({
@@ -237,21 +237,15 @@ export function ProfileSettings() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Profile Info Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Thông tin cá nhân
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-center space-x-4">
+    <div className="max-w-4xl mx-auto space-y-8 p-6">
+      {/* Profile Header Card */}
+      <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-50 to-indigo-50">
+        <CardContent className="p-8">
+          <div className="flex items-center space-x-6">
             <div className="relative">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src={employee?.avatar_url} />
-                <AvatarFallback className="bg-brand-primary text-white text-lg">
+              <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
+                <AvatarImage src={employee?.avatar_url} className="object-cover" />
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-2xl font-semibold">
                   {profile?.full_name?.charAt(0) || 'U'}
                 </AvatarFallback>
               </Avatar>
@@ -259,21 +253,21 @@ export function ProfileSettings() {
                 <DialogTrigger asChild>
                   <Button
                     size="sm"
+                    className="absolute -bottom-2 -right-2 h-10 w-10 rounded-full p-0 bg-white text-gray-600 hover:bg-gray-50 shadow-lg border-2 border-white"
                     variant="outline"
-                    className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
                   >
                     <Camera className="h-4 w-4" />
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Cập nhật ảnh đại diện</DialogTitle>
+                    <DialogTitle className="text-center">Cập nhật ảnh đại diện</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <div className="flex justify-center">
-                      <Avatar className="h-32 w-32">
-                        <AvatarImage src={employee?.avatar_url} />
-                        <AvatarFallback className="bg-brand-primary text-white text-2xl">
+                      <Avatar className="h-32 w-32 border-4 border-gray-100">
+                        <AvatarImage src={employee?.avatar_url} className="object-cover" />
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-3xl">
                           {profile?.full_name?.charAt(0) || 'U'}
                         </AvatarFallback>
                       </Avatar>
@@ -282,7 +276,7 @@ export function ProfileSettings() {
                       <Button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploadingAvatar}
-                        className="bg-brand-primary hover:bg-brand-primary/90"
+                        className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"
                       >
                         <Upload className="h-4 w-4 mr-2" />
                         {isUploadingAvatar ? 'Đang tải lên...' : 'Chọn ảnh mới'}
@@ -295,40 +289,60 @@ export function ProfileSettings() {
                         className="hidden"
                       />
                     </div>
-                    <p className="text-sm text-muted-foreground text-center">
+                    <p className="text-sm text-gray-500 text-center">
                       Chỉ chấp nhận file ảnh dưới 5MB
                     </p>
                   </div>
                 </DialogContent>
               </Dialog>
             </div>
-            <div className="space-y-1">
-              <h3 className="text-lg font-semibold">{profile?.full_name}</h3>
-              <p className="text-sm text-muted-foreground">Mã NV: {employee?.employee_code}</p>
-              {employee?.hire_date && (
-                <p className="text-sm text-muted-foreground">
-                  Ngày vào làm: {formatDate(employee.hire_date)}
-                </p>
-              )}
-              {employee?.salary && (
-                <p className="text-sm text-muted-foreground">
-                  Lương: {formatSalary(employee.salary)} VNĐ
-                </p>
-              )}
+            <div className="flex-1 space-y-2">
+              <h1 className="text-3xl font-bold text-gray-900">{profile?.full_name}</h1>
+              <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                <span className="bg-white px-3 py-1 rounded-full shadow-sm">
+                  Mã NV: {employee?.employee_code}
+                </span>
+                {employee?.hire_date && (
+                  <span className="bg-white px-3 py-1 rounded-full shadow-sm">
+                    Ngày vào làm: {formatDate(employee.hire_date)}
+                  </span>
+                )}
+                {employee?.salary && (
+                  <span className="bg-white px-3 py-1 rounded-full shadow-sm">
+                    Lương: {formatSalary(employee.salary)} VNĐ
+                  </span>
+                )}
+              </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
+      {/* Profile Information Card */}
+      <Card className="shadow-lg border-0">
+        <CardHeader className="pb-6">
+          <CardTitle className="flex items-center gap-3 text-xl">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <User className="h-5 w-5 text-blue-600" />
+            </div>
+            Thông tin cá nhân
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <Form {...profileForm}>
-            <form onSubmit={profileForm.handleSubmit(onUpdateProfile)} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={profileForm.handleSubmit(onUpdateProfile)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={profileForm.control}
                   name="full_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Họ và tên *</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">Họ và tên *</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input 
+                          {...field} 
+                          className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -340,11 +354,15 @@ export function ProfileSettings() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">Email</FormLabel>
                       <FormControl>
-                        <Input {...field} disabled />
+                        <Input 
+                          {...field} 
+                          disabled 
+                          className="h-11 bg-gray-50 border-gray-200"
+                        />
                       </FormControl>
-                      <p className="text-xs text-muted-foreground">Email không thể thay đổi</p>
+                      <p className="text-xs text-gray-500">Email không thể thay đổi</p>
                     </FormItem>
                   )}
                 />
@@ -354,9 +372,13 @@ export function ProfileSettings() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Số điện thoại</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">Số điện thoại</FormLabel>
                       <FormControl>
-                        <Input placeholder="0901234567" {...field} />
+                        <Input 
+                          placeholder="0901234567" 
+                          {...field} 
+                          className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -368,9 +390,13 @@ export function ProfileSettings() {
                   name="emergency_contact_phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>SĐT người liên hệ khẩn cấp</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">SĐT người liên hệ khẩn cấp</FormLabel>
                       <FormControl>
-                        <Input placeholder="0901234567" {...field} />
+                        <Input 
+                          placeholder="0901234567" 
+                          {...field} 
+                          className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -383,9 +409,13 @@ export function ProfileSettings() {
                 name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Địa chỉ</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700">Địa chỉ</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Nhập địa chỉ..." {...field} />
+                      <Textarea 
+                        placeholder="Nhập địa chỉ..." 
+                        {...field} 
+                        className="min-h-[100px] border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -397,18 +427,27 @@ export function ProfileSettings() {
                 name="emergency_contact_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Người liên hệ khẩn cấp</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700">Người liên hệ khẩn cấp</FormLabel>
                     <FormControl>
-                      <Input placeholder="Tên người liên hệ" {...field} />
+                      <Input 
+                        placeholder="Tên người liên hệ" 
+                        {...field} 
+                        className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="flex justify-end">
-                <Button type="submit" disabled={isLoading} className="bg-brand-primary hover:bg-brand-primary/90">
-                  {isLoading ? 'Đang cập nhật...' : 'Cập nhật thông tin'}
+              <div className="flex justify-end pt-4">
+                <Button 
+                  type="submit" 
+                  disabled={isLoading} 
+                  className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-lg"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {isLoading ? 'Đang cập nhật...' : 'Lưu thông tin'}
                 </Button>
               </div>
             </form>
@@ -417,39 +456,49 @@ export function ProfileSettings() {
       </Card>
 
       {/* Change Password Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Lock className="h-5 w-5" />
+      <Card className="shadow-lg border-0">
+        <CardHeader className="pb-6">
+          <CardTitle className="flex items-center gap-3 text-xl">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <Lock className="h-5 w-5 text-red-600" />
+            </div>
             Đổi mật khẩu
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...passwordForm}>
-            <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4">
+            <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-6">
               <FormField
                 control={passwordForm.control}
                 name="current_password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Mật khẩu hiện tại *</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700">Mật khẩu hiện tại *</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} />
+                      <Input 
+                        type="password" 
+                        {...field} 
+                        className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={passwordForm.control}
                   name="new_password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Mật khẩu mới *</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">Mật khẩu mới *</FormLabel>
                       <FormControl>
-                        <Input type="password" {...field} />
+                        <Input 
+                          type="password" 
+                          {...field} 
+                          className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -461,9 +510,13 @@ export function ProfileSettings() {
                   name="confirm_password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Xác nhận mật khẩu mới *</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">Xác nhận mật khẩu mới *</FormLabel>
                       <FormControl>
-                        <Input type="password" {...field} />
+                        <Input 
+                          type="password" 
+                          {...field} 
+                          className="h-11 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -471,8 +524,13 @@ export function ProfileSettings() {
                 />
               </div>
 
-              <div className="flex justify-end">
-                <Button type="submit" disabled={isLoading} className="bg-brand-primary hover:bg-brand-primary/90">
+              <div className="flex justify-end pt-4">
+                <Button 
+                  type="submit" 
+                  disabled={isLoading} 
+                  className="px-8 py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 shadow-lg"
+                >
+                  <Lock className="h-4 w-4 mr-2" />
                   {isLoading ? 'Đang đổi...' : 'Đổi mật khẩu'}
                 </Button>
               </div>
