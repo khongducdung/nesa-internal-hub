@@ -1,24 +1,18 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { OKRDashboard } from './OKRDashboard';
-import { OKRCycleManagement } from './OKRCycleManagement';
-import { OKRObjectiveManagement } from './OKRObjectiveManagement';
+import { IntegratedOKRManagement } from './IntegratedOKRManagement';
 import { OKRProgressAndReporting } from './OKRProgressAndReporting';
 import { MyOKRTasks } from './MyOKRTasks';
 import { CompanyOKRView } from './CompanyOKRView';
-import { CollaborativeOKRForm } from './CollaborativeOKRForm';
 import { OKRSettings } from './OKRSettings';
 import { useAuth } from '@/hooks/useAuth';
-import { Target, Users, BarChart3, Settings, Plus, Building2, TrendingUp } from 'lucide-react';
+import { Target, Users, BarChart3, Settings, Building2, TrendingUp, Zap } from 'lucide-react';
 
 export function OKRManagement() {
   const { profile, isAdmin } = useAuth();
-
-  // Kiểm tra xem user có phải là manager không
-  const isManager = true; // Tạm thời set true, sau này có thể check thực tế
+  const isManager = true;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative">
@@ -61,27 +55,18 @@ export function OKRManagement() {
                 <Target className="h-4 w-4" />
                 OKR của tôi
               </TabsTrigger>
-              <TabsTrigger value="collaborative" className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md">
-                <Users className="h-4 w-4" />
-                Cộng tác
+              <TabsTrigger value="integrated-management" className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-md">
+                <Zap className="h-4 w-4" />
+                Quản lý OKR
               </TabsTrigger>
               
               {isManager && (
-                <>
-                  <TabsTrigger value="cycles" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
-                    Chu kỳ OKR
-                  </TabsTrigger>
-                  <TabsTrigger value="objectives" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
-                    Quản lý Objectives
-                  </TabsTrigger>
-                  <TabsTrigger value="progress-reporting" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
-                    <TrendingUp className="h-4 w-4" />
-                    Tiến độ & Báo cáo
-                  </TabsTrigger>
-                </>
+                <TabsTrigger value="progress-reporting" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
+                  <TrendingUp className="h-4 w-4" />
+                  Tiến độ & Báo cáo
+                </TabsTrigger>
               )}
 
-              {/* Cài đặt OKR tab - chỉ hiển thị cho admin */}
               {isAdmin && (
                 <TabsTrigger value="settings" className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-gray-500 data-[state=active]:to-gray-600 data-[state=active]:text-white data-[state=active]:shadow-md">
                   <Settings className="h-4 w-4" />
@@ -105,27 +90,16 @@ export function OKRManagement() {
               <MyOKRTasks />
             </TabsContent>
 
-            <TabsContent value="collaborative" className="m-0 p-8">
-              <CollaborativeOKRForm />
+            <TabsContent value="integrated-management" className="m-0 p-8">
+              <IntegratedOKRManagement />
             </TabsContent>
 
             {isManager && (
-              <>
-                <TabsContent value="cycles" className="m-0 p-8">
-                  <OKRCycleManagement />
-                </TabsContent>
-
-                <TabsContent value="objectives" className="m-0 p-8">
-                  <OKRObjectiveManagement />
-                </TabsContent>
-
-                <TabsContent value="progress-reporting" className="m-0 p-8">
-                  <OKRProgressAndReporting />
-                </TabsContent>
-              </>
+              <TabsContent value="progress-reporting" className="m-0 p-8">
+                <OKRProgressAndReporting />
+              </TabsContent>
             )}
 
-            {/* Cài đặt OKR content - chỉ hiển thị cho admin */}
             {isAdmin && (
               <TabsContent value="settings" className="m-0 p-8">
                 <OKRSettings />
