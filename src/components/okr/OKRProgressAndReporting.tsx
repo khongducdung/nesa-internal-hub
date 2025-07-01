@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +15,8 @@ import { useOKRAnalytics } from '@/hooks/useOKRAnalytics';
 import { useAuth } from '@/hooks/useAuth';
 import { OKRReportGenerator } from './OKRReportGenerator';
 import { OKRRealTimeUpdates } from './OKRRealTimeUpdates';
+import { DepartmentDetailDialog } from './DepartmentDetailDialog';
+import { AdvancedFilterDialog } from './AdvancedFilterDialog';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart as RechartsPieChart, Cell, Area, AreaChart } from 'recharts';
 
@@ -26,6 +27,10 @@ export function OKRProgressAndReporting() {
   const { profile, isAdmin } = useAuth();
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [alertsDialogOpen, setAlertsDialogOpen] = useState(false);
+  const [departmentDetailOpen, setDepartmentDetailOpen] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState<{ id: string; name: string } | null>(null);
+  const [advancedFilterOpen, setAdvancedFilterOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState<any>({});
 
   const getStatusBadge = (progress: number) => {
     if (progress >= 100) return <Badge className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" />Hoàn thành</Badge>;
@@ -37,16 +42,28 @@ export function OKRProgressAndReporting() {
 
   const exportData = (format: 'excel' | 'pdf') => {
     console.log(`Exporting data as ${format}...`);
-    // Mock export functionality
     const fileName = `OKR_Data_${new Date().toISOString().split('T')[0]}.${format}`;
     
-    // Create mock download
     const element = document.createElement('a');
     element.href = '#';
     element.download = fileName;
     element.click();
     
     alert(`Dữ liệu đã được xuất thành ${fileName}!`);
+  };
+
+  const handleDepartmentView = (dept: any) => {
+    setSelectedDepartment({ id: dept.department_id, name: dept.name });
+    setDepartmentDetailOpen(true);
+  };
+
+  const handleApplyFilters = (filters: any) => {
+    setAppliedFilters(filters);
+    console.log('Applied filters:', filters);
+  };
+
+  const getActiveFiltersCount = () => {
+    return Object.values(appliedFilters).filter(Boolean).length;
   };
 
   if (loading || !analytics) {
@@ -207,9 +224,19 @@ export function OKRProgressAndReporting() {
               </Select>
             </div>
 
-            <Button variant="outline" size="sm" className="ml-auto">
-              <Filter className="h-4 w-4 mr-2" />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="ml-auto flex items-center gap-2"
+              onClick={() => setAdvancedFilterOpen(true)}
+            >
+              <Filter className="h-4 w-4" />
               Bộ lọc nâng cao
+              {getActiveFiltersCount() > 0 && (
+                <Badge variant="secondary" className="ml-1">
+                  {getActiveFiltersCount()}
+                </Badge>
+              )}
             </Button>
           </div>
         </CardContent>
@@ -322,7 +349,7 @@ export function OKRProgressAndReporting() {
           {isAdmin && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {analytics.departmentBreakdown.map((dept, index) => (
-                <Card key={dept.name} className="hover:shadow-lg transition-shadow">
+                <Card key={dept.name} className="hover:shadow-lg transition-shadow cursor-pointer">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold text-gray-900">{dept.name}</h3>
@@ -340,7 +367,15 @@ export function OKRProgressAndReporting() {
                         <span>OKR đúng tiến độ</span>
                         <span>{dept.onTrack}/{dept.total}</span>
                       </div>
-                      <Button variant="ghost" size="sm" className="w-full">
+                      <div className="text-xs text-gray-500">
+                        <strong>Quản lý:</strong> {dept.manager}
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => handleDepartmentView(dept)}
+                      >
                         <Eye className="h-4 w-4 mr-2" />
                         Xem chi tiết
                       </Button>
@@ -350,9 +385,65 @@ export function OKRProgressAndReporting() {
               ))}
             </div>
           )}
+
+          {/* Level & Position Breakdown */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  Phân tích theo cấp bậc
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {analytics.levelBreakdown.map((level) => (
+                    <div key={level.level} className="p-3 bg-purple-50 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">{level.level}</span>
+                        <Badge variant="outline">{level.avgProgress}%</Badge>
+                      </div>
+                      <Progress value={level.avgProgress} className="mb-2" />
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>{level.onTrack}/{level.total} đúng tiến độ</span>
+                        <span>{Math.round((level.onTrack / level.total) * 100)}% hiệu suất</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-orange-600" />
+                  Phân tích theo vị trí
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {analytics.positionBreakdown.map((position) => (
+                    <div key={position.position} className="p-3 bg-orange-50 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">{position.position}</span>
+                        <Badge variant="outline">{position.avgProgress}%</Badge>
+                      </div>
+                      <Progress value={position.avgProgress} className="mb-2" />
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>{position.completed}/{position.total} hoàn thành</span>
+                        <span>{Math.round((position.completed / position.total) * 100)}% tỷ lệ hoàn thành</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="performance" className="space-y-6">
+          
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -428,6 +519,20 @@ export function OKRProgressAndReporting() {
           <OKRReportGenerator />
         </TabsContent>
       </Tabs>
+
+      {/* Dialogs */}
+      <DepartmentDetailDialog
+        departmentId={selectedDepartment?.id || ''}
+        departmentName={selectedDepartment?.name || ''}
+        isOpen={departmentDetailOpen}
+        onClose={() => setDepartmentDetailOpen(false)}
+      />
+
+      <AdvancedFilterDialog
+        isOpen={advancedFilterOpen}
+        onClose={() => setAdvancedFilterOpen(false)}
+        onApplyFilters={handleApplyFilters}
+      />
     </div>
   );
 }
