@@ -71,12 +71,17 @@ export function OKRDashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Welcome Hero Section with gradient background */}
-      <Card className="bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 text-white border-0 shadow-xl overflow-hidden relative">
+      {/* Welcome Hero Section with image-based background */}
+      <Card className="border-0 shadow-xl overflow-hidden relative" style={{
+        backgroundImage: 'url(/lovable-uploads/e6c395cd-68c2-46ec-8fef-ddaecbf68791.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}>
         <CardContent className="p-0">
-          <div className="relative bg-gradient-to-r from-blue-500/90 via-blue-600/90 to-purple-600/90 backdrop-blur-sm">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-            <div className="relative p-8">
+          <div className="relative bg-black/20 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-black/10 to-transparent"></div>
+            <div className="relative p-8 text-white">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-4">
@@ -90,7 +95,7 @@ export function OKRDashboard() {
                     Chào mừng trở lại, {profile?.full_name || 'Người dùng'}!
                   </h1>
                   
-                  <p className="text-blue-100 text-lg mb-6 leading-relaxed">
+                  <p className="text-white/90 text-lg mb-6 leading-relaxed">
                     {randomQuote}
                   </p>
                   
@@ -118,7 +123,7 @@ export function OKRDashboard() {
                         <EmotionalRewards />
                       </DialogContent>
                     </Dialog>
-                    <Button size="sm" className="bg-white text-blue-600 hover:bg-white/90 font-medium">
+                    <Button size="sm" className="bg-white text-gray-800 hover:bg-white/90 font-medium">
                       Xem báo cáo →
                     </Button>
                   </div>
