@@ -5,12 +5,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { useEmployees } from '@/hooks/useEmployees';
 import { FileText, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useSettings } from '@/components/ui/settings-context';
 
 export function EmployeeJobDescription() {
   const { user } = useAuth();
   const { data: employees } = useEmployees();
-  const { hideDescriptions } = useSettings();
 
   const currentEmployee = employees?.find(emp => emp.auth_user_id === user?.id);
 
@@ -54,9 +52,6 @@ export function EmployeeJobDescription() {
         {(currentEmployee.contract_file_url || currentEmployee.cv_file_url) && (
           <div className="mt-6 pt-4 border-t">
             <h4 className="font-medium mb-3">Tài liệu liên quan</h4>
-            {!hideDescriptions && (
-              <p className="text-sm text-gray-600 mb-3">Các tài liệu đính kèm liên quan đến công việc</p>
-            )}
             <div className="flex flex-wrap gap-3">
               {currentEmployee.contract_file_url && (
                 <Button

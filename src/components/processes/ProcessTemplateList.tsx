@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Edit, Calendar, Users, Link, User, Plus, List } from 'lucide-react';
 import { ProcessTemplateWithDetails } from '@/hooks/useProcessTemplates';
-import { useSettings } from '@/components/ui/settings-context';
 
 interface ProcessTemplateListProps {
   templates: ProcessTemplateWithDetails[];
@@ -16,8 +15,6 @@ interface ProcessTemplateListProps {
 }
 
 export function ProcessTemplateList({ templates, isLoading, onEdit, onView, onCreateFirst }: ProcessTemplateListProps) {
-  const { hideDescriptions } = useSettings();
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'published':
@@ -77,9 +74,7 @@ export function ProcessTemplateList({ templates, isLoading, onEdit, onView, onCr
       <div className="text-center py-12">
         <List className="h-16 w-16 text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có tài liệu hướng dẫn</h3>
-        {!hideDescriptions && (
-          <p className="text-gray-500 mb-6">Bắt đầu bằng cách tạo tài liệu hướng dẫn đầu tiên cho nhân viên</p>
-        )}
+        <p className="text-gray-500 mb-6">Bắt đầu bằng cách tạo tài liệu hướng dẫn đầu tiên cho nhân viên</p>
         <Button onClick={onCreateFirst} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="h-4 w-4 mr-2" />
           Tạo tài liệu đầu tiên

@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { MoreHorizontal, Edit, Eye, Calendar, Users, Link, User } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ProcessTemplateWithDetails } from '@/hooks/useProcessTemplates';
-import { useSettings } from '@/components/ui/settings-context';
 
 interface ProcessTemplateCardProps {
   template: ProcessTemplateWithDetails;
@@ -15,8 +14,6 @@ interface ProcessTemplateCardProps {
 }
 
 export function ProcessTemplateCard({ template, onEdit, onView }: ProcessTemplateCardProps) {
-  const { hideDescriptions } = useSettings();
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'published':
@@ -111,28 +108,26 @@ export function ProcessTemplateCard({ template, onEdit, onView }: ProcessTemplat
         </div>
       </CardHeader>
       <CardContent>
-        {!hideDescriptions && (
-          <div className="grid grid-cols-2 gap-4 text-sm text-gray-500 mb-4">
-            <div className="flex items-center space-x-1">
-              <Calendar className="h-4 w-4" />
-              <span>Ngày tạo: {formatDate(template.created_at || '')}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <User className="h-4 w-4" />
-              <span>Người tạo</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Users className="h-4 w-4" />
-              <span>{getTargetTypeLabel(template.target_type || 'general')}</span>
-            </div>
-            {hasAttachments && (
-              <div className="flex items-center space-x-1">
-                <Link className="h-4 w-4" />
-                <span>{template.external_links.length} liên kết</span>
-              </div>
-            )}
+        <div className="grid grid-cols-2 gap-4 text-sm text-gray-500 mb-4">
+          <div className="flex items-center space-x-1">
+            <Calendar className="h-4 w-4" />
+            <span>Ngày tạo: {formatDate(template.created_at || '')}</span>
           </div>
-        )}
+          <div className="flex items-center space-x-1">
+            <User className="h-4 w-4" />
+            <span>Người tạo</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <Users className="h-4 w-4" />
+            <span>{getTargetTypeLabel(template.target_type || 'general')}</span>
+          </div>
+          {hasAttachments && (
+            <div className="flex items-center space-x-1">
+              <Link className="h-4 w-4" />
+              <span>{template.external_links.length} liên kết</span>
+            </div>
+          )}
+        </div>
 
         {template.tags && template.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
