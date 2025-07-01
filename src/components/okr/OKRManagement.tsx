@@ -11,6 +11,8 @@ import { CompanyOKRView } from './CompanyOKRView';
 import { OKRAchievements } from './OKRAchievements';
 import { CollaborativeOKRForm } from './CollaborativeOKRForm';
 import { OKRLeaderboard } from './OKRLeaderboard';
+import { EmotionalRewards } from './EmotionalRewards';
+import { OKRSettings } from './OKRSettings';
 import { useAuth } from '@/hooks/useAuth';
 
 export function OKRManagement() {
@@ -29,25 +31,23 @@ export function OKRManagement() {
       </div>
 
       <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className={`grid w-full ${isManager ? 'grid-cols-10' : 'grid-cols-5'}`}>
+        <TabsList className={`grid w-full ${isManager ? 'grid-cols-12' : 'grid-cols-7'}`}>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="company-okr">OKR Công ty</TabsTrigger>
           <TabsTrigger value="my-okrs">OKR của tôi</TabsTrigger>
           <TabsTrigger value="achievements">Huy hiệu</TabsTrigger>
           <TabsTrigger value="leaderboard">Xếp hạng</TabsTrigger>
+          <TabsTrigger value="emotional-rewards">Thưởng cảm xúc</TabsTrigger>
+          <TabsTrigger value="collaborative">Tạo OKR</TabsTrigger>
           
           {isManager && (
             <>
-              <TabsTrigger value="collaborative">Tạo OKR</TabsTrigger>
               <TabsTrigger value="cycles">Chu kỳ OKR</TabsTrigger>
               <TabsTrigger value="objectives">Quản lý Objectives</TabsTrigger>
               <TabsTrigger value="tracking">Theo dõi tiến độ</TabsTrigger>
               <TabsTrigger value="reporting">Báo cáo OKR</TabsTrigger>
+              <TabsTrigger value="settings">Cài đặt</TabsTrigger>
             </>
-          )}
-          
-          {!isManager && (
-            <TabsTrigger value="collaborative">Tạo OKR</TabsTrigger>
           )}
         </TabsList>
 
@@ -71,6 +71,10 @@ export function OKRManagement() {
           <OKRLeaderboard />
         </TabsContent>
 
+        <TabsContent value="emotional-rewards" className="mt-6">
+          <EmotionalRewards />
+        </TabsContent>
+
         <TabsContent value="collaborative" className="mt-6">
           <CollaborativeOKRForm />
         </TabsContent>
@@ -91,6 +95,10 @@ export function OKRManagement() {
 
             <TabsContent value="reporting" className="mt-6">
               <OKRReporting />
+            </TabsContent>
+
+            <TabsContent value="settings" className="mt-6">
+              <OKRSettings />
             </TabsContent>
           </>
         )}
