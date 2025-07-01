@@ -2,13 +2,12 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OKRDashboard } from './OKRDashboard';
-import { IntegratedOKRManagement } from './IntegratedOKRManagement';
 import { OKRProgressAndReporting } from './OKRProgressAndReporting';
 import { MyOKRTasks } from './MyOKRTasks';
 import { CompanyOKRView } from './CompanyOKRView';
 import { OKRSettings } from './OKRSettings';
 import { useAuth } from '@/hooks/useAuth';
-import { Target, Users, BarChart3, Settings, Building2, TrendingUp, Zap } from 'lucide-react';
+import { Target, Users, BarChart3, Settings, Building2, TrendingUp } from 'lucide-react';
 
 export function OKRManagement() {
   const { profile, isAdmin } = useAuth();
@@ -55,10 +54,6 @@ export function OKRManagement() {
                 <Target className="h-4 w-4" />
                 OKR của tôi
               </TabsTrigger>
-              <TabsTrigger value="integrated-management" className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-md">
-                <Zap className="h-4 w-4" />
-                Quản lý OKR
-              </TabsTrigger>
               
               {isManager && (
                 <TabsTrigger value="progress-reporting" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
@@ -88,10 +83,6 @@ export function OKRManagement() {
 
             <TabsContent value="my-okrs" className="m-0 p-8">
               <MyOKRTasks />
-            </TabsContent>
-
-            <TabsContent value="integrated-management" className="m-0 p-8">
-              <IntegratedOKRManagement />
             </TabsContent>
 
             {isManager && (
