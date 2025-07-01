@@ -48,8 +48,8 @@
 
     --radius: 0.5rem;
 
-    /* Sidebar Colors - Blue Gradient */
-    --sidebar-background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+    /* Sidebar Colors - Pure Blue Gradient */
+    --sidebar-background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 0 0% 100%;
     --sidebar-primary-foreground: 217 91% 60%;
@@ -96,7 +96,7 @@
     --ring: 217 91% 60%;
     --focus-ring: 217 91% 60%;
 
-    --sidebar-background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%);
+    --sidebar-background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 50%, #2563eb 100%);
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 0 0% 100%;
     --sidebar-primary-foreground: 217 91% 60%;
@@ -149,12 +149,29 @@
     @apply bg-white/20 text-white border-r-2 border-white font-medium;
   }
 
-  /* Sidebar gradient background */
+  /* Sidebar gradient background - Pure Blue */
   .sidebar-gradient {
-    background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
+    position: relative;
   }
 
-  /* Menu item hover effect */
+  .sidebar-gradient::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(29, 78, 216, 0.1) 50%, rgba(30, 64, 175, 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .sidebar-gradient:hover::before {
+    opacity: 1;
+  }
+
+  /* Menu item hover effect with improved spacing */
   .menu-item-hover {
     @apply transition-all duration-200 hover:bg-white/10 hover:text-white hover:transform hover:translate-x-1;
   }
@@ -210,12 +227,21 @@
     @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
   }
 
-  /* Gradient backgrounds */
+  /* Gradient backgrounds - Pure Blue */
   .bg-gradient-brand {
-    @apply bg-gradient-to-r from-primary to-primary-hover;
+    @apply bg-gradient-to-r from-blue-600 to-blue-700;
   }
 
   .bg-gradient-brand-light {
-    @apply bg-gradient-to-r from-primary-lighter to-primary-light;
+    @apply bg-gradient-to-r from-blue-50 to-blue-100;
+  }
+
+  /* Blue gradient utilities */
+  .bg-blue-gradient {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
+  }
+
+  .bg-blue-gradient-subtle {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(29, 78, 216, 0.05) 50%, rgba(30, 64, 175, 0.05) 100%);
   }
 }

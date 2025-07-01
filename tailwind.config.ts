@@ -114,13 +114,28 @@ export default {
 					'100%': {
 						transform: 'translateX(0)'
 					}
+				},
+				'gradient-shift': {
+					'0%': {
+						'background-position': '0% 50%'
+					},
+					'50%': {
+						'background-position': '100% 50%'
+					},
+					'100%': {
+						'background-position': '0% 50%'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out',
-				'slide-in': 'slide-in 0.3s ease-out'
+				'slide-in': 'slide-in 0.3s ease-out',
+				'gradient-shift': 'gradient-shift 3s ease infinite'
+			},
+			backgroundSize: {
+				'300%': '300%'
 			}
 		}
 	},
