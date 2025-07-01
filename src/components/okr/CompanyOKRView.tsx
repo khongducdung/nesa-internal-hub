@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -8,16 +7,22 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2, Target, TrendingUp, Plus, Edit, Eye, Users, Calendar, CheckCircle, AlertTriangle, Clock } from 'lucide-react';
-import { useOKRData } from '@/hooks/useOKRData';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Building2, Target, TrendingUp, Plus, Edit, Eye, Users, Calendar, CheckCircle, AlertTriangle, Clock, Trash2, Link2 } from 'lucide-react';
+import { useOKRData, OKRObjective } from '@/hooks/useOKRData';
 import { useAuth } from '@/hooks/useAuth';
+import { OKRViewDialog } from './OKRViewDialog';
+import { OKREditDialog } from './OKREditDialog';
+import { useToast } from '@/hooks/use-toast';
 
 export function CompanyOKRView() {
-  const { companyOKRs, currentCycle, createOKR, updateOKR, updateKeyResult, loading } = useOKRData();
+  const { companyOKRs, currentCycle, createOKR, updateOKR, deleteOKR, updateKeyResult, loading } = useOKRData();
   const { profile, isAdmin } = useAuth();
+  const { toast } = useToast();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedOKR, setSelectedOKR] = useState<any>(null);
+  const [selectedOKR, setSelectedOKR] = useState<OKRObjective | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -30,13 +35,6 @@ export function CompanyOKRView() {
     if (progress >= 60) return <Badge className="bg-green-100 text-green-800 flex items-center gap-1"><CheckCircle className="h-3 w-3" />Đúng tiến độ</Badge>;
     if (progress >= 40) return <Badge className="bg-yellow-100 text-yellow-800 flex items-center gap-1"><AlertTriangle className="h-3 w-3" />Cần chú ý</Badge>;
     return <Badge className="bg-red-100 text-red-800 flex items-center gap-1"><Clock className="h-3 w-3" />Chậm tiến độ</Badge>;
-  };
-
-  const getProgressColor = (progress: number) => {
-    if (progress >= 80) return 'bg-blue-500';
-    if (progress >= 60) return 'bg-green-500';
-    if (progress >= 40) return 'bg-yellow-500';
-    return 'bg-red-500';
   };
 
   const addKeyResult = () => {
@@ -75,6 +73,11 @@ export function CompanyOKRView() {
       key_results: keyResults
     });
 
+    toast({
+      title: "Thành công",
+      description: "Đã tạo OKR công ty mới",
+    });
+
     setFormData({
       title: '',
       description: '',
@@ -96,7 +99,40 @@ export function CompanyOKRView() {
         progress,
         status
       });
+
+      toast({
+        title: "Cập nhật thành công",
+        description: "Tiến độ Key Result đã được cập nhật",
+      });
     }
+  };
+
+  const handleViewOKR = (okr: OKRObjective) => {
+    setSelectedOKR(okr);
+    setViewDialogOpen(true);
+  };
+
+  const handleEditOKR = (okr: OKRObjective) => {
+    setSelectedOKR(okr);
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async (okrData: Partial<OKRObjective>) => {
+    if (selectedOKR) {
+      await updateOKR(selectedOKR.id, okrData);
+      toast({
+        title: "Cập nhật thành công",
+        description: "OKR đã được cập nhật",
+      });
+    }
+  };
+
+  const handleDeleteOKR = async (okrId: string) => {
+    await deleteOKR(okrId);
+    toast({
+      title: "Xóa thành công",
+      description: "OKR đã được xóa khỏi hệ thống",
+    });
   };
 
   // Mock department OKRs aligned with company OKRs
@@ -261,6 +297,12 @@ export function CompanyOKRView() {
                       <Target className="h-4 w-4" />
                       <span>{okr.key_results.length} Key Results</span>
                     </div>
+                    {okr.aligned_okrs && okr.aligned_okrs.length > 0 && (
+                      <div className="flex items-center gap-1">
+                        <Link2 className="h-4 w-4" />
+                        <span>{okr.aligned_okrs.length} OKR liên kết</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -268,16 +310,39 @@ export function CompanyOKRView() {
                     <div className="text-2xl font-bold text-blue-600 mb-1">{okr.progress}%</div>
                     <Progress value={okr.progress} className="w-24 h-2" />
                   </div>
-                  {isAdmin && (
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => handleViewOKR(okr)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    {isAdmin && (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => handleEditOKR(okr)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Xác nhận xóa OKR</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Bạn có chắc chắn muốn xóa OKR "{okr.title}"? Hành động này không thể hoàn tác.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Hủy</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteOKR(okr.id)} className="bg-red-600 hover:bg-red-700">
+                                Xóa
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -358,6 +423,20 @@ export function CompanyOKRView() {
           ))}
         </div>
       </div>
+
+      {/* Dialogs */}
+      <OKRViewDialog 
+        okr={selectedOKR} 
+        isOpen={viewDialogOpen} 
+        onClose={() => setViewDialogOpen(false)} 
+      />
+      
+      <OKREditDialog 
+        okr={selectedOKR} 
+        isOpen={editDialogOpen} 
+        onClose={() => setEditDialogOpen(false)}
+        onSave={handleSaveEdit}
+      />
     </div>
   );
 }

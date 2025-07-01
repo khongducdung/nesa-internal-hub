@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,17 +8,24 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Target, Calendar, TrendingUp, Edit, Plus, X, Users, Zap, CheckCircle, AlertTriangle, Clock, Building2, User } from 'lucide-react';
-import { useOKRData } from '@/hooks/useOKRData';
+import { Target, Calendar, TrendingUp, Edit, Plus, X, Users, Zap, CheckCircle, AlertTriangle, Clock, Building2, User, Eye, Trash2, Link2 } from 'lucide-react';
+import { useOKRData, OKRObjective } from '@/hooks/useOKRData';
 import { useAuth } from '@/hooks/useAuth';
+import { OKRViewDialog } from './OKRViewDialog';
+import { OKREditDialog } from './OKREditDialog';
+import { useToast } from '@/hooks/use-toast';
 
 export function MyOKRTasks() {
-  const { myOKRs, companyOKRs, currentCycle, createOKR, updateOKR, updateKeyResult, loading } = useOKRData();
+  const { myOKRs, companyOKRs, currentCycle, createOKR, updateOKR, deleteOKR, updateKeyResult, loading } = useOKRData();
   const { profile } = useAuth();
+  const { toast } = useToast();
   const [createOKROpen, setCreateOKROpen] = useState(false);
   const [updateProgressOpen, setUpdateProgressOpen] = useState(false);
-  const [selectedOKR, setSelectedOKR] = useState<any>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedOKR, setSelectedOKR] = useState<OKRObjective | null>(null);
   const [selectedKR, setSelectedKR] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -35,13 +41,6 @@ export function MyOKRTasks() {
     if (progress >= 60) return <Badge className="bg-green-100 text-green-800 flex items-center gap-1"><CheckCircle className="h-3 w-3" />Đúng tiến độ</Badge>;
     if (progress >= 40) return <Badge className="bg-yellow-100 text-yellow-800 flex items-center gap-1"><AlertTriangle className="h-3 w-3" />Cần chú ý</Badge>;
     return <Badge className="bg-red-100 text-red-800 flex items-center gap-1"><Clock className="h-3 w-3" />Chậm tiến độ</Badge>;
-  };
-
-  const getProgressColor = (progress: number) => {
-    if (progress >= 80) return 'bg-blue-500';
-    if (progress >= 60) return 'bg-green-500';
-    if (progress >= 40) return 'bg-yellow-500';
-    return 'bg-red-500';
   };
 
   const addKeyResult = () => {
@@ -83,6 +82,11 @@ export function MyOKRTasks() {
       key_results: keyResults
     });
 
+    toast({
+      title: "Thành công",
+      description: "Đã tạo OKR cá nhân mới",
+    });
+
     setFormData({
       title: '',
       description: '',
@@ -102,12 +106,46 @@ export function MyOKRTasks() {
     await updateKeyResult(selectedOKR.id, selectedKR.id, {
       current_value: newValue,
       progress,
-      status
+      status,
+      notes
+    });
+
+    toast({
+      title: "Cập nhật thành công",
+      description: "Tiến độ Key Result đã được cập nhật",
     });
 
     setUpdateProgressOpen(false);
     setSelectedOKR(null);
     setSelectedKR(null);
+  };
+
+  const handleViewOKR = (okr: OKRObjective) => {
+    setSelectedOKR(okr);
+    setViewDialogOpen(true);
+  };
+
+  const handleEditOKR = (okr: OKRObjective) => {
+    setSelectedOKR(okr);
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = async (okrData: Partial<OKRObjective>) => {
+    if (selectedOKR) {
+      await updateOKR(selectedOKR.id, okrData);
+      toast({
+        title: "Cập nhật thành công",
+        description: "OKR đã được cập nhật",
+      });
+    }
+  };
+
+  const handleDeleteOKR = async (okrId: string) => {
+    await deleteOKR(okrId);
+    toast({
+      title: "Xóa thành công",
+      description: "OKR đã được xóa khỏi hệ thống",
+    });
   };
 
   // Calculate overall performance metrics
@@ -363,7 +401,7 @@ export function MyOKRTasks() {
                       </div>
                       {okr.parent_okr_id && (
                         <div className="flex items-center space-x-1">
-                          <Building2 className="h-4 w-4" />
+                          <Link2 className="h-4 w-4" />
                           <span>Liên kết OKR Công ty</span>
                         </div>
                       )}
@@ -375,9 +413,35 @@ export function MyOKRTasks() {
                     <div className="text-2xl font-bold text-green-600 mb-1">{okr.progress}%</div>
                     <Progress value={okr.progress} className="w-20 h-2" />
                   </div>
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => handleViewOKR(okr)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleEditOKR(okr)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Xác nhận xóa OKR</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Bạn có chắc chắn muốn xóa OKR "{okr.title}"? Hành động này không thể hoàn tác.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Hủy</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteOKR(okr.id)} className="bg-red-600 hover:bg-red-700">
+                            Xóa
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -466,14 +530,24 @@ export function MyOKRTasks() {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label>Ghi chú (tùy chọn)</Label>
+                <Textarea
+                  placeholder="Thêm ghi chú về tiến độ..."
+                  rows={2}
+                />
+              </div>
+
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => setUpdateProgressOpen(false)}>
                   Hủy
                 </Button>
                 <Button onClick={() => {
                   const input = document.querySelector('input[type="number"]') as HTMLInputElement;
+                  const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
                   const value = parseFloat(input?.value) || 0;
-                  handleUpdateProgress(value);
+                  const notes = textarea?.value || '';
+                  handleUpdateProgress(value, notes);
                 }}>
                   Cập nhật
                 </Button>
@@ -482,6 +556,20 @@ export function MyOKRTasks() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Dialogs */}
+      <OKRViewDialog 
+        okr={selectedOKR} 
+        isOpen={viewDialogOpen} 
+        onClose={() => setViewDialogOpen(false)} 
+      />
+      
+      <OKREditDialog 
+        okr={selectedOKR} 
+        isOpen={editDialogOpen} 
+        onClose={() => setEditDialogOpen(false)}
+        onSave={handleSaveEdit}
+      />
     </div>
   );
 }

@@ -19,6 +19,8 @@ export interface OKRObjective {
   key_results: KeyResult[];
   created_at: string;
   updated_at: string;
+  created_by?: string;
+  aligned_okrs?: OKRObjective[]; // Child OKRs that align to this one
 }
 
 export interface KeyResult {
@@ -31,6 +33,7 @@ export interface KeyResult {
   progress: number;
   status: 'not_started' | 'on_track' | 'at_risk' | 'completed';
   due_date?: string;
+  notes?: string;
 }
 
 export interface OKRCycle {
@@ -44,10 +47,18 @@ export interface OKRCycle {
   is_current: boolean;
 }
 
+export interface OKRAlignment {
+  parent_id: string;
+  child_id: string;
+  alignment_percentage: number;
+  notes?: string;
+}
+
 export function useOKRData() {
   const { profile } = useAuth();
   const [companyOKRs, setCompanyOKRs] = useState<OKRObjective[]>([]);
   const [myOKRs, setMyOKRs] = useState<OKRObjective[]>([]);
+  const [departmentOKRs, setDepartmentOKRs] = useState<OKRObjective[]>([]);
   const [cycles, setCycles] = useState<OKRCycle[]>([]);
   const [currentCycle, setCurrentCycle] = useState<OKRCycle | null>(null);
   const [loading, setLoading] = useState(true);
@@ -92,6 +103,7 @@ export function useOKRData() {
           status: 'active',
           owner_id: 'company',
           owner_type: 'company',
+          created_by: 'admin',
           key_results: [
             {
               id: '1',
@@ -128,7 +140,8 @@ export function useOKRData() {
             }
           ],
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-15T00:00:00Z'
+          updated_at: '2024-01-15T00:00:00Z',
+          aligned_okrs: []
         },
         {
           id: '2',
@@ -141,6 +154,7 @@ export function useOKRData() {
           status: 'active',
           owner_id: 'company',
           owner_type: 'company',
+          created_by: 'admin',
           key_results: [
             {
               id: '4',
@@ -177,7 +191,8 @@ export function useOKRData() {
             }
           ],
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-15T00:00:00Z'
+          updated_at: '2024-01-15T00:00:00Z',
+          aligned_okrs: []
         }
       ];
 
@@ -196,6 +211,7 @@ export function useOKRData() {
           owner_type: 'individual',
           department_id: profile?.department_id,
           parent_okr_id: '1', // Links to company OKR
+          created_by: profile?.id || 'user',
           key_results: [
             {
               id: '7',
@@ -221,7 +237,8 @@ export function useOKRData() {
             }
           ],
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-15T00:00:00Z'
+          updated_at: '2024-01-15T00:00:00Z',
+          aligned_okrs: []
         },
         {
           id: '4',
@@ -235,6 +252,7 @@ export function useOKRData() {
           owner_id: profile?.id || 'user',
           owner_type: 'individual',
           department_id: profile?.department_id,
+          created_by: profile?.id || 'user',
           key_results: [
             {
               id: '9',
@@ -260,14 +278,55 @@ export function useOKRData() {
             }
           ],
           created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-15T00:00:00Z'
+          updated_at: '2024-01-15T00:00:00Z',
+          aligned_okrs: []
         }
       ];
+
+      // Mock department OKRs
+      const mockDepartmentOKRs: OKRObjective[] = [
+        {
+          id: '5',
+          title: 'Tăng 40% doanh số phòng Kinh Doanh Q1',
+          description: 'Mục tiêu phòng Kinh Doanh hỗ trợ mục tiêu công ty',
+          cycle: 'Q1 2024',
+          year: 2024,
+          quarter: 'Q1',
+          progress: 75,
+          status: 'active',
+          owner_id: 'dept_sales',
+          owner_type: 'department',
+          department_id: 'dept_sales',
+          parent_okr_id: '1',
+          created_by: 'manager_sales',
+          key_results: [
+            {
+              id: '11',
+              title: 'Tăng số lượng khách hàng mới 35%',
+              target_value: 350,
+              current_value: 240,
+              unit: 'khách hàng',
+              weight: 60,
+              progress: 69,
+              status: 'on_track',
+              due_date: '2024-03-31'
+            }
+          ],
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-15T00:00:00Z',
+          aligned_okrs: []
+        }
+      ];
+
+      // Set up alignment relationships
+      mockCompanyOKRs[0].aligned_okrs = [mockDepartmentOKRs[0], mockMyOKRs[0]];
+      mockDepartmentOKRs[0].aligned_okrs = [mockMyOKRs[0]];
 
       setCycles(mockCycles);
       setCurrentCycle(mockCycles.find(c => c.is_current) || null);
       setCompanyOKRs(mockCompanyOKRs);
       setMyOKRs(mockMyOKRs);
+      setDepartmentOKRs(mockDepartmentOKRs);
       setLoading(false);
     };
 
@@ -275,7 +334,6 @@ export function useOKRData() {
   }, [profile]);
 
   const createOKR = async (okrData: Partial<OKRObjective>) => {
-    // Mock create function - replace with real API call
     const newOKR: OKRObjective = {
       id: Date.now().toString(),
       title: okrData.title || '',
@@ -291,29 +349,55 @@ export function useOKRData() {
       parent_okr_id: okrData.parent_okr_id,
       key_results: okrData.key_results || [],
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      created_by: profile?.id || 'user',
+      aligned_okrs: []
     };
 
     if (okrData.owner_type === 'company') {
       setCompanyOKRs(prev => [...prev, newOKR]);
+    } else if (okrData.owner_type === 'department') {
+      setDepartmentOKRs(prev => [...prev, newOKR]);
     } else {
       setMyOKRs(prev => [...prev, newOKR]);
+    }
+
+    // Update parent OKR alignment
+    if (newOKR.parent_okr_id) {
+      updateOKRAlignment(newOKR.parent_okr_id, newOKR.id);
     }
 
     return newOKR;
   };
 
   const updateOKR = async (id: string, updates: Partial<OKRObjective>) => {
-    // Mock update function - replace with real API call
     const updateOKRList = (okrs: OKRObjective[]) =>
       okrs.map(okr => okr.id === id ? { ...okr, ...updates, updated_at: new Date().toISOString() } : okr);
 
     setCompanyOKRs(updateOKRList);
     setMyOKRs(updateOKRList);
+    setDepartmentOKRs(updateOKRList);
+  };
+
+  const deleteOKR = async (id: string) => {
+    // Remove from all lists
+    setCompanyOKRs(prev => prev.filter(okr => okr.id !== id));
+    setMyOKRs(prev => prev.filter(okr => okr.id !== id));
+    setDepartmentOKRs(prev => prev.filter(okr => okr.id !== id));
+
+    // Remove from alignment relationships
+    const removeAlignment = (okrs: OKRObjective[]) =>
+      okrs.map(okr => ({
+        ...okr,
+        aligned_okrs: okr.aligned_okrs?.filter(aligned => aligned.id !== id) || []
+      }));
+
+    setCompanyOKRs(removeAlignment);
+    setMyOKRs(removeAlignment);
+    setDepartmentOKRs(removeAlignment);
   };
 
   const updateKeyResult = async (okrId: string, keyResultId: string, updates: Partial<KeyResult>) => {
-    // Mock update function - replace with real API call
     const updateOKRs = (okrs: OKRObjective[]) =>
       okrs.map(okr => {
         if (okr.id === okrId) {
@@ -328,16 +412,50 @@ export function useOKRData() {
 
     setCompanyOKRs(updateOKRs);
     setMyOKRs(updateOKRs);
+    setDepartmentOKRs(updateOKRs);
+  };
+
+  const updateOKRAlignment = (parentId: string, childId: string) => {
+    const updateParentOKR = (okrs: OKRObjective[]) =>
+      okrs.map(okr => {
+        if (okr.id === parentId) {
+          const childOKR = [...companyOKRs, ...myOKRs, ...departmentOKRs].find(o => o.id === childId);
+          if (childOKR && !okr.aligned_okrs?.find(a => a.id === childId)) {
+            return {
+              ...okr,
+              aligned_okrs: [...(okr.aligned_okrs || []), childOKR]
+            };
+          }
+        }
+        return okr;
+      });
+
+    setCompanyOKRs(updateParentOKR);
+    setMyOKRs(updateParentOKR);
+    setDepartmentOKRs(updateParentOKR);
+  };
+
+  const getOKRById = (id: string): OKRObjective | undefined => {
+    return [...companyOKRs, ...myOKRs, ...departmentOKRs].find(okr => okr.id === id);
+  };
+
+  const getAlignedOKRs = (parentId: string): OKRObjective[] => {
+    return [...companyOKRs, ...myOKRs, ...departmentOKRs].filter(okr => okr.parent_okr_id === parentId);
   };
 
   return {
     companyOKRs,
     myOKRs,
+    departmentOKRs,
     cycles,
     currentCycle,
     loading,
     createOKR,
     updateOKR,
-    updateKeyResult
+    deleteOKR,
+    updateKeyResult,
+    getOKRById,
+    getAlignedOKRs,
+    updateOKRAlignment
   };
 }
