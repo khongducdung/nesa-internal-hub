@@ -14,15 +14,17 @@ import { CollaborativeOKRForm } from './CollaborativeOKRForm';
 import { OKRSettings } from './OKRSettings';
 import { useAuth } from '@/hooks/useAuth';
 import { Target, Users, BarChart3, Settings, Plus, Building2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export function OKRManagement() {
   const { profile, isAdmin } = useAuth();
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
 
   // Kiểm tra xem user có phải là manager không
   const isManager = true; // Tạm thời set true, sau này có thể check thực tế
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative">
       {/* Header với gradient và typography hiện đại */}
       <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white">
         <div className="container mx-auto px-6 py-8">
@@ -40,16 +42,6 @@ export function OKRManagement() {
                 <div className="text-2xl font-bold">Q1 2024</div>
                 <div className="text-indigo-200 text-sm">Chu kỳ hiện tại</div>
               </div>
-              {/* Settings button only for admins */}
-              {isAdmin && (
-                <Button 
-                  variant="outline" 
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Cài đặt hệ thống
-                </Button>
-              )}
             </div>
           </div>
         </div>
@@ -141,6 +133,32 @@ export function OKRManagement() {
           </div>
         </Tabs>
       </div>
+
+      {/* Floating Settings Button for Admin */}
+      {isAdmin && (
+        <div className="fixed bottom-8 right-8 z-50">
+          <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+            <DialogTrigger asChild>
+              <Button className="relative w-16 h-16 bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 group">
+                <Settings className="h-7 w-7 transition-transform group-hover:rotate-90" />
+                {/* Notification Badge */}
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold animate-pulse">
+                  3
+                </span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                  <Settings className="h-6 w-6 text-orange-600" />
+                  Cài đặt hệ thống OKR
+                </DialogTitle>
+              </DialogHeader>
+              <OKRSettings />
+            </DialogContent>
+          </Dialog>
+        </div>
+      )}
     </div>
   );
 }
