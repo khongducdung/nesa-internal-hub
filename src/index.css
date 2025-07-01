@@ -15,8 +15,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 27%;
 
-    /* Primary Blue Brand Colors */
-    --primary: 217 91% 60%;
+    /* Primary Blue Brand Colors - Chuẩn hóa màu #2563EB */
+    --primary: 217 91% 60%; /* #2563EB */
     --primary-foreground: 0 0% 100%;
     --primary-hover: 217 91% 55%;
     --primary-light: 217 91% 85%;
@@ -119,14 +119,48 @@
 
 /* Global Brand Component Styles */
 @layer components {
-  /* Primary Button Style */
+  /* Primary Button Style - Chuẩn hóa màu #2563EB */
   .btn-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary-hover focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors duration-200;
+    @apply bg-[#2563EB] text-white hover:bg-[#1d4ed8] focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 transition-colors duration-200;
   }
 
   /* Secondary Button Style */
   .btn-secondary {
     @apply bg-secondary text-secondary-foreground hover:bg-accent border border-border transition-colors duration-200;
+  }
+
+  /* Menu ngang chuẩn - Hàng đầu */
+  .nav-tabs-primary {
+    @apply w-full h-12 items-center justify-start rounded-lg bg-white p-1 shadow-sm border border-gray-200;
+  }
+
+  .nav-tab-primary {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .nav-tab-primary-active {
+    @apply bg-[#2563EB] text-white shadow-sm;
+  }
+
+  .nav-tab-primary-inactive {
+    @apply text-gray-600 hover:text-gray-900 hover:bg-gray-50;
+  }
+
+  /* Menu ngang chuẩn - Hàng thứ 2 (không đổi nền xanh khi active) */
+  .nav-tabs-secondary {
+    @apply inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground;
+  }
+
+  .nav-tab-secondary {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .nav-tab-secondary-active {
+    @apply bg-background text-foreground shadow-sm;
+  }
+
+  .nav-tab-secondary-inactive {
+    @apply hover:bg-background/80 hover:text-foreground;
   }
 
   /* Card with subtle blue accent */
@@ -136,12 +170,12 @@
 
   /* Input with blue focus */
   .input-branded {
-    @apply border-input bg-background focus:border-primary focus:ring-1 focus:ring-primary transition-colors duration-200;
+    @apply border-input bg-background focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] transition-colors duration-200;
   }
 
   /* Work area with subtle blue border */
   .work-area {
-    @apply border border-border/50 rounded-lg bg-card/50 focus-within:border-primary/30 focus-within:bg-card transition-all duration-200;
+    @apply border border-border/50 rounded-lg bg-card/50 focus-within:border-[#2563EB]/30 focus-within:bg-card transition-all duration-200;
   }
 
   /* Navigation active state */
@@ -161,11 +195,11 @@
 
   /* Hero Section - New gradient hero background */
   .hero-gradient {
-    @apply bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 text-white border-0 shadow-xl overflow-hidden relative;
+    @apply bg-gradient-to-r from-[#2563EB] via-blue-600 to-purple-600 text-white border-0 shadow-xl overflow-hidden relative;
   }
 
   .hero-content {
-    @apply relative bg-gradient-to-r from-blue-500/90 via-blue-600/90 to-purple-600/90 backdrop-blur-sm;
+    @apply relative bg-gradient-to-r from-[#2563EB]/90 via-blue-600/90 to-purple-600/90 backdrop-blur-sm;
   }
 
   .hero-overlay {
@@ -178,7 +212,7 @@
   }
 
   .hero-btn-primary {
-    @apply bg-white text-blue-600 hover:bg-white/90 font-medium;
+    @apply bg-white text-[#2563EB] hover:bg-white/90 font-medium;
   }
 
   /* Status badges */
@@ -195,7 +229,7 @@
   }
 
   .badge-info {
-    @apply bg-primary/10 text-primary border border-primary/20;
+    @apply bg-[#2563EB]/10 text-[#2563EB] border border-[#2563EB]/20;
   }
 
   /* Hover effects */
@@ -205,48 +239,61 @@
 
   /* Loading spinner */
   .spinner-primary {
-    @apply animate-spin rounded-full border-2 border-primary/20 border-t-primary;
+    @apply animate-spin rounded-full border-2 border-[#2563EB]/20 border-t-[#2563EB];
+  }
+
+  /* Button chuẩn toàn hệ thống */
+  .system-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-[#2563EB] text-white hover:bg-[#1d4ed8] h-10 px-4 py-2;
+  }
+
+  .system-btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-10 px-4 py-2;
+  }
+
+  .system-btn-outline {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2;
   }
 }
 
 /* Utility Classes */
 @layer utilities {
   .text-brand {
-    @apply text-primary;
+    @apply text-[#2563EB];
   }
 
   .bg-brand {
-    @apply bg-primary;
+    @apply bg-[#2563EB];
   }
 
   .border-brand {
-    @apply border-primary;
+    @apply border-[#2563EB];
   }
 
   .ring-brand {
-    @apply ring-primary;
+    @apply ring-[#2563EB];
   }
 
   /* Focus styles */
   .focus-brand {
-    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    @apply focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2;
   }
 
   /* Gradient backgrounds */
   .bg-gradient-brand {
-    @apply bg-gradient-to-r from-primary to-primary-hover;
+    @apply bg-gradient-to-r from-[#2563EB] to-[#1d4ed8];
   }
 
   .bg-gradient-brand-light {
-    @apply bg-gradient-to-r from-primary-lighter to-primary-light;
+    @apply bg-gradient-to-r from-blue-100 to-blue-200;
   }
 
   /* Hero gradient utilities */
   .bg-hero-gradient {
-    @apply bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600;
+    @apply bg-gradient-to-r from-[#2563EB] via-blue-600 to-purple-600;
   }
 
   .bg-hero-overlay {
-    @apply bg-gradient-to-r from-blue-500/90 via-blue-600/90 to-purple-600/90;
+    @apply bg-gradient-to-r from-[#2563EB]/90 via-blue-600/90 to-purple-600/90;
   }
 }
