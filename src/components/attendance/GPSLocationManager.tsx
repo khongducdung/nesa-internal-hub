@@ -11,6 +11,14 @@ import { useAttendanceLocations } from '@/hooks/useAttendanceLocations';
 import { useAttendanceLocationMutations } from '@/hooks/useAttendanceLocationMutations';
 import { useToast } from '@/hooks/use-toast';
 
+// Declare global google maps types
+declare global {
+  interface Window {
+    google: typeof google;
+    initMap: () => void;
+  }
+}
+
 interface LocationForm {
   name: string;
   address: string;
@@ -21,20 +29,20 @@ interface LocationForm {
 
 interface GoogleMapsProps {
   onLocationSelect: (lat: number, lng: number, address?: string) => void;
-  selectedLocation?: { lat: number; lng: number };
+  selectedLocation?: { lat: number; lng: number } | null;
   apiKey: string;
 }
 
 function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: GoogleMapsProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markerRef = useRef<any>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const markerRef = useRef<google.maps.Marker | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string>('');
 
   const initializeMap = useCallback(() => {
     console.log('Initializing map...');
-    if (!mapRef.current || !window.google?.maps) {
+    if (!mapRef.current || !window.google) {
       console.error('Map container or Google Maps not available');
       return;
     }
@@ -47,44 +55,23 @@ function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: Goog
         center: defaultCenter,
         zoom: 15,
         mapTypeControl: true,
-        streetViewControl: false,
-        fullscreenControl: false,
+        streetViewControl: true,
+        fullscreenControl: true,
       });
 
       console.log('Map created successfully');
 
       // Add click listener to map
-      mapInstanceRef.current.addListener('click', (event: any) => {
+      mapInstanceRef.current.addListener('click', (event: google.maps.MapMouseEvent) => {
         console.log('Map clicked:', event.latLng?.lat(), event.latLng?.lng());
         const lat = event.latLng?.lat();
         const lng = event.latLng?.lng();
         
         if (lat && lng) {
-          // Update marker position
-          if (markerRef.current) {
-            markerRef.current.setPosition({ lat, lng });
-          } else {
-            markerRef.current = new window.google.maps.Marker({
-              position: { lat, lng },
-              map: mapInstanceRef.current,
-              draggable: true,
-            });
-
-            // Add drag listener to marker
-            markerRef.current.addListener('dragend', () => {
-              const position = markerRef.current?.getPosition();
-              if (position) {
-                const newLat = position.lat();
-                const newLng = position.lng();
-                console.log('Marker dragged to:', newLat, newLng);
-                onLocationSelect(newLat, newLng);
-              }
-            });
-          }
-
+          updateMarkerPosition(lat, lng);
           // Get address using Geocoding
           const geocoder = new window.google.maps.Geocoder();
-          geocoder.geocode({ location: { lat, lng } }, (results: any, status: string) => {
+          geocoder.geocode({ location: { lat, lng } }, (results, status) => {
             let address = '';
             if (status === 'OK' && results?.[0]) {
               address = results[0].formatted_address;
@@ -97,21 +84,7 @@ function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: Goog
 
       // Add existing marker if we have selected location
       if (selectedLocation) {
-        markerRef.current = new window.google.maps.Marker({
-          position: selectedLocation,
-          map: mapInstanceRef.current,
-          draggable: true,
-        });
-
-        markerRef.current.addListener('dragend', () => {
-          const position = markerRef.current?.getPosition();
-          if (position) {
-            const newLat = position.lat();
-            const newLng = position.lng();
-            console.log('Existing marker dragged to:', newLat, newLng);
-            onLocationSelect(newLat, newLng);
-          }
-        });
+        updateMarkerPosition(selectedLocation.lat, selectedLocation.lng);
       }
     } catch (error) {
       console.error('Error initializing map:', error);
@@ -119,44 +92,78 @@ function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: Goog
     }
   }, [selectedLocation, onLocationSelect]);
 
+  const updateMarkerPosition = (lat: number, lng: number) => {
+    if (!mapInstanceRef.current) return;
+
+    if (markerRef.current) {
+      markerRef.current.setPosition({ lat, lng });
+    } else {
+      markerRef.current = new window.google.maps.Marker({
+        position: { lat, lng },
+        map: mapInstanceRef.current,
+        draggable: true,
+        title: 'Vị trí chấm công'
+      });
+
+      // Add drag listener to marker
+      markerRef.current.addListener('dragend', () => {
+        const position = markerRef.current?.getPosition();
+        if (position) {
+          const newLat = position.lat();
+          const newLng = position.lng();
+          console.log('Marker dragged to:', newLat, newLng);
+          onLocationSelect(newLat, newLng);
+        }
+      });
+    }
+
+    // Center map on marker
+    mapInstanceRef.current.setCenter({ lat, lng });
+  };
+
   useEffect(() => {
     if (!apiKey) {
       console.log('No API key provided');
       return;
     }
 
+    // Check if Google Maps is already loaded
+    if (window.google && window.google.maps) {
+      console.log('Google Maps already loaded');
+      setIsLoaded(true);
+      setTimeout(initializeMap, 100);
+      return;
+    }
+
+    // Clean up existing script
+    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+    if (existingScript) {
+      existingScript.remove();
+    }
+
     const loadGoogleMaps = () => {
-      console.log('Loading Google Maps...');
+      console.log('Loading Google Maps API...');
       
-      // Check if already loaded
-      if (window.google?.maps) {
-        console.log('Google Maps already loaded');
-        setIsLoaded(true);
-        initializeMap();
-        return;
-      }
-
-      // Remove existing script if any
-      const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-      if (existingScript) {
-        existingScript.remove();
-      }
-
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry&callback=initMap`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=3`;
       script.async = true;
       script.defer = true;
       
-      // Global callback
-      (window as any).initMap = () => {
-        console.log('Google Maps loaded via callback');
-        setIsLoaded(true);
-        setTimeout(initializeMap, 100);
+      script.onload = () => {
+        console.log('Google Maps script loaded successfully');
+        if (window.google && window.google.maps) {
+          setIsLoaded(true);
+          setLoadError('');
+          setTimeout(initializeMap, 100);
+        } else {
+          console.error('Google Maps not available after script load');
+          setLoadError('Google Maps không khả dụng sau khi tải script');
+        }
       };
 
-      script.onerror = () => {
-        console.error('Error loading Google Maps script');
-        setLoadError('Không thể tải Google Maps. Vui lòng kiểm tra API key.');
+      script.onerror = (error) => {
+        console.error('Error loading Google Maps script:', error);
+        setLoadError('Không thể tải Google Maps. Vui lòng kiểm tra API key và kết nối internet.');
       };
 
       document.head.appendChild(script);
@@ -164,45 +171,31 @@ function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: Goog
 
     loadGoogleMaps();
 
-    // Cleanup
     return () => {
-      if ((window as any).initMap) {
-        delete (window as any).initMap;
+      // Cleanup on unmount
+      const script = document.querySelector('script[src*="maps.googleapis.com"]');
+      if (script) {
+        script.remove();
       }
     };
   }, [apiKey, initializeMap]);
 
+  // Update marker when selectedLocation changes
   useEffect(() => {
     if (isLoaded && selectedLocation && mapInstanceRef.current) {
-      console.log('Updating map center to:', selectedLocation);
-      mapInstanceRef.current.setCenter(selectedLocation);
-      
-      if (markerRef.current) {
-        markerRef.current.setPosition(selectedLocation);
-      } else {
-        markerRef.current = new window.google.maps.Marker({
-          position: selectedLocation,
-          map: mapInstanceRef.current,
-          draggable: true,
-        });
-
-        markerRef.current.addListener('dragend', () => {
-          const position = markerRef.current?.getPosition();
-          if (position) {
-            const newLat = position.lat();
-            const newLng = position.lng();
-            console.log('New marker dragged to:', newLat, newLng);
-            onLocationSelect(newLat, newLng);
-          }
-        });
-      }
+      console.log('Updating marker position to:', selectedLocation);
+      updateMarkerPosition(selectedLocation.lat, selectedLocation.lng);
     }
-  }, [selectedLocation, isLoaded, onLocationSelect]);
+  }, [selectedLocation, isLoaded]);
 
   if (!apiKey) {
     return (
-      <div className="h-96 bg-gray-100 rounded-lg flex items-center justify-center">
-        <p className="text-gray-500">Vui lòng nhập Google Maps API Key để hiển thị bản đồ</p>
+      <div className="h-96 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+        <div className="text-center">
+          <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500 font-medium">Vui lòng nhập Google Maps API Key</p>
+          <p className="text-gray-400 text-sm">để hiển thị bản đồ</p>
+        </div>
       </div>
     );
   }
@@ -210,9 +203,17 @@ function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: Goog
   if (loadError) {
     return (
       <div className="h-96 bg-red-50 rounded-lg flex items-center justify-center border border-red-200">
-        <div className="text-center">
-          <p className="text-red-600 font-medium">Lỗi tải bản đồ</p>
-          <p className="text-red-500 text-sm mt-1">{loadError}</p>
+        <div className="text-center max-w-md">
+          <div className="text-red-600 font-bold text-lg mb-2">❌ Lỗi tải bản đồ</div>
+          <p className="text-red-600 text-sm mb-4">{loadError}</p>
+          <div className="bg-red-100 p-3 rounded text-xs text-red-700">
+            <strong>Kiểm tra:</strong>
+            <ul className="list-disc list-inside mt-1 text-left">
+              <li>API key Google Maps có hợp lệ không</li>
+              <li>Đã bật Maps JavaScript API chưa</li>
+              <li>Đã cấu hình domain trong Google Console chưa</li>
+            </ul>
+          </div>
         </div>
       </div>
     );
@@ -222,10 +223,11 @@ function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: Goog
     <div className="relative h-96 w-full rounded-lg overflow-hidden border">
       <div ref={mapRef} className="w-full h-full" />
       {!isLoaded && (
-        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+        <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-            <p className="text-gray-500">Đang tải bản đồ...</p>
+            <p className="text-gray-600 font-medium">Đang tải Google Maps...</p>
+            <p className="text-gray-400 text-sm">Vui lòng chờ...</p>
           </div>
         </div>
       )}
@@ -352,12 +354,34 @@ export function GPSLocationManager() {
       return;
     }
 
-    // Prepare location data with proper number conversion and rounding
+    // Validate coordinate ranges
+    const lat = Number(formData.latitude);
+    const lng = Number(formData.longitude);
+    
+    if (lat < -90 || lat > 90) {
+      toast({
+        title: 'Lỗi',
+        description: 'Vĩ độ phải từ -90 đến 90',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (lng < -180 || lng > 180) {
+      toast({
+        title: 'Lỗi',
+        description: 'Kinh độ phải từ -180 đến 180',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Prepare location data with proper number conversion
     const locationData = {
       name: formData.name.trim(),
       address: formData.address.trim() || null,
-      latitude: Number(Number(formData.latitude).toFixed(6)),
-      longitude: Number(Number(formData.longitude).toFixed(6)),
+      latitude: Number(lat.toFixed(6)),
+      longitude: Number(lng.toFixed(6)),
       radius_meters: Number(formData.radius_meters)
     };
 
@@ -447,37 +471,41 @@ export function GPSLocationManager() {
   const selectedLocation = formData.latitude !== '' && formData.longitude !== '' ? {
     lat: Number(formData.latitude),
     lng: Number(formData.longitude)
-  } : undefined;
+  } : null;
 
   return (
     <div className="space-y-6">
       {/* Google Maps API Key Input */}
-      {!apiKey && (
-        <Card className="border-yellow-200 bg-yellow-50">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <Label htmlFor="apiKey">Google Maps API Key</Label>
-                <Input
-                  id="apiKey"
-                  type="password"
-                  placeholder="Nhập Google Maps API Key..."
-                  onChange={(e) => {
-                    console.log('API key entered');
-                    setApiKey(e.target.value);
-                  }}
-                />
-                <p className="text-sm text-gray-600 mt-1">
-                  Cần API key để hiển thị bản đồ. Lấy từ{' '}
-                  <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-                    Google Cloud Console
-                  </a>
-                </p>
-              </div>
+      <Card className="border-blue-200 bg-blue-50">
+        <CardContent className="p-4">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-blue-600" />
+              <Label htmlFor="apiKey" className="font-semibold">Google Maps API Key</Label>
+              {apiKey && <Badge variant="outline" className="text-green-600">✓ Đã nhập</Badge>}
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <Input
+              id="apiKey"
+              type="password"
+              placeholder="Nhập Google Maps API Key..."
+              value={apiKey}
+              onChange={(e) => {
+                console.log('API key entered');
+                setApiKey(e.target.value);
+              }}
+            />
+            <div className="text-sm text-gray-600 bg-white p-3 rounded border-l-4 border-blue-400">
+              <strong>Hướng dẫn lấy API key:</strong>
+              <ol className="list-decimal list-inside mt-1 space-y-1">
+                <li>Truy cập <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Google Cloud Console</a></li>
+                <li>Tạo API key mới hoặc sử dụng key có sẵn</li>
+                <li>Bật Maps JavaScript API trong Libraries</li>
+                <li>Cấu hình domain cho API key</li>
+              </ol>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Form thêm/sửa địa điểm */}
@@ -596,7 +624,7 @@ export function GPSLocationManager() {
           <CardHeader>
             <CardTitle>Chọn vị trí trên bản đồ</CardTitle>
             <p className="text-sm text-gray-600">
-              Click vào bản đồ để chọn vị trí chấm công
+              Click vào bản đồ để chọn vị trí chấm công. Kéo thả marker để điều chỉnh.
             </p>
           </CardHeader>
           <CardContent>
