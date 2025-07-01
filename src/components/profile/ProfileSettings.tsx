@@ -6,14 +6,14 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { User, Camera, Lock } from 'lucide-react';
+import { User, Camera, Lock, Upload } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const profileFormSchema = z.object({
   full_name: z.string().min(1, 'Họ tên là bắt buộc'),
@@ -41,6 +41,9 @@ export function ProfileSettings() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
   const [employee, setEmployee] = React.useState<any>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = React.useState(false);
+  const [avatarDialogOpen, setAvatarDialogOpen] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
@@ -93,6 +96,62 @@ export function ProfileSettings() {
     fetchEmployeeData();
   }, [user?.id, profileForm]);
 
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !employee?.id) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: 'Lỗi',
+        description: 'File không được vượt quá 5MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${employee.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('employee-files')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('employee-files')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from('employees')
+        .update({ avatar_url: publicUrl })
+        .eq('id', employee.id);
+
+      if (updateError) throw updateError;
+
+      setEmployee({ ...employee, avatar_url: publicUrl });
+      setAvatarDialogOpen(false);
+
+      toast({
+        title: 'Thành công',
+        description: 'Cập nhật ảnh đại diện thành công',
+      });
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        title: 'Lỗi',
+        description: error.message || 'Có lỗi xảy ra khi tải ảnh lên',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   const onUpdateProfile = async (data: ProfileFormData) => {
     if (!user?.id || !employee?.id) return;
     
@@ -130,6 +189,16 @@ export function ProfileSettings() {
   const onChangePassword = async (data: PasswordFormData) => {
     setIsLoading(true);
     try {
+      // Verify current password first
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || '',
+        password: data.current_password
+      });
+
+      if (signInError) {
+        throw new Error('Mật khẩu hiện tại không đúng');
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: data.new_password
       });
@@ -179,12 +248,60 @@ export function ProfileSettings() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center space-x-4">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src={employee?.avatar_url} />
-              <AvatarFallback className="bg-brand-primary text-white text-lg">
-                {profile?.full_name?.charAt(0) || 'U'}
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative">
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={employee?.avatar_url} />
+                <AvatarFallback className="bg-brand-primary text-white text-lg">
+                  {profile?.full_name?.charAt(0) || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <Dialog open={avatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Cập nhật ảnh đại diện</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="flex justify-center">
+                      <Avatar className="h-32 w-32">
+                        <AvatarImage src={employee?.avatar_url} />
+                        <AvatarFallback className="bg-brand-primary text-white text-2xl">
+                          {profile?.full_name?.charAt(0) || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                    <div className="flex justify-center">
+                      <Button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploadingAvatar}
+                        className="bg-brand-primary hover:bg-brand-primary/90"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {isUploadingAvatar ? 'Đang tải lên...' : 'Chọn ảnh mới'}
+                      </Button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarUpload}
+                        className="hidden"
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground text-center">
+                      Chỉ chấp nhận file ảnh dưới 5MB
+                    </p>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
             <div className="space-y-1">
               <h3 className="text-lg font-semibold">{profile?.full_name}</h3>
               <p className="text-sm text-muted-foreground">Mã NV: {employee?.employee_code}</p>
