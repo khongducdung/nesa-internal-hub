@@ -3,59 +3,86 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design System - Blue Brand Theme */
+/* Advanced Design System - Professional UI */
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 215 25% 27%;
-
+    /* Base colors - Modern grayscale */
+    --background: 0 0% 99%;
+    --foreground: 222 26% 14%;
+    
+    /* Surface colors */
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 27%;
-
+    --card-foreground: 222 26% 14%;
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
+    --popover-foreground: 222 26% 14%;
 
-    /* Primary Blue Brand Colors - Chuẩn hóa màu #2563EB */
+    /* Primary brand - Professional blue with depth */
     --primary: 217 91% 60%; /* #2563EB */
     --primary-foreground: 0 0% 100%;
     --primary-hover: 217 91% 55%;
     --primary-light: 217 91% 85%;
     --primary-lighter: 217 91% 95%;
+    --primary-dark: 217 91% 45%;
+    --primary-gradient: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(217 91% 55%) 100%);
 
-    /* Secondary Colors */
+    /* Secondary colors - Sophisticated neutrals */
     --secondary: 210 11% 96%;
-    --secondary-foreground: 215 25% 27%;
-
+    --secondary-foreground: 222 26% 14%;
+    --secondary-hover: 210 11% 94%;
+    
+    /* Muted variations */
     --muted: 210 11% 96%;
     --muted-foreground: 215 16% 47%;
+    --muted-hover: 210 11% 92%;
 
+    /* Accent colors */
     --accent: 217 91% 95%;
     --accent-foreground: 217 91% 35%;
+    --accent-hover: 217 91% 90%;
 
-    /* Status Colors */
+    /* Status colors - Refined palette */
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    --success-light: 142 71% 95%;
+    --warning: 35 91% 55%;
+    --warning-foreground: 0 0% 100%; 
+    --warning-light: 35 91% 95%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
+    --destructive-light: 0 84% 95%;
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+    --info-light: 199 89% 95%;
 
-    /* Border and Input */
-    --border: 217 20% 88%;
-    --input: 217 20% 88%;
+    /* Borders and inputs */
+    --border: 217 32% 91%;
+    --input: 217 32% 91%;
     --ring: 217 91% 60%;
     --focus-ring: 217 91% 60%;
 
+    /* Radius system */
     --radius: 0.5rem;
+    --radius-sm: 0.25rem;
+    --radius-md: 0.375rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
 
-    /* Sidebar Colors - Blue Gradient */
-    --sidebar-background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+    /* Advanced shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    --shadow-glow: 0 0 0 1px hsl(217 91% 60% / 0.1), 0 0 20px hsl(217 91% 60% / 0.15);
+
+    /* Sidebar design - Enhanced gradients */
+    --sidebar-background: linear-gradient(180deg, hsl(217 91% 60%) 0%, hsl(217 91% 48%) 100%);
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 0 0% 100%;
     --sidebar-primary-foreground: 217 91% 60%;
-    --sidebar-accent: rgba(255, 255, 255, 0.1);
+    --sidebar-accent: rgba(255, 255, 255, 0.12);
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: rgba(255, 255, 255, 0.2);
+    --sidebar-border: rgba(255, 255, 255, 0.15);
     --sidebar-ring: 0 0% 100%;
   }
 
@@ -117,16 +144,19 @@
   }
 }
 
-/* Global Brand Component Styles */
+/* Advanced Component System */
 @layer components {
-  /* Primary Button Style - Chuẩn hóa màu #2563EB */
+  /* Modern Button Styles using semantic tokens */
   .btn-primary {
-    @apply bg-[#2563EB] text-white hover:bg-[#1d4ed8] focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 transition-colors duration-200;
+    @apply bg-primary text-primary-foreground hover:bg-primary-hover focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md;
   }
 
-  /* Secondary Button Style */
   .btn-secondary {
-    @apply bg-secondary text-secondary-foreground hover:bg-accent border border-border transition-colors duration-200;
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary-hover border border-border transition-all duration-200 shadow-sm hover:shadow-md;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-foreground hover:bg-muted/50 border border-transparent hover:border-border transition-all duration-200;
   }
 
   /* Menu ngang chuẩn - Hàng đầu */
