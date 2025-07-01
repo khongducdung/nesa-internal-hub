@@ -6,14 +6,13 @@ import { Button } from '@/components/ui/button';
 import { OKRDashboard } from './OKRDashboard';
 import { OKRCycleManagement } from './OKRCycleManagement';
 import { OKRObjectiveManagement } from './OKRObjectiveManagement';
-import { OKRProgressTracking } from './OKRProgressTracking';
-import { OKRReporting } from './OKRReporting';
+import { OKRProgressAndReporting } from './OKRProgressAndReporting';
 import { MyOKRTasks } from './MyOKRTasks';
 import { CompanyOKRView } from './CompanyOKRView';
 import { CollaborativeOKRForm } from './CollaborativeOKRForm';
 import { OKRSettings } from './OKRSettings';
 import { useAuth } from '@/hooks/useAuth';
-import { Target, Users, BarChart3, Settings, Plus, Building2 } from 'lucide-react';
+import { Target, Users, BarChart3, Settings, Plus, Building2, TrendingUp } from 'lucide-react';
 
 export function OKRManagement() {
   const { profile, isAdmin } = useAuth();
@@ -75,11 +74,9 @@ export function OKRManagement() {
                   <TabsTrigger value="objectives" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
                     Quản lý Objectives
                   </TabsTrigger>
-                  <TabsTrigger value="tracking" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
-                    Theo dõi tiến độ
-                  </TabsTrigger>
-                  <TabsTrigger value="reporting" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
-                    Báo cáo OKR
+                  <TabsTrigger value="progress-reporting" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
+                    <TrendingUp className="h-4 w-4" />
+                    Tiến độ & Báo cáo
                   </TabsTrigger>
                 </>
               )}
@@ -122,12 +119,8 @@ export function OKRManagement() {
                   <OKRObjectiveManagement />
                 </TabsContent>
 
-                <TabsContent value="tracking" className="m-0 p-8">
-                  <OKRProgressTracking />
-                </TabsContent>
-
-                <TabsContent value="reporting" className="m-0 p-8">
-                  <OKRReporting />
+                <TabsContent value="progress-reporting" className="m-0 p-8">
+                  <OKRProgressAndReporting />
                 </TabsContent>
               </>
             )}
