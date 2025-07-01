@@ -16,7 +16,7 @@ import {
   Clock,
   Link2
 } from 'lucide-react';
-import { OKRObjective } from '@/hooks/useOKRData';
+import { OKRObjective, useOKRData } from '@/hooks/useOKRData';
 
 interface OKRViewDialogProps {
   okr: OKRObjective | null;
@@ -25,7 +25,11 @@ interface OKRViewDialogProps {
 }
 
 export function OKRViewDialog({ okr, isOpen, onClose }: OKRViewDialogProps) {
+  const { getParentOKR } = useOKRData();
+
   if (!okr) return null;
+
+  const parentOKR = getParentOKR(okr);
 
   const getStatusBadge = (status: string, progress: number) => {
     if (status === 'completed') return <Badge className="bg-green-100 text-green-800 flex items-center gap-1"><CheckCircle className="h-3 w-3" />Hoàn thành</Badge>;
@@ -152,7 +156,7 @@ export function OKRViewDialog({ okr, isOpen, onClose }: OKRViewDialogProps) {
           </Card>
 
           {/* Alignment Information */}
-          {(okr.parent_okr_id || (okr.aligned_okrs && okr.aligned_okrs.length > 0)) && (
+          {(parentOKR || (okr.aligned_okrs && okr.aligned_okrs.length > 0)) && (
             <Card>
               <CardContent className="p-4">
                 <h3 className="font-semibold mb-3 flex items-center gap-2">
@@ -160,11 +164,21 @@ export function OKRViewDialog({ okr, isOpen, onClose }: OKRViewDialogProps) {
                   Liên kết OKR
                 </h3>
                 
-                {okr.parent_okr_id && (
+                {parentOKR && (
                   <div className="mb-4">
                     <p className="text-sm font-medium text-gray-700 mb-2">Liên kết tới OKR cấp cao:</p>
-                    <div className="p-2 bg-blue-50 rounded border-l-4 border-blue-400">
-                      <p className="text-sm text-blue-800">OKR ID: {okr.parent_okr_id}</p>
+                    <div className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {getOwnerTypeIcon(parentOKR.owner_type)}
+                          <span className="font-medium text-blue-800">{parentOKR.title}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-blue-700">{parentOKR.progress}%</span>
+                          <Progress value={parentOKR.progress} className="w-16 h-1" />
+                        </div>
+                      </div>
+                      <p className="text-xs text-blue-600 mt-1">{getOwnerTypeText(parentOKR.owner_type)}</p>
                     </div>
                   </div>
                 )}
@@ -176,17 +190,18 @@ export function OKRViewDialog({ okr, isOpen, onClose }: OKRViewDialogProps) {
                     </p>
                     <div className="space-y-2">
                       {okr.aligned_okrs.map((alignedOKR) => (
-                        <div key={alignedOKR.id} className="p-2 bg-green-50 rounded border-l-4 border-green-400">
+                        <div key={alignedOKR.id} className="p-3 bg-green-50 rounded-lg border-l-4 border-green-400">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               {getOwnerTypeIcon(alignedOKR.owner_type)}
-                              <span className="text-sm font-medium text-green-800">{alignedOKR.title}</span>
+                              <span className="font-medium text-green-800">{alignedOKR.title}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium text-green-700">{alignedOKR.progress}%</span>
                               <Progress value={alignedOKR.progress} className="w-16 h-1" />
                             </div>
                           </div>
+                          <p className="text-xs text-green-600 mt-1">{getOwnerTypeText(alignedOKR.owner_type)}</p>
                         </div>
                       ))}
                     </div>

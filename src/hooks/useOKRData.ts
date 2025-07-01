@@ -196,6 +196,41 @@ export function useOKRData() {
         }
       ];
 
+      // Mock department OKRs
+      const mockDepartmentOKRs: OKRObjective[] = [
+        {
+          id: '5',
+          title: 'Tăng 40% doanh số phòng Kinh Doanh Q1',
+          description: 'Mục tiêu phòng Kinh Doanh hỗ trợ mục tiêu công ty',
+          cycle: 'Q1 2024',
+          year: 2024,
+          quarter: 'Q1',
+          progress: 75,
+          status: 'active',
+          owner_id: 'dept_sales',
+          owner_type: 'department',
+          department_id: 'dept_sales',
+          parent_okr_id: '1',
+          created_by: 'manager_sales',
+          key_results: [
+            {
+              id: '11',
+              title: 'Tăng số lượng khách hàng mới 35%',
+              target_value: 350,
+              current_value: 240,
+              unit: 'khách hàng',
+              weight: 60,
+              progress: 69,
+              status: 'on_track',
+              due_date: '2024-03-31'
+            }
+          ],
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-15T00:00:00Z',
+          aligned_okrs: []
+        }
+      ];
+
       // Mock user OKRs based on profile
       const mockMyOKRs: OKRObjective[] = [
         {
@@ -210,7 +245,7 @@ export function useOKRData() {
           owner_id: profile?.id || 'user',
           owner_type: 'individual',
           department_id: profile?.department_id,
-          parent_okr_id: '1', // Links to company OKR
+          parent_okr_id: '5', // Links to department OKR
           created_by: profile?.id || 'user',
           key_results: [
             {
@@ -283,44 +318,30 @@ export function useOKRData() {
         }
       ];
 
-      // Mock department OKRs
-      const mockDepartmentOKRs: OKRObjective[] = [
-        {
-          id: '5',
-          title: 'Tăng 40% doanh số phòng Kinh Doanh Q1',
-          description: 'Mục tiêu phòng Kinh Doanh hỗ trợ mục tiêu công ty',
-          cycle: 'Q1 2024',
-          year: 2024,
-          quarter: 'Q1',
-          progress: 75,
-          status: 'active',
-          owner_id: 'dept_sales',
-          owner_type: 'department',
-          department_id: 'dept_sales',
-          parent_okr_id: '1',
-          created_by: 'manager_sales',
-          key_results: [
-            {
-              id: '11',
-              title: 'Tăng số lượng khách hàng mới 35%',
-              target_value: 350,
-              current_value: 240,
-              unit: 'khách hàng',
-              weight: 60,
-              progress: 69,
-              status: 'on_track',
-              due_date: '2024-03-31'
-            }
-          ],
-          created_at: '2024-01-01T00:00:00Z',
-          updated_at: '2024-01-15T00:00:00Z',
-          aligned_okrs: []
-        }
-      ];
-
       // Set up alignment relationships
-      mockCompanyOKRs[0].aligned_okrs = [mockDepartmentOKRs[0], mockMyOKRs[0]];
-      mockDepartmentOKRs[0].aligned_okrs = [mockMyOKRs[0]];
+      const setupAlignments = () => {
+        const allOKRs = [...mockCompanyOKRs, ...mockDepartmentOKRs, ...mockMyOKRs];
+        
+        // Clear existing alignments
+        allOKRs.forEach(okr => {
+          okr.aligned_okrs = [];
+        });
+
+        // Set up alignments based on parent_okr_id
+        allOKRs.forEach(okr => {
+          if (okr.parent_okr_id) {
+            const parentOKR = allOKRs.find(parent => parent.id === okr.parent_okr_id);
+            if (parentOKR) {
+              if (!parentOKR.aligned_okrs) {
+                parentOKR.aligned_okrs = [];
+              }
+              parentOKR.aligned_okrs.push(okr);
+            }
+          }
+        });
+      };
+
+      setupAlignments();
 
       setCycles(mockCycles);
       setCurrentCycle(mockCycles.find(c => c.is_current) || null);
@@ -333,6 +354,8 @@ export function useOKRData() {
     loadMockData();
   }, [profile]);
 
+  const getAllOKRs = () => [...companyOKRs, ...departmentOKRs, ...myOKRs];
+
   const createOKR = async (okrData: Partial<OKRObjective>) => {
     const newOKR: OKRObjective = {
       id: Date.now().toString(),
@@ -342,7 +365,7 @@ export function useOKRData() {
       year: currentCycle?.year || 2024,
       quarter: currentCycle?.quarter || 'Q1',
       progress: 0,
-      status: 'draft',
+      status: okrData.status || 'draft',
       owner_id: okrData.owner_id || profile?.id || 'user',
       owner_type: okrData.owner_type || 'individual',
       department_id: okrData.department_id,
@@ -372,7 +395,27 @@ export function useOKRData() {
 
   const updateOKR = async (id: string, updates: Partial<OKRObjective>) => {
     const updateOKRList = (okrs: OKRObjective[]) =>
-      okrs.map(okr => okr.id === id ? { ...okr, ...updates, updated_at: new Date().toISOString() } : okr);
+      okrs.map(okr => {
+        if (okr.id === id) {
+          const updatedOKR = { ...okr, ...updates, updated_at: new Date().toISOString() };
+          
+          // Handle parent OKR changes
+          if (updates.parent_okr_id !== undefined && updates.parent_okr_id !== okr.parent_okr_id) {
+            // Remove from old parent's aligned_okrs
+            if (okr.parent_okr_id) {
+              removeFromParentAlignment(okr.parent_okr_id, id);
+            }
+            
+            // Add to new parent's aligned_okrs
+            if (updates.parent_okr_id) {
+              updateOKRAlignment(updates.parent_okr_id, id);
+            }
+          }
+          
+          return updatedOKR;
+        }
+        return okr;
+      });
 
     setCompanyOKRs(updateOKRList);
     setMyOKRs(updateOKRList);
@@ -380,12 +423,18 @@ export function useOKRData() {
   };
 
   const deleteOKR = async (id: string) => {
+    // Remove from parent's aligned_okrs
+    const okrToDelete = getOKRById(id);
+    if (okrToDelete?.parent_okr_id) {
+      removeFromParentAlignment(okrToDelete.parent_okr_id, id);
+    }
+
     // Remove from all lists
     setCompanyOKRs(prev => prev.filter(okr => okr.id !== id));
     setMyOKRs(prev => prev.filter(okr => okr.id !== id));
     setDepartmentOKRs(prev => prev.filter(okr => okr.id !== id));
 
-    // Remove from alignment relationships
+    // Remove from alignment relationships (as parent)
     const removeAlignment = (okrs: OKRObjective[]) =>
       okrs.map(okr => ({
         ...okr,
@@ -419,7 +468,7 @@ export function useOKRData() {
     const updateParentOKR = (okrs: OKRObjective[]) =>
       okrs.map(okr => {
         if (okr.id === parentId) {
-          const childOKR = [...companyOKRs, ...myOKRs, ...departmentOKRs].find(o => o.id === childId);
+          const childOKR = getAllOKRs().find(o => o.id === childId);
           if (childOKR && !okr.aligned_okrs?.find(a => a.id === childId)) {
             return {
               ...okr,
@@ -435,12 +484,34 @@ export function useOKRData() {
     setDepartmentOKRs(updateParentOKR);
   };
 
+  const removeFromParentAlignment = (parentId: string, childId: string) => {
+    const removeFromParent = (okrs: OKRObjective[]) =>
+      okrs.map(okr => {
+        if (okr.id === parentId) {
+          return {
+            ...okr,
+            aligned_okrs: okr.aligned_okrs?.filter(aligned => aligned.id !== childId) || []
+          };
+        }
+        return okr;
+      });
+
+    setCompanyOKRs(removeFromParent);
+    setMyOKRs(removeFromParent);
+    setDepartmentOKRs(removeFromParent);
+  };
+
   const getOKRById = (id: string): OKRObjective | undefined => {
-    return [...companyOKRs, ...myOKRs, ...departmentOKRs].find(okr => okr.id === id);
+    return getAllOKRs().find(okr => okr.id === id);
   };
 
   const getAlignedOKRs = (parentId: string): OKRObjective[] => {
-    return [...companyOKRs, ...myOKRs, ...departmentOKRs].filter(okr => okr.parent_okr_id === parentId);
+    return getAllOKRs().filter(okr => okr.parent_okr_id === parentId);
+  };
+
+  const getParentOKR = (okr: OKRObjective): OKRObjective | undefined => {
+    if (!okr.parent_okr_id) return undefined;
+    return getOKRById(okr.parent_okr_id);
   };
 
   return {
@@ -456,6 +527,8 @@ export function useOKRData() {
     updateKeyResult,
     getOKRById,
     getAlignedOKRs,
-    updateOKRAlignment
+    getParentOKR,
+    updateOKRAlignment,
+    getAllOKRs
   };
 }

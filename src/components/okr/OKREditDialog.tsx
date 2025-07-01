@@ -39,7 +39,7 @@ type FormData = {
 };
 
 export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogProps) {
-  const { companyOKRs, departmentOKRs } = useOKRData();
+  const { companyOKRs, departmentOKRs, getParentOKR } = useOKRData();
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
@@ -65,6 +65,15 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
           progress: kr.progress,
           status: kr.status
         }))
+      });
+    } else {
+      // Reset form for creating new OKR
+      setFormData({
+        title: '',
+        description: '',
+        status: 'active',
+        parent_okr_id: '',
+        key_results: [{ id: '', title: '', target_value: '', current_value: '', unit: '', weight: 100, progress: 0, status: 'not_started' }]
       });
     }
   }, [okr]);
@@ -138,13 +147,13 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
     onClose();
   };
 
-  if (!okr) return null;
-
   // Get available parent OKRs (higher level than current OKR)
   const availableParentOKRs = [
-    ...companyOKRs.filter(o => o.id !== okr.id && okr.owner_type !== 'company'),
-    ...departmentOKRs.filter(o => o.id !== okr.id && okr.owner_type === 'individual')
+    ...companyOKRs.filter(o => o.id !== okr?.id && okr?.owner_type !== 'company'),
+    ...departmentOKRs.filter(o => o.id !== okr?.id && okr?.owner_type === 'individual')
   ];
+
+  const currentParentOKR = okr ? getParentOKR(okr) : null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -152,7 +161,7 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-blue-600" />
-            Chỉnh sửa OKR
+            {okr ? 'Chỉnh sửa OKR' : 'Tạo OKR mới'}
           </DialogTitle>
         </DialogHeader>
 
@@ -296,6 +305,24 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
 
           <TabsContent value="alignment" className="space-y-4">
             <div className="space-y-4">
+              {/* Current parent OKR display */}
+              {currentParentOKR && (
+                <div className="space-y-2">
+                  <Label>OKR cấp cao hiện tại</Label>
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {currentParentOKR.owner_type === 'company' ? '🏢' : '👥'} 
+                        <span className="font-medium text-blue-800">{currentParentOKR.title}</span>
+                      </div>
+                      <Badge variant="outline" className="bg-blue-100 text-blue-700">
+                        {currentParentOKR.progress}%
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label className="flex items-center gap-2">
                   <Link2 className="h-4 w-4" />
@@ -321,7 +348,7 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
                 </p>
               </div>
 
-              {okr.aligned_okrs && okr.aligned_okrs.length > 0 && (
+              {okr?.aligned_okrs && okr.aligned_okrs.length > 0 && (
                 <div className="space-y-2">
                   <Label>OKR đã liên kết ({okr.aligned_okrs.length})</Label>
                   <div className="space-y-2">
@@ -329,7 +356,7 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
                       <div key={alignedOKR.id} className="p-3 bg-green-50 rounded-lg border border-green-200">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span>{alignedOKR.owner_type === 'individual' ? '👤' : '👥'}</span>
+                            <span>{alignedOKR.owner_type === 'individual' ? '👤' : alignedOKR.owner_type === 'department' ? '👥' : '🏢'}</span>
                             <span className="font-medium text-green-800">{alignedOKR.title}</span>
                           </div>
                           <Badge variant="outline" className="bg-green-100 text-green-700">
@@ -351,7 +378,7 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
           </Button>
           <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
             <Save className="h-4 w-4 mr-2" />
-            Lưu thay đổi
+            {okr ? 'Lưu thay đổi' : 'Tạo OKR'}
           </Button>
         </div>
       </DialogContent>
