@@ -18,7 +18,6 @@ import {
   Trophy,
   Flame,
   Zap,
-  Plus,
   MessageSquare,
   Gift,
   Heart,
@@ -37,7 +36,7 @@ import { OKRLeaderboard } from './OKRLeaderboard';
 import { EmotionalRewards } from './EmotionalRewards';
 
 export function OKRDashboard() {
-  const { profile } = useAuth();
+  const { profile, isAdmin } = useAuth();
   const [achievementsOpen, setAchievementsOpen] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [emotionalRewardsOpen, setEmotionalRewardsOpen] = useState(false);
@@ -127,7 +126,7 @@ export function OKRDashboard() {
       {/* Motivational Welcome Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 opacity-10 rounded-3xl"></div>
-        <Card className="border-0 shadow-lg bg-gradient-to-r from-white via-blue-50 to-indigo-50 relative">
+        <Card className="border-0 shadow-xl bg-gradient-to-r from-white via-blue-50 to-indigo-50 relative">
           <CardContent className="p-8">
             <div className="flex items-center justify-between">
               <div className="flex-1">
@@ -144,12 +143,8 @@ export function OKRDashboard() {
                 </div>
                 <p className="text-lg text-indigo-700 font-medium mb-6">{randomQuote}</p>
                 
-                {/* Quick Action Buttons */}
+                {/* Quick Action Buttons - Removed "Tạo OKR mới" */}
                 <div className="flex flex-wrap gap-3">
-                  <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Tạo OKR mới
-                  </Button>
                   <Button variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50">
                     <MessageSquare className="h-4 w-4 mr-2" />
                     Feedback

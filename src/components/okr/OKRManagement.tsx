@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,15 +14,15 @@ import { CollaborativeOKRForm } from './CollaborativeOKRForm';
 import { OKRSettings } from './OKRSettings';
 import { useAuth } from '@/hooks/useAuth';
 import { Target, Users, BarChart3, Settings, Plus, Building2 } from 'lucide-react';
+
 export function OKRManagement() {
-  const {
-    profile
-  } = useAuth();
+  const { profile, isAdmin } = useAuth();
 
   // Kiểm tra xem user có phải là manager không
   const isManager = true; // Tạm thời set true, sau này có thể check thực tế
 
-  return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header với gradient và typography hiện đại */}
       <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white">
         <div className="container mx-auto px-6 py-8">
@@ -39,6 +40,16 @@ export function OKRManagement() {
                 <div className="text-2xl font-bold">Q1 2024</div>
                 <div className="text-indigo-200 text-sm">Chu kỳ hiện tại</div>
               </div>
+              {/* Settings button only for admins */}
+              {isAdmin && (
+                <Button 
+                  variant="outline" 
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Cài đặt hệ thống
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -71,7 +82,8 @@ export function OKRManagement() {
                 Cộng tác
               </TabsTrigger>
               
-              {isManager && <>
+              {isManager && (
+                <>
                   <TabsTrigger value="cycles" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
                     Chu kỳ OKR
                   </TabsTrigger>
@@ -84,10 +96,8 @@ export function OKRManagement() {
                   <TabsTrigger value="reporting" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
                     Báo cáo OKR
                   </TabsTrigger>
-                  <TabsTrigger value="settings" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
-                    Cài đặt
-                  </TabsTrigger>
-                </>}
+                </>
+              )}
             </TabsList>
           </div>
 
@@ -109,7 +119,8 @@ export function OKRManagement() {
               <CollaborativeOKRForm />
             </TabsContent>
 
-            {isManager && <>
+            {isManager && (
+              <>
                 <TabsContent value="cycles" className="m-0 p-8">
                   <OKRCycleManagement />
                 </TabsContent>
@@ -125,13 +136,11 @@ export function OKRManagement() {
                 <TabsContent value="reporting" className="m-0 p-8">
                   <OKRReporting />
                 </TabsContent>
-
-                <TabsContent value="settings" className="m-0 p-8">
-                  <OKRSettings />
-                </TabsContent>
-              </>}
+              </>
+            )}
           </div>
         </Tabs>
       </div>
-    </div>;
+    </div>
+  );
 }
