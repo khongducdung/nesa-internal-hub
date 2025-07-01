@@ -10,16 +10,10 @@ import { OKRProgressTracking } from './OKRProgressTracking';
 import { OKRReporting } from './OKRReporting';
 import { MyOKRTasks } from './MyOKRTasks';
 import { CompanyOKRView } from './CompanyOKRView';
-import { OKRAchievements } from './OKRAchievements';
 import { CollaborativeOKRForm } from './CollaborativeOKRForm';
-import { OKRLeaderboard } from './OKRLeaderboard';
-import { EmotionalRewards } from './EmotionalRewards';
 import { OKRSettings } from './OKRSettings';
 import { useAuth } from '@/hooks/useAuth';
 import { 
-  Award, 
-  Trophy, 
-  Heart, 
   Target, 
   Users, 
   BarChart3, 
@@ -58,48 +52,14 @@ export function OKRManagement() {
         </div>
       </div>
 
-      {/* Top Action Bar - 3 tính năng chính */}
+      {/* Top Action Bar */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
-              <Tabs defaultValue="achievements" className="flex-1">
-                <TabsList className="bg-gray-100 p-1 rounded-xl">
-                  <TabsTrigger 
-                    value="achievements" 
-                    className="flex items-center gap-2 px-6 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                  >
-                    <Award className="h-4 w-4" />
-                    <span className="font-medium">Huy hiệu</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="leaderboard"
-                    className="flex items-center gap-2 px-6 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                  >
-                    <Trophy className="h-4 w-4" />
-                    <span className="font-medium">Xếp hạng</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="emotional-rewards"
-                    className="flex items-center gap-2 px-6 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
-                  >
-                    <Heart className="h-4 w-4" />
-                    <span className="font-medium">Thưởng cảm xúc</span>
-                  </TabsTrigger>
-                </TabsList>
-
-                <div className="mt-6">
-                  <TabsContent value="achievements">
-                    <OKRAchievements />
-                  </TabsContent>
-                  <TabsContent value="leaderboard">
-                    <OKRLeaderboard />
-                  </TabsContent>
-                  <TabsContent value="emotional-rewards">
-                    <EmotionalRewards />
-                  </TabsContent>
-                </div>
-              </Tabs>
+              <div className="text-lg font-semibold text-gray-700">
+                Chào {profile?.full_name || 'Admin'}! Sẵn sàng chinh phục mục tiêu hôm nay?
+              </div>
             </div>
 
             {/* Quick Actions */}

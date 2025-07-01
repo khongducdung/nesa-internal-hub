@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   Target, 
   TrendingUp, 
@@ -24,58 +25,33 @@ import {
   HandHeart,
   Coins,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Medal,
+  Crown,
+  Eye,
+  Send
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { OKRAchievements } from './OKRAchievements';
+import { OKRLeaderboard } from './OKRLeaderboard';
+import { EmotionalRewards } from './EmotionalRewards';
 
 export function OKRDashboard() {
   const { profile } = useAuth();
+  const [achievementsOpen, setAchievementsOpen] = useState(false);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [emotionalRewardsOpen, setEmotionalRewardsOpen] = useState(false);
   
   // Mock data - sẽ thay thế bằng API call
   const isManager = true; // Tạm thời set true
   
   const okrStats = [
     {
-      title: 'Tổng Objectives',
-      value: '8',
-      icon: Target,
-      color: 'from-blue-500 to-blue-600',
-      change: '+2',
-      changeType: 'increase'
-    },
-    {
-      title: 'Đang thực hiện',
-      value: '6',
-      icon: TrendingUp,
-      color: 'from-green-500 to-green-600',
-      change: '+1',
-      changeType: 'increase'
-    },
-    {
-      title: 'Hoàn thành',
-      value: '5',
-      icon: CheckCircle,
-      color: 'from-purple-500 to-purple-600',
-      change: '+2',
-      changeType: 'increase'
-    },
-    {
-      title: 'Huy hiệu đạt được',
-      value: '12',
-      icon: Award,
-      color: 'from-yellow-500 to-yellow-600',
-      change: '+3',
-      changeType: 'increase'
-    }
-  ];
-
-  const managerStats = [
-    {
       title: 'Tổng Objectives toàn công ty',
       value: '45',
       icon: Target,
       color: 'from-blue-500 to-blue-600',
-      change: '+8',
+      change: '+8 so với quý trước',
       changeType: 'increase'
     },
     {
@@ -83,7 +59,7 @@ export function OKRDashboard() {
       value: '32',
       icon: TrendingUp,
       color: 'from-green-500 to-green-600',
-      change: '+5',
+      change: '+5 so với quý trước',
       changeType: 'increase'
     },
     {
@@ -91,7 +67,7 @@ export function OKRDashboard() {
       value: '28',
       icon: CheckCircle,
       color: 'from-purple-500 to-purple-600',
-      change: '+7',
+      change: '+7 so với quý trước',
       changeType: 'increase'
     },
     {
@@ -99,23 +75,20 @@ export function OKRDashboard() {
       value: '3',
       icon: AlertCircle,
       color: 'from-orange-500 to-orange-600',
-      change: '-2',
+      change: '-2 so với quý trước',
       changeType: 'decrease'
     }
   ];
 
   // Câu nói khích lệ
   const motivationalQuotes = [
-    "🎯 Mỗi mục tiêu đạt được là một bước tiến lớn!",
+    "🔥 Bạn đang trên đường chinh phục những đỉnh cao mới!",
     "⭐ Thành công không phải là điểm đến, mà là hành trình!",
     "🚀 Hôm nay bạn đã làm gì để gần hơn với mục tiêu?",
-    "💪 Kiên trì và nỗ lực sẽ mang lại kết quả tuyệt vời!",
-    "🔥 Bạn đang trên đường chinh phục những đỉnh cao mới!"
+    "💪 Kiên trì và nỗ lực sẽ mang lại kết quả tuyệt vời!"
   ];
 
   const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
-
-  const stats = isManager ? managerStats : okrStats;
 
   // Mock data for rewards
   const rewardData = {
@@ -124,6 +97,29 @@ export function OKRDashboard() {
     dedicationPoints: 92,
     myRank: 3,
     totalParticipants: 45
+  };
+
+  // Mock data for badges
+  const myBadges = [
+    { name: 'Người hoàn thành mục tiêu', icon: Trophy, color: 'from-yellow-400 to-yellow-600' },
+    { name: 'Làm việc nhóm xuất sắc', icon: Award, color: 'from-green-400 to-green-600' },
+    { name: 'Đạt mục tiêu sớm', icon: Star, color: 'from-blue-400 to-blue-600' }
+  ];
+
+  // Mock data for top performers
+  const topPerformers = [
+    { name: 'Nguyễn Văn A', score: 1250, department: 'Kinh Doanh', rank: 1 },
+    { name: 'Trần Thị B', score: 1180, department: 'Kỹ Thuật', rank: 2 },
+    { name: 'Tôi', score: 1050, department: 'Marketing', rank: 3, isMe: true }
+  ];
+
+  const getRankIcon = (rank: number) => {
+    switch (rank) {
+      case 1: return <Crown className="h-4 w-4 text-yellow-500" />;
+      case 2: return <Medal className="h-4 w-4 text-gray-400" />;
+      case 3: return <Award className="h-4 w-4 text-orange-500" />;
+      default: return <Star className="h-4 w-4 text-blue-500" />;
+    }
   };
 
   return (
@@ -141,7 +137,7 @@ export function OKRDashboard() {
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">
-                      Chào {profile?.full_name || 'bạn'}! 👋
+                      Chào {profile?.full_name || 'Admin'}! 👋
                     </h2>
                     <p className="text-gray-600">Sẵn sàng chinh phục mục tiêu hôm nay?</p>
                   </div>
@@ -158,10 +154,20 @@ export function OKRDashboard() {
                     <MessageSquare className="h-4 w-4 mr-2" />
                     Feedback
                   </Button>
-                  <Button variant="outline" className="border-green-200 text-green-700 hover:bg-green-50">
-                    <Heart className="h-4 w-4 mr-2" />
-                    Gửi thưởng cảm xúc
-                  </Button>
+                  <Dialog open={emotionalRewardsOpen} onOpenChange={setEmotionalRewardsOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="border-green-200 text-green-700 hover:bg-green-50">
+                        <Heart className="h-4 w-4 mr-2" />
+                        Gửi thưởng cảm xúc
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Thưởng cảm xúc</DialogTitle>
+                      </DialogHeader>
+                      <EmotionalRewards />
+                    </DialogContent>
+                  </Dialog>
                   <Button variant="outline" className="border-yellow-200 text-yellow-700 hover:bg-yellow-50">
                     <Gift className="h-4 w-4 mr-2" />
                     Đổi quà
@@ -232,16 +238,123 @@ export function OKRDashboard() {
             </div>
             <div className="text-3xl font-bold text-purple-700 mb-1">#{rewardData.myRank}</div>
             <div className="text-sm text-purple-600 font-medium">Xếp hạng</div>
-            <Button variant="ghost" size="sm" className="mt-2 text-purple-700 hover:bg-purple-100">
-              <ArrowRight className="h-3 w-3 ml-1" />
-            </Button>
+            <Dialog open={leaderboardOpen} onOpenChange={setLeaderboardOpen}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" className="mt-2 text-purple-700 hover:bg-purple-100">
+                  <Eye className="h-3 w-3 mr-1" />
+                  Chi tiết
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Bảng xếp hạng</DialogTitle>
+                </DialogHeader>
+                <OKRLeaderboard />
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
       </div>
 
+      {/* My Achievements Section */}
+      <Card className="shadow-xl border-0 bg-gradient-to-r from-white via-yellow-50 to-orange-50">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
+                <Award className="h-5 w-5 text-white" />
+              </div>
+              Huy hiệu của tôi
+            </CardTitle>
+            <Dialog open={achievementsOpen} onOpenChange={setAchievementsOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="border-yellow-300 text-yellow-700 hover:bg-yellow-50">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Xem tất cả
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Tất cả huy hiệu</DialogTitle>
+                </DialogHeader>
+                <OKRAchievements />
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+            {myBadges.map((badge, index) => {
+              const Icon = badge.icon;
+              return (
+                <div key={index} className="text-center group hover:scale-105 transition-transform">
+                  <div className={`w-16 h-16 bg-gradient-to-br ${badge.color} rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg group-hover:shadow-xl transition-shadow`}>
+                    <Icon className="h-8 w-8 text-white" />
+                  </div>
+                  <div className="text-xs text-gray-600 font-medium">{badge.name}</div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Top Performers Mini Leaderboard */}
+      <Card className="shadow-xl border-0 bg-gradient-to-r from-white via-blue-50 to-indigo-50">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-white" />
+              </div>
+              Top Performers
+            </CardTitle>
+            <Dialog open={leaderboardOpen} onOpenChange={setLeaderboardOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Xem bảng xếp hạng
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Bảng xếp hạng đầy đủ</DialogTitle>
+                </DialogHeader>
+                <OKRLeaderboard />
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {topPerformers.map((person, index) => (
+              <div key={index} className={`flex items-center justify-between p-4 rounded-xl transition-all hover:shadow-md ${
+                person.isMe ? 'bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200' : 'bg-white/70 hover:bg-white'
+              }`}>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center justify-center w-8 h-8">
+                    {getRankIcon(person.rank)}
+                  </div>
+                  <div>
+                    <div className={`font-medium ${person.isMe ? 'text-green-800' : 'text-gray-900'}`}>
+                      {person.name}
+                    </div>
+                    <div className="text-sm text-gray-500">{person.department}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold text-blue-600 text-lg">{person.score}</div>
+                  <div className="text-xs text-gray-500">điểm</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
+        {okrStats.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <Card key={index} className="hover:shadow-xl transition-all duration-300 hover:scale-105 border-0 shadow-lg bg-gradient-to-br from-white to-gray-50">
@@ -257,7 +370,7 @@ export function OKRDashboard() {
                     <p className={`text-sm font-medium flex items-center ${
                       stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {stat.change} so với quý trước
+                      {stat.change}
                     </p>
                   </div>
                   <div className={`bg-gradient-to-br ${stat.color} p-4 rounded-2xl shadow-xl`}>
