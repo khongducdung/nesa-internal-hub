@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,17 +11,18 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useWorkShiftMutations } from '@/hooks/useWorkShiftMutations';
-import { useWorkShifts } from '@/hooks/useWorkShifts';
+import { useWorkShift } from '@/hooks/useWorkShifts';
 import { useAttendanceSettings } from '@/hooks/useAttendanceSettings';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { ColorPicker } from '@/components/ui/color-picker';
 import { WorkSessionsManager } from './WorkSessionsManager';
-import { Clock, Users, MapPin, Settings, Calendar, AlertCircle } from 'lucide-react';
+import { Clock, Users, Calendar, Settings, AlertCircle } from 'lucide-react';
 
 interface WorkSession {
   name: string;
   start_time: string;
   end_time: string;
+  [key: string]: any;
 }
 
 interface WorkShiftFormAdvancedProps {
@@ -30,11 +32,9 @@ interface WorkShiftFormAdvancedProps {
 
 export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvancedProps) {
   const { toast } = useToast();
-  const { data: shifts } = useWorkShifts();
+  const { data: shift } = useWorkShift(shiftId || '');
   const { data: attendanceSettings } = useAttendanceSettings();
   const { createShift, updateShift } = useWorkShiftMutations();
-
-  const currentShift = shiftId ? shifts?.find(s => s.id === shiftId) : null;
 
   const [formData, setFormData] = useState({
     name: '',
@@ -48,54 +48,33 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
     max_hours_per_day: 8,
     color: '#3B82F6',
     attendance_setting_id: '',
-    // New fields
     work_sessions: [] as WorkSession[],
     saturday_work_type: 'off' as 'off' | 'full' | 'half_morning' | 'half_afternoon',
     saturday_work_sessions: [] as WorkSession[],
     total_work_coefficient: 1.0,
-    // Advanced features
-    is_night_shift: false,
-    allow_early_checkin_minutes: 15,
-    allow_late_checkout_minutes: 15,
-    auto_checkout_enabled: false,
-    auto_checkout_time: '18:00',
-    require_manager_approval: false,
-    location_restricted: false,
-    max_employees: null as number | null,
-    priority_level: 1
   });
 
-  const [activeTab, setActiveTab] = useState<'basic' | 'schedule' | 'rules' | 'advanced'>('basic');
+  const [activeTab, setActiveTab] = useState<'basic' | 'schedule' | 'advanced'>('basic');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (currentShift) {
+    if (shift) {
       setFormData({
-        name: currentShift.name || '',
-        description: currentShift.description || '',
-        start_time: currentShift.start_time || '08:00',
-        end_time: currentShift.end_time || '17:00',
-        break_duration_minutes: currentShift.break_duration_minutes || 60,
-        days_of_week: currentShift.days_of_week || [1, 2, 3, 4, 5],
-        shift_type: (currentShift.shift_type as any) || 'fulltime',
-        min_hours_per_day: currentShift.min_hours_per_day || 8,
-        max_hours_per_day: currentShift.max_hours_per_day || 8,
-        color: currentShift.color || '#3B82F6',
-        attendance_setting_id: currentShift.attendance_setting_id || '',
-        // New fields
-        work_sessions: currentShift.work_sessions || [],
-        saturday_work_type: currentShift.saturday_work_type || 'off',
-        saturday_work_sessions: currentShift.saturday_work_sessions || [],
-        total_work_coefficient: currentShift.total_work_coefficient || 1.0,
-        // Advanced features (default values for existing shifts)
-        is_night_shift: false,
-        allow_early_checkin_minutes: 15,
-        allow_late_checkout_minutes: 15,
-        auto_checkout_enabled: false,
-        auto_checkout_time: '18:00',
-        require_manager_approval: false,
-        location_restricted: false,
-        max_employees: null,
-        priority_level: 1
+        name: shift.name || '',
+        description: shift.description || '',
+        start_time: shift.start_time || '08:00',
+        end_time: shift.end_time || '17:00',
+        break_duration_minutes: shift.break_duration_minutes || 60,
+        days_of_week: shift.days_of_week || [1, 2, 3, 4, 5],
+        shift_type: (shift.shift_type as any) || 'fulltime',
+        min_hours_per_day: shift.min_hours_per_day || 8,
+        max_hours_per_day: shift.max_hours_per_day || 8,
+        color: shift.color || '#3B82F6',
+        attendance_setting_id: shift.attendance_setting_id || '',
+        work_sessions: shift.work_sessions || [],
+        saturday_work_type: shift.saturday_work_type || 'off',
+        saturday_work_sessions: shift.saturday_work_sessions || [],
+        total_work_coefficient: shift.total_work_coefficient || 1.0,
       });
     } else if (attendanceSettings && attendanceSettings.length > 0) {
       setFormData(prev => ({
@@ -107,7 +86,40 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
         ]
       }));
     }
-  }, [currentShift, attendanceSettings]);
+  }, [shift, attendanceSettings]);
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Tên ca làm việc là bắt buộc';
+    }
+
+    if (!formData.attendance_setting_id) {
+      newErrors.attendance_setting_id = 'Vui lòng chọn cài đặt chấm công';
+    }
+
+    if (formData.work_sessions.length === 0) {
+      newErrors.work_sessions = 'Vui lòng thêm ít nhất một ca làm việc';
+    }
+
+    if (formData.days_of_week.length === 0) {
+      newErrors.days_of_week = 'Vui lòng chọn ít nhất một ngày trong tuần';
+    }
+
+    // Validate work sessions
+    formData.work_sessions.forEach((session, index) => {
+      if (!session.name.trim()) {
+        newErrors[`session_${index}_name`] = `Tên ca ${index + 1} là bắt buộc`;
+      }
+      if (session.start_time >= session.end_time) {
+        newErrors[`session_${index}_time`] = `Thời gian ca ${index + 1} không hợp lệ`;
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleDayToggle = (day: number) => {
     setFormData(prev => ({
@@ -133,30 +145,26 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (formData.work_sessions.length === 0) {
+    if (!validateForm()) {
       toast({
-        title: 'Thiếu thông tin',
-        description: 'Vui lòng thêm ít nhất một ca làm việc',
+        title: 'Dữ liệu không hợp lệ',
+        description: 'Vui lòng kiểm tra lại thông tin đã nhập',
         variant: 'destructive'
       });
       return;
     }
     
     try {
-      const submitData = {
-        ...formData,
-        max_employees: formData.max_employees || undefined
-      };
-
       if (shiftId) {
-        await updateShift.mutateAsync({ id: shiftId, data: submitData });
+        await updateShift.mutateAsync({ id: shiftId, data: formData });
         toast({ title: 'Đã cập nhật ca làm việc thành công' });
       } else {
-        await createShift.mutateAsync(submitData);
+        await createShift.mutateAsync(formData);
         toast({ title: 'Đã tạo ca làm việc thành công' });
       }
       onClose();
     } catch (error) {
+      console.error('Error saving work shift:', error);
       toast({ 
         title: 'Có lỗi xảy ra', 
         description: 'Vui lòng thử lại sau',
@@ -184,8 +192,7 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
         {[
           { key: 'basic', label: 'Thông tin cơ bản', icon: Clock },
           { key: 'schedule', label: 'Lịch trình', icon: Calendar },
-          { key: 'rules', label: 'Quy tắc', icon: Settings },
-          { key: 'advanced', label: 'Nâng cao', icon: Users }
+          { key: 'advanced', label: 'Nâng cao', icon: Settings }
         ].map(tab => {
           const Icon = tab.icon;
           return (
@@ -215,8 +222,9 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Ca hành chính"
-                required
+                className={errors.name ? 'border-red-500' : ''}
               />
+              {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
             </div>
 
             <div className="space-y-2">
@@ -229,24 +237,9 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="fulltime">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      Full-time (8 giờ)
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="parttime">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      Part-time (4 giờ)
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="flexible">
-                    <div className="flex items-center gap-2">
-                      <Settings className="h-4 w-4" />
-                      Linh hoạt
-                    </div>
-                  </SelectItem>
+                  <SelectItem value="fulltime">Full-time (8 giờ)</SelectItem>
+                  <SelectItem value="parttime">Part-time (4 giờ)</SelectItem>
+                  <SelectItem value="flexible">Linh hoạt</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -263,12 +256,29 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Màu sắc ca làm việc</Label>
-            <ColorPicker
-              value={formData.color}
-              onChange={(color) => setFormData(prev => ({ ...prev, color }))}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Màu sắc ca làm việc</Label>
+              <ColorPicker
+                value={formData.color}
+                onChange={(color) => setFormData(prev => ({ ...prev, color }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Hệ số công việc</Label>
+              <Input
+                type="number"
+                step="0.1"
+                min="0.1"
+                max="2.0"
+                value={formData.total_work_coefficient}
+                onChange={(e) => setFormData(prev => ({ ...prev, total_work_coefficient: parseFloat(e.target.value) || 1.0 }))}
+              />
+              <p className="text-sm text-gray-600">
+                Hệ số 1.0 = 1 công. Hệ số 0.5 = 0.5 công
+              </p>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -277,35 +287,20 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
               value={formData.attendance_setting_id} 
               onValueChange={(value) => setFormData(prev => ({ ...prev, attendance_setting_id: value }))}
             >
-              <SelectTrigger>
+              <SelectTrigger className={errors.attendance_setting_id ? 'border-red-500' : ''}>
                 <SelectValue placeholder="Chọn cài đặt chấm công" />
               </SelectTrigger>
               <SelectContent>
                 {attendanceSettings?.map((setting) => (
                   <SelectItem key={setting.id} value={setting.id}>
-                    <div className="flex items-center gap-2">
-                      <Settings className="h-4 w-4" />
-                      {setting.name}
-                    </div>
+                    {setting.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          
-          <div className="space-y-2">
-            <Label>Hệ số công việc</Label>
-            <Input
-              type="number"
-              step="0.1"
-              min="0.1"
-              max="2.0"
-              value={formData.total_work_coefficient}
-              onChange={(e) => setFormData(prev => ({ ...prev, total_work_coefficient: parseFloat(e.target.value) || 1.0 }))}
-            />
-            <p className="text-sm text-gray-600">
-              Hệ số 1.0 = 1 công. Hệ số 0.5 = 0.5 công (làm nửa ngày)
-            </p>
+            {errors.attendance_setting_id && (
+              <p className="text-sm text-red-500">{errors.attendance_setting_id}</p>
+            )}
           </div>
         </div>
       )}
@@ -314,11 +309,16 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
       {activeTab === 'schedule' && (
         <div className="space-y-6">
           {/* Work Sessions */}
-          <WorkSessionsManager
-            title="Ca làm việc trong ngày"
-            sessions={formData.work_sessions}
-            onChange={(sessions) => setFormData(prev => ({ ...prev, work_sessions: sessions }))}
-          />
+          <div>
+            <WorkSessionsManager
+              title="Ca làm việc trong ngày"
+              sessions={formData.work_sessions}
+              onChange={(sessions) => setFormData(prev => ({ ...prev, work_sessions: sessions }))}
+            />
+            {errors.work_sessions && (
+              <p className="text-sm text-red-500 mt-2">{errors.work_sessions}</p>
+            )}
+          </div>
 
           {/* Total Work Hours Summary */}
           <Card>
@@ -329,6 +329,38 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
                   {totalWorkHours.toFixed(1)} giờ
                 </Badge>
               </div>
+              <div className="mt-2 text-xs text-gray-500">
+                Hệ số hiện tại: {formData.total_work_coefficient}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Days of Week */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Ngày trong tuần *
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-7 gap-2">
+                {dayNames.map((day) => (
+                  <div key={day.value} className="flex flex-col items-center space-y-2">
+                    <Label htmlFor={`day-${day.value}`} className="text-xs text-center">
+                      {day.label}
+                    </Label>
+                    <Checkbox
+                      id={`day-${day.value}`}
+                      checked={formData.days_of_week.includes(day.value)}
+                      onCheckedChange={() => handleDayToggle(day.value)}
+                    />
+                  </div>
+                ))}
+              </div>
+              {errors.days_of_week && (
+                <p className="text-sm text-red-500 mt-2">{errors.days_of_week}</p>
+              )}
             </CardContent>
           </Card>
 
@@ -366,196 +398,100 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
               )}
             </CardContent>
           </Card>
-
-          {/* Days of Week */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Ngày trong tuần
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-7 gap-2">
-                {dayNames.map((day) => (
-                  <div key={day.value} className="flex flex-col items-center space-y-2">
-                    <Label htmlFor={`day-${day.value}`} className="text-xs text-center">
-                      {day.label}
-                    </Label>
-                    <Checkbox
-                      id={`day-${day.value}`}
-                      checked={formData.days_of_week.includes(day.value)}
-                      onCheckedChange={() => handleDayToggle(day.value)}
-                      className="data-[state=checked]:bg-blue-600"
-                    />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Rules Tab */}
-      {activeTab === 'rules' && (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Quy tắc check-in/out</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="early_checkin">Cho phép check-in sớm (phút)</Label>
-                  <Input
-                    id="early_checkin"
-                    type="number"
-                    value={formData.allow_early_checkin_minutes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, allow_early_checkin_minutes: parseInt(e.target.value) || 0 }))}
-                    min="0"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="late_checkout">Cho phép check-out muộn (phút)</Label>
-                  <Input
-                    id="late_checkout"
-                    type="number"
-                    value={formData.allow_late_checkout_minutes}
-                    onChange={(e) => setFormData(prev => ({ ...prev, allow_late_checkout_minutes: parseInt(e.target.value) || 0 }))}
-                    min="0"
-                  />
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Tự động check-out</Label>
-                    <p className="text-sm text-gray-600">Tự động check-out khi hết giờ làm việc</p>
-                  </div>
-                  <Switch
-                    checked={formData.auto_checkout_enabled}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, auto_checkout_enabled: checked }))}
-                  />
-                </div>
-
-                {formData.auto_checkout_enabled && (
-                  <div className="space-y-2">
-                    <Label htmlFor="auto_checkout_time">Thời gian tự động check-out</Label>
-                    <Input
-                      id="auto_checkout_time"
-                      type="time"
-                      value={formData.auto_checkout_time}
-                      onChange={(e) => setFormData(prev => ({ ...prev, auto_checkout_time: e.target.value }))}
-                    />
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Ca làm việc đêm</Label>
-                    <p className="text-sm text-gray-600">Đánh dấu đây là ca làm việc qua đêm</p>
-                  </div>
-                  <Switch
-                    checked={formData.is_night_shift}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_night_shift: checked }))}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Yêu cầu phê duyệt từ quản lý</Label>
-                    <p className="text-sm text-gray-600">Cần phê duyệt khi đăng ký ca này</p>
-                  </div>
-                  <Switch
-                    checked={formData.require_manager_approval}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, require_manager_approval: checked }))}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       )}
 
       {/* Advanced Tab */}
       {activeTab === 'advanced' && (
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Quản lý nhân viên
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="max_employees">Số lượng nhân viên tối đa</Label>
-                <Input
-                  id="max_employees"
-                  type="number"
-                  value={formData.max_employees || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, max_employees: e.target.value ? parseInt(e.target.value) : null }))}
-                  placeholder="Không giới hạn"
-                  min="1"
-                />
-                <p className="text-sm text-gray-600">Để trống nếu không giới hạn số lượng nhân viên</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="priority_level">Mức độ ưu tiên</Label>
-                <Select 
-                  value={formData.priority_level.toString()} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, priority_level: parseInt(value) }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Cao</SelectItem>
-                    <SelectItem value="2">Trung bình</SelectItem>
-                    <SelectItem value="3">Thấp</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Giới hạn theo địa điểm</Label>
-                  <p className="text-sm text-gray-600">Chỉ cho phép check-in tại địa điểm cụ thể</p>
-                </div>
-                <Switch
-                  checked={formData.location_restricted}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, location_restricted: checked }))}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {formData.location_restricted && (
+          {formData.shift_type === 'flexible' && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  Cài đặt địa điểm
-                </CardTitle>
+                <CardTitle className="text-base">Cấu hình ca linh hoạt</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2 p-4 bg-yellow-50 rounded-lg">
-                  <AlertCircle className="h-4 w-4 text-yellow-600" />
-                  <p className="text-sm text-yellow-800">
-                    Tính năng này sẽ được phát triển trong phiên bản tới. Hiện tại, vui lòng sử dụng cài đặt GPS trong phần cài đặt chấm công.
-                  </p>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="min_hours">Số giờ tối thiểu/ngày</Label>
+                    <Input
+                      id="min_hours"
+                      type="number"
+                      min="1"
+                      max="24"
+                      value={formData.min_hours_per_day}
+                      onChange={(e) => setFormData(prev => ({ 
+                        ...prev, 
+                        min_hours_per_day: parseFloat(e.target.value) || 1 
+                      }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="max_hours">Số giờ tối đa/ngày</Label>
+                    <Input
+                      id="max_hours"
+                      type="number"
+                      min="1"
+                      max="24"
+                      value={formData.max_hours_per_day}
+                      onChange={(e) => setFormData(prev => ({ 
+                        ...prev, 
+                        max_hours_per_day: parseFloat(e.target.value) || 8 
+                      }))}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
           )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Thông tin bổ sung</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="start_time">Giờ bắt đầu ca</Label>
+                  <Input
+                    id="start_time"
+                    type="time"
+                    value={formData.start_time}
+                    onChange={(e) => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="end_time">Giờ kết thúc ca</Label>
+                  <Input
+                    id="end_time"
+                    type="time"
+                    value={formData.end_time}
+                    onChange={(e) => setFormData(prev => ({ ...prev, end_time: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="break_duration">Thời gian nghỉ (phút)</Label>
+                <Input
+                  id="break_duration"
+                  type="number"
+                  min="0"
+                  value={formData.break_duration_minutes}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    break_duration_minutes: parseInt(e.target.value) || 0 
+                  }))}
+                />
+                <p className="text-sm text-gray-600">
+                  Thời gian nghỉ sẽ không tính vào giờ làm việc
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
 
+      {/* Form Actions */}
       <div className="flex justify-end gap-2 pt-4 border-t">
         <Button type="button" variant="outline" onClick={onClose}>
           Hủy

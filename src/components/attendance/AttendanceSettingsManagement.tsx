@@ -1,367 +1,590 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings, MapPin, Clock, Save, Timer, Calendar } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { useAttendanceSettings, useAttendanceSettingMutations } from '@/hooks/useAttendanceSettings';
 import { useToast } from '@/components/ui/use-toast';
-
-interface SettingsFormData {
-  work_start_time: string;
-  work_end_time: string;
-  break_start_time: string;
-  break_end_time: string;
-  late_threshold_minutes: number;
-  early_leave_threshold_minutes: number;
-  overtime_start_after_minutes: number;
-  require_gps_check: boolean;
-  gps_radius_meters: number;
-  weekend_work_allowed: boolean;
-  allow_multiple_checkins: boolean;
-  require_daily_start_checkin: boolean;
-  require_daily_end_checkout: boolean;
-  // New fields
-  early_checkin_allowed_minutes: number;
-  late_checkout_allowed_minutes: number;
-  count_early_checkin_as_work: boolean;
-  count_late_checkout_as_work: boolean;
-  saturday_work_enabled: boolean;
-  saturday_work_type: 'off' | 'full' | 'half_morning' | 'half_afternoon';
-}
+import { Settings, Clock, MapPin, Shield, Calendar } from 'lucide-react';
 
 export function AttendanceSettingsManagement() {
   const { data: settings, isLoading } = useAttendanceSettings();
-  const { createSetting } = useAttendanceSettingMutations();
+  const { createSetting, updateSetting } = useAttendanceSettingMutations();
   const { toast } = useToast();
-  const [saving, setSaving] = useState(false);
 
-  const defaultSetting = settings?.find(s => s.is_default) || settings?.[0];
-
-  const { register, handleSubmit, watch, setValue } = useForm<SettingsFormData>({
-    defaultValues: {
-      work_start_time: defaultSetting?.work_start_time || '08:00',
-      work_end_time: defaultSetting?.work_end_time || '17:00',
-      break_start_time: defaultSetting?.break_start_time || '12:00',
-      break_end_time: defaultSetting?.break_end_time || '13:00',
-      late_threshold_minutes: defaultSetting?.late_threshold_minutes || 15,
-      early_leave_threshold_minutes: defaultSetting?.early_leave_threshold_minutes || 15,
-      overtime_start_after_minutes: defaultSetting?.overtime_start_after_minutes || 0,
-      require_gps_check: defaultSetting?.require_gps_check || false,
-      gps_radius_meters: defaultSetting?.gps_radius_meters || 100,
-      weekend_work_allowed: defaultSetting?.weekend_work_allowed || false,
-      allow_multiple_checkins: defaultSetting?.allow_multiple_checkins || false,
-      require_daily_start_checkin: defaultSetting?.require_daily_start_checkin || true,
-      require_daily_end_checkout: defaultSetting?.require_daily_end_checkout || true,
-      // New fields
-      early_checkin_allowed_minutes: defaultSetting?.early_checkin_allowed_minutes || 15,
-      late_checkout_allowed_minutes: defaultSetting?.late_checkout_allowed_minutes || 15,
-      count_early_checkin_as_work: defaultSetting?.count_early_checkin_as_work || false,
-      count_late_checkout_as_work: defaultSetting?.count_late_checkout_as_work || true,
-      saturday_work_enabled: defaultSetting?.saturday_work_enabled || false,
-      saturday_work_type: defaultSetting?.saturday_work_type || 'off',
-    }
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    work_start_time: '08:00',
+    work_end_time: '17:00',
+    break_start_time: '12:00',
+    break_end_time: '13:00',
+    late_threshold_minutes: 15,
+    early_leave_threshold_minutes: 15,
+    overtime_start_after_minutes: 0,
+    require_gps_check: false,
+    gps_radius_meters: 100,
+    weekend_work_allowed: false,
+    early_checkin_allowed_minutes: 15,
+    late_checkout_allowed_minutes: 15,
+    count_early_checkin_as_work: false,
+    count_late_checkout_as_work: true,
+    saturday_work_enabled: false,
+    saturday_work_type: 'off' as 'off' | 'full' | 'half_morning' | 'half_afternoon',
+    require_daily_start_checkin: true,
+    require_daily_end_checkout: true,
+    allow_multiple_checkins: false,
+    is_default: false,
+    created_by: ''
   });
 
-  const onSubmit = async (data: SettingsFormData) => {
-    setSaving(true);
-    try {
-      await createSetting.mutateAsync({
-        name: 'Cài đặt chấm công cập nhật',
-        description: 'Cài đặt được cập nhật từ giao diện quản lý',
-        ...data,
-        status: 'active',
-        is_default: true,
-        created_by: '00000000-0000-0000-0000-000000000000' // Should be current user ID
-      });
+  const handleEdit = (setting: any) => {
+    setEditingId(setting.id);
+    setFormData({
+      name: setting.name || '',
+      description: setting.description || '',
+      work_start_time: setting.work_start_time || '08:00',
+      work_end_time: setting.work_end_time || '17:00',
+      break_start_time: setting.break_start_time || '12:00',
+      break_end_time: setting.break_end_time || '13:00',
+      late_threshold_minutes: setting.late_threshold_minutes || 15,
+      early_leave_threshold_minutes: setting.early_leave_threshold_minutes || 15,
+      overtime_start_after_minutes: setting.overtime_start_after_minutes || 0,
+      require_gps_check: setting.require_gps_check || false,
+      gps_radius_meters: setting.gps_radius_meters || 100,
+      weekend_work_allowed: setting.weekend_work_allowed || false,
+      early_checkin_allowed_minutes: setting.early_checkin_allowed_minutes || 15,
+      late_checkout_allowed_minutes: setting.late_checkout_allowed_minutes || 15,
+      count_early_checkin_as_work: setting.count_early_checkin_as_work || false,
+      count_late_checkout_as_work: setting.count_late_checkout_as_work || true,
+      saturday_work_enabled: setting.saturday_work_enabled || false,
+      saturday_work_type: setting.saturday_work_type || 'off',
+      require_daily_start_checkin: setting.require_daily_start_checkin ?? true,
+      require_daily_end_checkout: setting.require_daily_end_checkout ?? true,
+      allow_multiple_checkins: setting.allow_multiple_checkins || false,
+      is_default: setting.is_default || false,
+      created_by: setting.created_by || ''
+    });
+  };
 
-      toast({
-        title: 'Thành công',
-        description: 'Đã lưu cài đặt chấm công'
-      });
+  const handleSave = async () => {
+    try {
+      if (editingId) {
+        await updateSetting.mutateAsync({ id: editingId, data: formData });
+        toast({ title: 'Đã cập nhật cài đặt chấm công thành công' });
+      } else {
+        await createSetting.mutateAsync({
+          ...formData,
+          status: 'active',
+          created_by: '' // Should be set to current user ID
+        });
+        toast({ title: 'Đã tạo cài đặt chấm công thành công' });
+      }
+      
+      setEditingId(null);
+      resetForm();
     } catch (error) {
-      console.error('Error saving settings:', error);
-    } finally {
-      setSaving(false);
+      console.error('Error saving attendance setting:', error);
+      toast({
+        title: 'Có lỗi xảy ra',
+        description: 'Không thể lưu cài đặt. Vui lòng thử lại.',
+        variant: 'destructive'
+      });
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      work_start_time: '08:00',
+      work_end_time: '17:00',
+      break_start_time: '12:00',
+      break_end_time: '13:00',
+      late_threshold_minutes: 15,
+      early_leave_threshold_minutes: 15,
+      overtime_start_after_minutes: 0,
+      require_gps_check: false,
+      gps_radius_meters: 100,
+      weekend_work_allowed: false,
+      early_checkin_allowed_minutes: 15,
+      late_checkout_allowed_minutes: 15,
+      count_early_checkin_as_work: false,
+      count_late_checkout_as_work: true,
+      saturday_work_enabled: false,
+      saturday_work_type: 'off',
+      require_daily_start_checkin: true,
+      require_daily_end_checkout: true,
+      allow_multiple_checkins: false,
+      is_default: false,
+      created_by: ''
+    });
+  };
+
+  const handleCancel = () => {
+    setEditingId(null);
+    resetForm();
+  };
+
   if (isLoading) {
-    return <div className="flex justify-center p-8">Đang tải cài đặt...</div>;
+    return (
+      <div className="space-y-6">
+        <div className="h-8 bg-gray-200 rounded animate-pulse" />
+        <div className="h-96 bg-gray-200 rounded animate-pulse" />
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-semibold">Cài đặt máy chấm công</h2>
-        <p className="text-gray-600">Thiết lập cấu hình hệ thống chấm công</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-semibold">Cài đặt chấm công</h2>
+          <p className="text-gray-600">Quản lý các quy tắc và cài đặt chấm công</p>
+        </div>
+        <Button onClick={() => setEditingId('new')}>
+          <Settings className="h-4 w-4 mr-2" />
+          Tạo cài đặt mới
+        </Button>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+      {/* Form for Creating/Editing */}
+      {editingId && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {editingId === 'new' ? 'Tạo cài đặt chấm công mới' : 'Chỉnh sửa cài đặt chấm công'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Tên cài đặt *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Cài đặt chấm công văn phòng"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Cài đặt mặc định</Label>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={formData.is_default}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_default: checked }))}
+                    />
+                    <Label className="text-sm text-gray-600">
+                      Sử dụng làm cài đặt mặc định
+                    </Label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Mô tả</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Mô tả về cài đặt chấm công này"
+                  rows={3}
+                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Work Schedule */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
-                Cài đặt thời gian
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+                <h3 className="text-lg font-medium">Lịch làm việc</h3>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="work-start">Giờ bắt đầu làm việc</Label>
-                  <Input 
-                    id="work-start" 
-                    type="time" 
-                    {...register('work_start_time')}
+                  <Label htmlFor="work_start_time">Giờ vào làm</Label>
+                  <Input
+                    id="work_start_time"
+                    type="time"
+                    value={formData.work_start_time}
+                    onChange={(e) => setFormData(prev => ({ ...prev, work_start_time: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="work-end">Giờ kết thúc làm việc</Label>
-                  <Input 
-                    id="work-end" 
-                    type="time" 
-                    {...register('work_end_time')}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="break-start">Giờ bắt đầu nghỉ trưa</Label>
-                  <Input 
-                    id="break-start" 
-                    type="time" 
-                    {...register('break_start_time')}
+                  <Label htmlFor="work_end_time">Giờ tan làm</Label>
+                  <Input
+                    id="work_end_time"
+                    type="time"
+                    value={formData.work_end_time}
+                    onChange={(e) => setFormData(prev => ({ ...prev, work_end_time: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="break-end">Giờ kết thúc nghỉ trưa</Label>
-                  <Input 
-                    id="break-end" 
-                    type="time" 
-                    {...register('break_end_time')}
+                  <Label htmlFor="break_start_time">Giờ nghỉ trưa</Label>
+                  <Input
+                    id="break_start_time"
+                    type="time"
+                    value={formData.break_start_time}
+                    onChange={(e) => setFormData(prev => ({ ...prev, break_start_time: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="break_end_time">Hết nghỉ trưa</Label>
+                  <Input
+                    id="break_end_time"
+                    type="time"
+                    value={formData.break_end_time}
+                    onChange={(e) => setFormData(prev => ({ ...prev, break_end_time: e.target.value }))}
                   />
                 </div>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="late-threshold">Ngưỡng đi muộn (phút)</Label>
-                <Input 
-                  id="late-threshold" 
-                  type="number" 
-                  {...register('late_threshold_minutes', { valueAsNumber: true })}
-                />
+            <Separator />
+
+            {/* Flexible Check-in/out Settings */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                <h3 className="text-lg font-medium">Cài đặt chấm công linh hoạt</h3>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="early-leave">Ngưỡng về sớm (phút)</Label>
-                <Input 
-                  id="early-leave" 
-                  type="number" 
-                  {...register('early_leave_threshold_minutes', { valueAsNumber: true })}
-                />
-              </div>
-            </CardContent>
-          </Card>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="early_checkin">Cho phép check-in sớm (phút)</Label>
+                    <Input
+                      id="early_checkin"
+                      type="number"
+                      min="0"
+                      value={formData.early_checkin_allowed_minutes}
+                      onChange={(e) => setFormData(prev => ({ 
+                        ...prev, 
+                        early_checkin_allowed_minutes: parseInt(e.target.value) || 0 
+                      }))}
+                    />
+                  </div>
 
-          {/* New Advanced Time Settings Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Timer className="h-5 w-5" />
-                Cài đặt thời gian linh hoạt
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="early-checkin-allowed">Cho phép check-in sớm (phút)</Label>
-                <Input 
-                  id="early-checkin-allowed" 
-                  type="number" 
-                  {...register('early_checkin_allowed_minutes', { valueAsNumber: true })}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Tính thời gian check-in sớm vào giờ làm</Label>
-                  <p className="text-sm text-gray-600">Check-in sớm có được tính vào giờ làm việc</p>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={formData.count_early_checkin_as_work}
+                      onCheckedChange={(checked) => setFormData(prev => ({ 
+                        ...prev, 
+                        count_early_checkin_as_work: checked 
+                      }))}
+                    />
+                    <Label className="text-sm">
+                      Tính thời gian check-in sớm vào giờ làm việc
+                    </Label>
+                  </div>
                 </div>
-                <Switch 
-                  checked={watch('count_early_checkin_as_work')}
-                  onCheckedChange={(checked) => setValue('count_early_checkin_as_work', checked)}
-                />
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="late-checkout-allowed">Cho phép check-out muộn (phút)</Label>
-                <Input 
-                  id="late-checkout-allowed" 
-                  type="number" 
-                  {...register('late_checkout_allowed_minutes', { valueAsNumber: true })}
-                />
-              </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="late_checkout">Cho phép check-out muộn (phút)</Label>
+                    <Input
+                      id="late_checkout"
+                      type="number"
+                      min="0"
+                      value={formData.late_checkout_allowed_minutes}
+                      onChange={(e) => setFormData(prev => ({ 
+                        ...prev, 
+                        late_checkout_allowed_minutes: parseInt(e.target.value) || 0 
+                      }))}
+                    />
+                  </div>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Tính thời gian check-out muộn vào giờ làm</Label>
-                  <p className="text-sm text-gray-600">Check-out muộn có được tính vào giờ làm việc</p>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={formData.count_late_checkout_as_work}
+                      onCheckedChange={(checked) => setFormData(prev => ({ 
+                        ...prev, 
+                        count_late_checkout_as_work: checked 
+                      }))}
+                    />
+                    <Label className="text-sm">
+                      Tính thời gian check-out muộn vào giờ làm việc
+                    </Label>
+                  </div>
                 </div>
-                <Switch 
-                  checked={watch('count_late_checkout_as_work')}
-                  onCheckedChange={(checked) => setValue('count_late_checkout_as_work', checked)}
-                />
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Saturday Work Settings Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <Separator />
+
+            {/* Saturday Work Settings */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                Cài đặt thứ 7
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
+                <h3 className="text-lg font-medium">Cài đặt làm việc thứ 7</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={formData.saturday_work_enabled}
+                    onCheckedChange={(checked) => setFormData(prev => ({ 
+                      ...prev, 
+                      saturday_work_enabled: checked 
+                    }))}
+                  />
                   <Label>Cho phép làm việc thứ 7</Label>
-                  <p className="text-sm text-gray-600">Nhân viên có thể chấm công vào thứ 7</p>
                 </div>
-                <Switch 
-                  checked={watch('saturday_work_enabled')}
-                  onCheckedChange={(checked) => setValue('saturday_work_enabled', checked)}
-                />
-              </div>
 
-              {watch('saturday_work_enabled') && (
+                {formData.saturday_work_enabled && (
+                  <div className="space-y-2">
+                    <Label>Loại làm việc thứ 7</Label>
+                    <Select 
+                      value={formData.saturday_work_type} 
+                      onValueChange={(value: any) => setFormData(prev => ({ 
+                        ...prev, 
+                        saturday_work_type: value 
+                      }))}
+                    >
+                      <SelectTrigger className="w-full md:w-64">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="off">Không làm</SelectItem>
+                        <SelectItem value="full">Cả ngày</SelectItem>
+                        <SelectItem value="half_morning">Nửa ngày sáng</SelectItem>
+                        <SelectItem value="half_afternoon">Nửa ngày chiều</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Attendance Rules */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Quy tắc chấm công</h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label>Loại làm việc thứ 7 mặc định</Label>
-                  <Select 
-                    value={watch('saturday_work_type')} 
-                    onValueChange={(value: any) => setValue('saturday_work_type', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="off">Không làm</SelectItem>
-                      <SelectItem value="full">Làm cả ngày</SelectItem>
-                      <SelectItem value="half_morning">Nửa ngày sáng</SelectItem>
-                      <SelectItem value="half_afternoon">Nửa ngày chiều</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="late_threshold">Ngưỡng đi muộn (phút)</Label>
+                  <Input
+                    id="late_threshold"
+                    type="number"
+                    min="0"
+                    value={formData.late_threshold_minutes}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      late_threshold_minutes: parseInt(e.target.value) || 0 
+                    }))}
+                  />
                 </div>
-              )}
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Cài đặt GPS
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Yêu cầu kiểm tra GPS</Label>
-                  <p className="text-sm text-gray-600">Bắt buộc chấm công tại vị trí cho phép</p>
+                <div className="space-y-2">
+                  <Label htmlFor="early_leave_threshold">Ngưỡng về sớm (phút)</Label>
+                  <Input
+                    id="early_leave_threshold"
+                    type="number"
+                    min="0"
+                    value={formData.early_leave_threshold_minutes}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      early_leave_threshold_minutes: parseInt(e.target.value) || 0 
+                    }))}
+                  />
                 </div>
-                <Switch 
-                  checked={watch('require_gps_check')}
-                  onCheckedChange={(checked) => setValue('require_gps_check', checked)}
-                />
+
+                <div className="space-y-2">
+                  <Label htmlFor="overtime_start">Tăng ca sau (phút)</Label>
+                  <Input
+                    id="overtime_start"
+                    type="number"
+                    min="0"
+                    value={formData.overtime_start_after_minutes}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      overtime_start_after_minutes: parseInt(e.target.value) || 0 
+                    }))}
+                  />
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="gps-radius">Bán kính cho phép (mét)</Label>
-                <Input 
-                  id="gps-radius" 
-                  type="number" 
-                  {...register('gps_radius_meters', { valueAsNumber: true })}
-                />
-              </div>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={formData.require_daily_start_checkin}
+                    onCheckedChange={(checked) => setFormData(prev => ({ 
+                      ...prev, 
+                      require_daily_start_checkin: checked 
+                    }))}
+                  />
+                  <Label>Bắt buộc check-in hàng ngày</Label>
+                </div>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={formData.require_daily_end_checkout}
+                    onCheckedChange={(checked) => setFormData(prev => ({ 
+                      ...prev, 
+                      require_daily_end_checkout: checked 
+                    }))}
+                  />
+                  <Label>Bắt buộc check-out hàng ngày</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={formData.allow_multiple_checkins}
+                    onCheckedChange={(checked) => setFormData(prev => ({ 
+                      ...prev, 
+                      allow_multiple_checkins: checked 
+                    }))}
+                  />
+                  <Label>Cho phép check-in/out nhiều lần</Label>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={formData.weekend_work_allowed}
+                    onCheckedChange={(checked) => setFormData(prev => ({ 
+                      ...prev, 
+                      weekend_work_allowed: checked 
+                    }))}
+                  />
                   <Label>Cho phép làm việc cuối tuần</Label>
-                  <p className="text-sm text-gray-600">Nhân viên có thể chấm công vào T7, CN</p>
                 </div>
-                <Switch 
-                  checked={watch('weekend_work_allowed')}
-                  onCheckedChange={(checked) => setValue('weekend_work_allowed', checked)}
-                />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* GPS Settings */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                <h3 className="text-lg font-medium">Cài đặt GPS</h3>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Cho phép nhiều lần check-in</Label>
-                  <p className="text-sm text-gray-600">Nhân viên có thể check-in/out nhiều lần</p>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    checked={formData.require_gps_check}
+                    onCheckedChange={(checked) => setFormData(prev => ({ 
+                      ...prev, 
+                      require_gps_check: checked 
+                    }))}
+                  />
+                  <Label>Yêu cầu kiểm tra GPS khi chấm công</Label>
                 </div>
-                <Switch 
-                  checked={watch('allow_multiple_checkins')}
-                  onCheckedChange={(checked) => setValue('allow_multiple_checkins', checked)}
-                />
+
+                {formData.require_gps_check && (
+                  <div className="space-y-2">
+                    <Label htmlFor="gps_radius">Bán kính cho phép (mét)</Label>
+                    <Input
+                      id="gps_radius"
+                      type="number"
+                      min="1"
+                      value={formData.gps_radius_meters}
+                      onChange={(e) => setFormData(prev => ({ 
+                        ...prev, 
+                        gps_radius_meters: parseInt(e.target.value) || 100 
+                      }))}
+                      className="w-32"
+                    />
+                    <p className="text-sm text-gray-600">
+                      Nhân viên chỉ có thể chấm công trong bán kính này
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Form Actions */}
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <Button type="button" variant="outline" onClick={handleCancel}>
+                Hủy
+              </Button>
+              <Button 
+                onClick={handleSave}
+                disabled={createSetting.isPending || updateSetting.isPending}
+              >
+                {createSetting.isPending || updateSetting.isPending 
+                  ? 'Đang lưu...' 
+                  : (editingId === 'new' ? 'Tạo cài đặt' : 'Cập nhật')
+                }
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Existing Settings List */}
+      <div className="grid gap-4">
+        {settings?.map((setting) => (
+          <Card key={setting.id}>
+            <CardContent className="p-6">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-3">
+                    <h3 className="text-lg font-medium">{setting.name}</h3>
+                    {setting.is_default && (
+                      <Badge>Mặc định</Badge>
+                    )}
+                    <Badge variant="outline">{setting.status}</Badge>
+                  </div>
+
+                  {setting.description && (
+                    <p className="text-gray-600 mb-4">{setting.description}</p>
+                  )}
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium">Giờ làm việc:</span>
+                      <p>{setting.work_start_time} - {setting.work_end_time}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Ngưỡng muộn:</span>
+                      <p>{setting.late_threshold_minutes} phút</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">GPS:</span>
+                      <p>{setting.require_gps_check ? 'Bắt buộc' : 'Không'}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Thứ 7:</span>
+                      <p>{setting.saturday_work_enabled ? 'Cho phép' : 'Không'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(setting)}
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Chỉnh sửa
+                </Button>
               </div>
             </CardContent>
           </Card>
+        ))}
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Cài đặt khác
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="overtime-threshold">Tăng ca sau (phút)</Label>
-                <Input 
-                  id="overtime-threshold" 
-                  type="number" 
-                  {...register('overtime_start_after_minutes', { valueAsNumber: true })}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Yêu cầu check-in hàng ngày</Label>
-                  <p className="text-sm text-gray-600">Bắt buộc check-in mỗi ngày làm việc</p>
-                </div>
-                <Switch 
-                  checked={watch('require_daily_start_checkin')}
-                  onCheckedChange={(checked) => setValue('require_daily_start_checkin', checked)}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Yêu cầu check-out hàng ngày</Label>
-                  <p className="text-sm text-gray-600">Bắt buộc check-out khi kết thúc ngày</p>
-                </div>
-                <Switch 
-                  checked={watch('require_daily_end_checkout')}
-                  onCheckedChange={(checked) => setValue('require_daily_end_checkout', checked)}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="flex justify-end mt-6">
-          <Button type="submit" className="flex items-center gap-2" disabled={saving}>
-            <Save className="h-4 w-4" />
-            {saving ? 'Đang lưu...' : 'Lưu cài đặt'}
-          </Button>
-        </div>
-      </form>
+        {(!settings || settings.length === 0) && !editingId && (
+          <div className="text-center py-12 text-gray-500">
+            <Settings className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-medium">Chưa có cài đặt chấm công nào</p>
+            <p className="text-sm">Tạo cài đặt đầu tiên để bắt đầu</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
