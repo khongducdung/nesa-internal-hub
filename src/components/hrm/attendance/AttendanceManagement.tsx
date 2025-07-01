@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Clock, Users, Calendar, FileText, Settings, Building2 } from 'lucide-react';
@@ -11,11 +10,11 @@ export function AttendanceManagement() {
   const currentEmployeeId = '00000000-0000-0000-0000-000000000000';
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Section với gradient đồng bộ */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-purple-50">
+      {/* Header Section - Only background styling updated */}
       <div className="bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 p-8 rounded-2xl mx-6 mt-6 shadow-lg">
         <div className="relative">
-          {/* Greeting và Welcome Message */}
+          {/* Keep existing greeting and content */}
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
               <Clock className="h-5 w-5 text-blue-200" />
@@ -37,7 +36,7 @@ export function AttendanceManagement() {
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Keep existing action buttons */}
           <div className="flex items-center gap-3 mb-8">
             <button className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-lg border border-white/30 transition-all duration-200">
               <span>✓</span>
@@ -52,7 +51,7 @@ export function AttendanceManagement() {
             </button>
           </div>
 
-          {/* Quick Stats - Updated styling */}
+          {/* Keep existing quick stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-white/15 backdrop-blur-sm rounded-xl p-4 border border-white/20 hover:bg-white/20 transition-all duration-200">
               <div className="flex items-center justify-between">
@@ -94,53 +93,55 @@ export function AttendanceManagement() {
         </div>
       </div>
 
-      {/* Main Content - Simple 3 Tab Layout */}
+      {/* Main Content with white background */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <Tabs defaultValue="checkin" className="w-full">
-          {/* Simple 3 Tab Navigation */}
-          <div className="mb-8">
-            <TabsList className="grid grid-cols-3 w-full h-14 bg-white border border-gray-200 p-1 rounded-xl shadow-sm">
-              <TabsTrigger 
-                value="checkin" 
-                className="h-12 rounded-lg text-sm font-medium data-[state=active]:bg-[#2563EB] data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
-              >
-                <Clock className="h-4 w-4 mr-2" />
-                Chấm công
-              </TabsTrigger>
-              
-              <TabsTrigger 
-                value="shifts"
-                className="h-12 rounded-lg text-sm font-medium data-[state=active]:bg-[#2563EB] data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Quản lý ca
-              </TabsTrigger>
-              
-              <TabsTrigger 
-                value="reports"
-                className="h-12 rounded-lg text-sm font-medium data-[state=active]:bg-[#2563EB] data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Báo cáo
-              </TabsTrigger>
-            </TabsList>
-          </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <Tabs defaultValue="checkin" className="w-full">
+            {/* Keep existing 3 tab navigation */}
+            <div className="mb-8">
+              <TabsList className="grid grid-cols-3 w-full h-14 bg-gray-50 border border-gray-200 p-1 rounded-xl shadow-sm">
+                <TabsTrigger 
+                  value="checkin" 
+                  className="h-12 rounded-lg text-sm font-medium data-[state=active]:bg-[#2563EB] data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+                >
+                  <Clock className="h-4 w-4 mr-2" />
+                  Chấm công
+                </TabsTrigger>
+                
+                <TabsTrigger 
+                  value="shifts"
+                  className="h-12 rounded-lg text-sm font-medium data-[state=active]:bg-[#2563EB] data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Quản lý ca
+                </TabsTrigger>
+                
+                <TabsTrigger 
+                  value="reports"
+                  className="h-12 rounded-lg text-sm font-medium data-[state=active]:bg-[#2563EB] data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Báo cáo
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-          {/* Tab Contents */}
-          <div className="space-y-6">
-            <TabsContent value="checkin" className="m-0">
-              <CheckInOutInterface employeeId={currentEmployeeId} />
-            </TabsContent>
+            {/* Keep existing tab contents */}
+            <div className="space-y-6">
+              <TabsContent value="checkin" className="m-0">
+                <CheckInOutInterface employeeId={currentEmployeeId} />
+              </TabsContent>
 
-            <TabsContent value="shifts" className="m-0">
-              <ShiftManagement />
-            </TabsContent>
+              <TabsContent value="shifts" className="m-0">
+                <ShiftManagement />
+              </TabsContent>
 
-            <TabsContent value="reports" className="m-0">
-              <AttendanceReports />
-            </TabsContent>
-          </div>
-        </Tabs>
+              <TabsContent value="reports" className="m-0">
+                <AttendanceReports />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
       </div>
     </div>
   );
