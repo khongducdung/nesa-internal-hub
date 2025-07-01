@@ -13,6 +13,7 @@ import {
 import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
 import { useCompanyPolicies } from '@/hooks/useCompanyPolicies';
+import { formatNumber } from '@/utils/formatters';
 
 export default function HRM() {
   const { data: employees } = useEmployees();
@@ -28,15 +29,15 @@ export default function HRM() {
   const hrStats = [
     {
       title: 'Tổng nhân viên',
-      value: totalEmployees.toString(),
+      value: formatNumber(totalEmployees),
       icon: Users,
       color: 'from-blue-500 to-blue-600',
-      change: `${activeEmployees}/${totalEmployees} đang làm việc`,
+      change: `${formatNumber(activeEmployees)}/${formatNumber(totalEmployees)} đang làm việc`,
       changeType: 'neutral'
     },
     {
       title: 'Phòng ban',
-      value: totalDepartments.toString(),
+      value: formatNumber(totalDepartments),
       icon: Building2,
       color: 'from-green-500 to-green-600',
       change: 'Đang hoạt động',
@@ -44,7 +45,7 @@ export default function HRM() {
     },
     {
       title: 'Nhân viên hoạt động',
-      value: activeEmployees.toString(),
+      value: formatNumber(activeEmployees),
       icon: UserCheck,
       color: 'from-purple-500 to-purple-600',
       change: 'Đang làm việc',
@@ -52,7 +53,7 @@ export default function HRM() {
     },
     {
       title: 'Quy định hiệu lực',
-      value: activePolicies.toString(),
+      value: formatNumber(activePolicies),
       icon: FileText,
       color: 'from-orange-500 to-orange-600',
       change: 'Đang áp dụng',

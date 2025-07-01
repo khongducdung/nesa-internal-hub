@@ -7,7 +7,8 @@ export const formatDate = (dateString: string | null | undefined): string => {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return '';
   
-  return date.toLocaleDateString('vi-VN', {
+  // Format theo dd/mm/yyyy
+  return date.toLocaleDateString('en-GB', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'
@@ -20,7 +21,8 @@ export const formatDateTime = (dateString: string | null | undefined): string =>
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return '';
   
-  return date.toLocaleString('vi-VN', {
+  // Format theo dd/mm/yyyy HH:mm
+  return date.toLocaleString('en-GB', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -33,7 +35,8 @@ export const formatDateTime = (dateString: string | null | undefined): string =>
 export const formatCurrency = (amount: number | null | undefined): string => {
   if (amount === null || amount === undefined || isNaN(amount)) return '0';
   
-  return new Intl.NumberFormat('vi-VN', {
+  // Sử dụng định dạng với dấu phẩy ngăn cách hàng nghìn
+  return new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(amount);
@@ -42,7 +45,8 @@ export const formatCurrency = (amount: number | null | undefined): string => {
 export const formatNumber = (value: number | null | undefined): string => {
   if (value === null || value === undefined || isNaN(value)) return '0';
   
-  return new Intl.NumberFormat('vi-VN', {
+  // Sử dụng định dạng với dấu phẩy ngăn cách hàng nghìn
+  return new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2
   }).format(value);
@@ -54,7 +58,7 @@ export const formatTime = (timeString: string | null | undefined): string => {
   const date = new Date(timeString);
   if (isNaN(date.getTime())) return '';
   
-  return date.toLocaleTimeString('vi-VN', {
+  return date.toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false

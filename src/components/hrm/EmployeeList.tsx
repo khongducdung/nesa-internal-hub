@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -70,7 +71,7 @@ export function EmployeeList() {
   const filteredEmployees = employees?.filter(employee =>
     employee.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     employee.employee_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    employee.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (employee.phone && employee.phone.toLowerCase().includes(searchQuery.toLowerCase())) ||
     employee.departments?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     employee.positions?.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -110,7 +111,7 @@ export function EmployeeList() {
               <TableRow>
                 <TableHead>Mã NV</TableHead>
                 <TableHead>Họ tên</TableHead>
-                <TableHead>Email</TableHead>
+                <TableHead>Số điện thoại</TableHead>
                 <TableHead>Phòng ban</TableHead>
                 <TableHead>Chức vụ</TableHead>
                 <TableHead>Cấp bậc</TableHead>
@@ -123,7 +124,7 @@ export function EmployeeList() {
                 <TableRow key={employee.id}>
                   <TableCell className="font-medium">{employee.employee_code}</TableCell>
                   <TableCell>{employee.full_name}</TableCell>
-                  <TableCell>{employee.email}</TableCell>
+                  <TableCell>{employee.phone || 'N/A'}</TableCell>
                   <TableCell>{employee.departments?.name || 'N/A'}</TableCell>
                   <TableCell>{employee.positions?.name || 'N/A'}</TableCell>
                   <TableCell>{getLevelBadge(employee.employee_level || 'level_3')}</TableCell>
