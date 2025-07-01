@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { MapPin, Plus, Edit, Trash2, Navigation, Globe } from 'lucide-react';
+import { MapPin, Edit, Trash2, Navigation, Globe } from 'lucide-react';
 import { useAttendanceLocations } from '@/hooks/useAttendanceLocations';
 import { useAttendanceLocationMutations } from '@/hooks/useAttendanceLocationMutations';
 import { useToast } from '@/hooks/use-toast';
@@ -24,7 +24,6 @@ export function GPSLocationManager() {
   const { createLocation, updateLocation, deleteLocation } = useAttendanceLocationMutations();
   const { toast } = useToast();
 
-  const [showForm, setShowForm] = useState(false);
   const [editingLocation, setEditingLocation] = useState<string | null>(null);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [formData, setFormData] = useState<LocationForm>({
@@ -104,7 +103,6 @@ export function GPSLocationManager() {
         await createLocation.mutateAsync(locationData);
       }
       
-      setShowForm(false);
       setEditingLocation(null);
       setFormData({
         name: '',
@@ -127,7 +125,17 @@ export function GPSLocationManager() {
       radius_meters: location.radius_meters
     });
     setEditingLocation(location.id);
-    setShowForm(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingLocation(null);
+    setFormData({
+      name: '',
+      address: '',
+      latitude: '',
+      longitude: '',
+      radius_meters: 100
+    });
   };
 
   const handleDelete = async (id: string) => {
@@ -140,192 +148,170 @@ export function GPSLocationManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold">Quản lý địa điểm chấm công GPS</h3>
-          <p className="text-sm text-gray-600">Thiết lập các vị trí được phép chấm công</p>
-        </div>
-        <Button onClick={() => setShowForm(true)} disabled={showForm}>
-          <Plus className="h-4 w-4 mr-2" />
-          Thêm địa điểm
-        </Button>
-      </div>
-
-      {/* Form thêm/sửa địa điểm */}
-      {showForm && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {editingLocation ? 'Chỉnh sửa địa điểm' : 'Thêm địa điểm mới'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Tên địa điểm *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Văn phòng chính, Chi nhánh..."
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="radius">Bán kính chấm công (mét)</Label>
-                  <Input
-                    id="radius"
-                    type="number"
-                    value={formData.radius_meters}
-                    onChange={(e) => setFormData(prev => ({ ...prev, radius_meters: Number(e.target.value) }))}
-                    min="10"
-                    max="1000"
-                  />
-                </div>
-              </div>
-
+      {/* Form thêm/sửa địa điểm - luôn hiển thị */}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {editingLocation ? 'Chỉnh sửa địa điểm' : 'Thêm địa điểm mới'}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="address">Địa chỉ</Label>
+                <Label htmlFor="name">Tên địa điểm *</Label>
                 <Input
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                  placeholder="Địa chỉ chi tiết"
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Văn phòng chính, Chi nhánh..."
+                  required
                 />
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="latitude">Vĩ độ (Latitude) *</Label>
-                  <Input
-                    id="latitude"
-                    type="number"
-                    step="any"
-                    value={formData.latitude}
-                    onChange={(e) => setFormData(prev => ({ ...prev, latitude: e.target.value ? Number(e.target.value) : '' }))}
-                    placeholder="21.0285"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="longitude">Kinh độ (Longitude) *</Label>
-                  <Input
-                    id="longitude"
-                    type="number"
-                    step="any"
-                    value={formData.longitude}
-                    onChange={(e) => setFormData(prev => ({ ...prev, longitude: e.target.value ? Number(e.target.value) : '' }))}
-                    placeholder="105.8542"
-                    required
-                  />
-                </div>
+              <div>
+                <Label htmlFor="radius">Bán kính chấm công (mét)</Label>
+                <Input
+                  id="radius"
+                  type="number"
+                  value={formData.radius_meters}
+                  onChange={(e) => setFormData(prev => ({ ...prev, radius_meters: Number(e.target.value) }))}
+                  min="10"
+                  max="1000"
+                />
               </div>
+            </div>
 
-              <div className="flex gap-2 flex-wrap">
-                <Button type="button" variant="outline" onClick={handleGetCurrentLocation}>
-                  <Navigation className="h-4 w-4 mr-2" />
-                  Lấy vị trí hiện tại
-                </Button>
-                <Button type="button" variant="outline" onClick={handleOpenGoogleMaps}>
-                  <Globe className="h-4 w-4 mr-2" />
-                  Mở Google Maps
-                </Button>
+            <div>
+              <Label htmlFor="address">Địa chỉ</Label>
+              <Input
+                id="address"
+                value={formData.address}
+                onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                placeholder="Địa chỉ chi tiết"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="latitude">Vĩ độ (Latitude) *</Label>
+                <Input
+                  id="latitude"
+                  type="number"
+                  step="any"
+                  value={formData.latitude}
+                  onChange={(e) => setFormData(prev => ({ ...prev, latitude: e.target.value ? Number(e.target.value) : '' }))}
+                  placeholder="21.0285"
+                  required
+                />
               </div>
+              <div>
+                <Label htmlFor="longitude">Kinh độ (Longitude) *</Label>
+                <Input
+                  id="longitude"
+                  type="number"
+                  step="any"
+                  value={formData.longitude}
+                  onChange={(e) => setFormData(prev => ({ ...prev, longitude: e.target.value ? Number(e.target.value) : '' }))}
+                  placeholder="105.8542"
+                  required
+                />
+              </div>
+            </div>
 
-              <div className="flex gap-2">
-                <Button type="submit" disabled={createLocation.isPending || updateLocation.isPending}>
-                  {editingLocation ? 'Cập nhật' : 'Thêm địa điểm'}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingLocation(null);
-                    setFormData({
-                      name: '',
-                      address: '',
-                      latitude: '',
-                      longitude: '',
-                      radius_meters: 100
-                    });
-                  }}
-                >
+            <div className="flex gap-2 flex-wrap">
+              <Button type="button" variant="outline" onClick={handleGetCurrentLocation}>
+                <Navigation className="h-4 w-4 mr-2" />
+                Lấy vị trí hiện tại
+              </Button>
+              <Button type="button" variant="outline" onClick={handleOpenGoogleMaps}>
+                <Globe className="h-4 w-4 mr-2" />
+                Mở Google Maps
+              </Button>
+            </div>
+
+            <div className="flex gap-2">
+              <Button type="submit" disabled={createLocation.isPending || updateLocation.isPending}>
+                {editingLocation ? 'Cập nhật' : 'Thêm địa điểm'}
+              </Button>
+              {editingLocation && (
+                <Button type="button" variant="outline" onClick={handleCancelEdit}>
                   Hủy
                 </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
+              )}
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
       {/* Danh sách địa điểm */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {locations?.map((location) => (
-          <Card key={location.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-blue-600" />
-                  <h4 className="font-medium">{location.name}</h4>
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Danh sách địa điểm</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {locations?.map((location) => (
+            <Card key={location.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-blue-600" />
+                    <h4 className="font-medium">{location.name}</h4>
+                  </div>
+                  <Badge variant="secondary">{location.radius_meters}m</Badge>
                 </div>
-                <Badge variant="secondary">{location.radius_meters}m</Badge>
-              </div>
 
-              {location.address && (
-                <p className="text-sm text-gray-600 mb-2">{location.address}</p>
-              )}
+                {location.address && (
+                  <p className="text-sm text-gray-600 mb-2">{location.address}</p>
+                )}
 
-              <div className="text-xs text-gray-500 mb-3">
-                <div>Lat: {location.latitude}</div>
-                <div>Lng: {location.longitude}</div>
-              </div>
+                <div className="text-xs text-gray-500 mb-3">
+                  <div>Lat: {location.latitude}</div>
+                  <div>Lng: {location.longitude}</div>
+                </div>
 
-              <div className="flex gap-2">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => handleEdit(location)}
-                >
-                  <Edit className="h-3 w-3" />
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Bạn có chắc muốn xóa địa điểm "{location.name}"?
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Hủy</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => handleDelete(location.id)}
-                        className="bg-red-600 hover:bg-red-700"
-                      >
-                        Xóa
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleEdit(location)}
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Bạn có chắc muốn xóa địa điểm "{location.name}"?
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Hủy</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDelete(location.id)}
+                          className="bg-red-600 hover:bg-red-700"
+                        >
+                          Xóa
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
 
-        {(!locations || locations.length === 0) && (
-          <div className="col-span-full text-center py-8 text-gray-500">
-            <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Chưa có địa điểm chấm công nào</p>
-            <p className="text-sm">Nhấn "Thêm địa điểm" để bắt đầu</p>
-          </div>
-        )}
+          {(!locations || locations.length === 0) && (
+            <div className="col-span-full text-center py-8 text-gray-500">
+              <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Chưa có địa điểm chấm công nào</p>
+              <p className="text-sm">Điền form trên để thêm địa điểm đầu tiên</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
