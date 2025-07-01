@@ -3,17 +3,30 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, MapPin, Calendar, User, AlertCircle } from 'lucide-react';
+import { Clock, MapPin, Calendar, User, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
+import { useAttendance, useAttendanceMutations } from '@/hooks/useAttendance';
 
 export function CheckInOutInterface() {
   const { profile } = useAuth();
   const { toast } = useToast();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [isCheckedIn, setIsCheckedIn] = useState(false);
-  const [todayAttendance, setTodayAttendance] = useState<any>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+
+  // Get today's attendance for current user
+  const today = new Date().toISOString().split('T')[0];
+  const { data: attendanceRecords } = useAttendance(
+    profile?.employee_id, 
+    today, 
+    today
+  );
+  const { checkIn, checkOut } = useAttendanceMutations();
+
+  const todayAttendance = attendanceRecords?.[0];
+  const isCheckedIn = todayAttendance?.check_in_time && !todayAttendance?.check_out_time;
+  const isCompleted = todayAttendance?.check_in_time && todayAttendance?.check_out_time;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -24,7 +37,6 @@ export function CheckInOutInterface() {
   }, []);
 
   useEffect(() => {
-    // Get current location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -32,16 +44,15 @@ export function CheckInOutInterface() {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           });
+          setLocationError(null);
         },
         (error) => {
           console.error('Error getting location:', error);
-          toast({
-            title: 'Không thể lấy vị trí',
-            description: 'Vui lòng cho phép truy cập vị trí để chấm công',
-            variant: 'destructive'
-          });
+          setLocationError('Không thể lấy vị trí. Vui lòng cho phép truy cập vị trí.');
         }
       );
+    } else {
+      setLocationError('Trình duyệt không hỗ trợ định vị GPS.');
     }
   }, []);
 
@@ -55,38 +66,72 @@ export function CheckInOutInterface() {
       return;
     }
 
-    try {
-      // Implement check-in logic here
-      setIsCheckedIn(true);
+    if (!profile?.employee_id) {
       toast({
-        title: 'Check-in thành công',
-        description: `Đã chấm công vào lúc ${currentTime.toLocaleTimeString()}`
-      });
-    } catch (error) {
-      toast({
-        title: 'Lỗi check-in',
-        description: 'Không thể thực hiện check-in. Vui lòng thử lại.',
+        title: 'Lỗi thông tin nhân viên',
+        description: 'Không tìm thấy thông tin nhân viên',
         variant: 'destructive'
       });
+      return;
+    }
+
+    try {
+      await checkIn.mutateAsync({
+        employee_id: profile.employee_id,
+        date: today,
+        check_in_time: new Date().toISOString(),
+        check_in_latitude: location.lat,
+        check_in_longitude: location.lng
+      });
+    } catch (error) {
+      console.error('Check-in error:', error);
     }
   };
 
   const handleCheckOut = async () => {
-    try {
-      // Implement check-out logic here
-      setIsCheckedIn(false);
-      toast({
-        title: 'Check-out thành công',
-        description: `Đã chấm công ra lúc ${currentTime.toLocaleTimeString()}`
-      });
-    } catch (error) {
+    if (!todayAttendance?.id) {
       toast({
         title: 'Lỗi check-out',
-        description: 'Không thể thực hiện check-out. Vui lòng thử lại.',
+        description: 'Không tìm thấy thông tin check-in',
         variant: 'destructive'
       });
+      return;
+    }
+
+    try {
+      await checkOut.mutateAsync({
+        id: todayAttendance.id,
+        check_out_time: new Date().toISOString(),
+        check_out_latitude: location?.lat,
+        check_out_longitude: location?.lng
+      });
+    } catch (error) {
+      console.error('Check-out error:', error);
     }
   };
+
+  const calculateWorkHours = () => {
+    if (!todayAttendance?.check_in_time) return '-- giờ';
+    
+    const checkInTime = new Date(todayAttendance.check_in_time);
+    const checkOutTime = todayAttendance.check_out_time 
+      ? new Date(todayAttendance.check_out_time)
+      : new Date();
+    
+    const diffMs = checkOutTime.getTime() - checkInTime.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return `${diffHours}:${diffMinutes.toString().padStart(2, '0')} giờ`;
+  };
+
+  const getAttendanceStatus = () => {
+    if (isCompleted) return { label: 'Hoàn thành', variant: 'default' as const };
+    if (isCheckedIn) return { label: 'Đang làm việc', variant: 'secondary' as const };
+    return { label: 'Chưa check-in', variant: 'outline' as const };
+  };
+
+  const status = getAttendanceStatus();
 
   return (
     <div className="space-y-6">
@@ -95,7 +140,7 @@ export function CheckInOutInterface() {
         <CardContent className="p-6">
           <div className="text-center">
             <div className="text-4xl font-bold text-gray-900 mb-2">
-              {currentTime.toLocaleTimeString()}
+              {currentTime.toLocaleTimeString('vi-VN')}
             </div>
             <div className="text-lg text-gray-600">
               {currentTime.toLocaleDateString('vi-VN', { 
@@ -121,8 +166,8 @@ export function CheckInOutInterface() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Trạng thái:</span>
-              <Badge variant={isCheckedIn ? "default" : "secondary"}>
-                {isCheckedIn ? 'Đã check-in' : 'Chưa check-in'}
+              <Badge variant={status.variant}>
+                {status.label}
               </Badge>
             </div>
 
@@ -137,31 +182,37 @@ export function CheckInOutInterface() {
             </div>
 
             <div className="space-y-2">
-              {!isCheckedIn ? (
+              {!isCheckedIn && !isCompleted ? (
                 <Button 
                   onClick={handleCheckIn} 
                   className="w-full"
-                  disabled={!location}
+                  disabled={!location || checkIn.isPending}
                 >
                   <Clock className="h-4 w-4 mr-2" />
-                  Check-in
+                  {checkIn.isPending ? 'Đang check-in...' : 'Check-in'}
                 </Button>
-              ) : (
+              ) : isCheckedIn ? (
                 <Button 
                   onClick={handleCheckOut} 
                   variant="outline"
                   className="w-full"
+                  disabled={checkOut.isPending}
                 >
                   <Clock className="h-4 w-4 mr-2" />
-                  Check-out
+                  {checkOut.isPending ? 'Đang check-out...' : 'Check-out'}
                 </Button>
+              ) : (
+                <div className="flex items-center justify-center gap-2 text-green-600 p-3 bg-green-50 rounded-lg">
+                  <CheckCircle className="h-5 w-5" />
+                  <span>Đã hoàn thành ca làm việc hôm nay</span>
+                </div>
               )}
             </div>
 
-            {!location && (
+            {locationError && (
               <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
                 <AlertCircle className="h-4 w-4" />
-                <span>Cần cho phép truy cập vị trí để chấm công</span>
+                <span>{locationError}</span>
               </div>
             )}
           </CardContent>
@@ -179,20 +230,38 @@ export function CheckInOutInterface() {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <div className="text-gray-600">Check-in</div>
-                <div className="font-medium">--:--</div>
+                <div className="font-medium">
+                  {todayAttendance?.check_in_time 
+                    ? new Date(todayAttendance.check_in_time).toLocaleTimeString('vi-VN', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })
+                    : '--:--'
+                  }
+                </div>
               </div>
               <div>
                 <div className="text-gray-600">Check-out</div>
-                <div className="font-medium">--:--</div>
+                <div className="font-medium">
+                  {todayAttendance?.check_out_time 
+                    ? new Date(todayAttendance.check_out_time).toLocaleTimeString('vi-VN', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })
+                    : '--:--'
+                  }
+                </div>
               </div>
               <div>
                 <div className="text-gray-600">Giờ làm việc</div>
-                <div className="font-medium">-- giờ</div>
+                <div className="font-medium">{calculateWorkHours()}</div>
               </div>
               <div>
                 <div className="text-gray-600">Trạng thái</div>
                 <div className="font-medium">
-                  <Badge variant="secondary">Chưa hoàn thành</Badge>
+                  <Badge variant={status.variant} className="text-xs">
+                    {status.label}
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -206,10 +275,39 @@ export function CheckInOutInterface() {
           <CardTitle>Lịch sử chấm công gần đây</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-gray-500">
-            <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Chưa có dữ liệu chấm công</p>
-          </div>
+          {attendanceRecords && attendanceRecords.length > 0 ? (
+            <div className="space-y-3">
+              {attendanceRecords.slice(0, 5).map((record) => (
+                <div key={record.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <div className="font-medium">
+                        {new Date(record.date).toLocaleDateString('vi-VN')}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {record.check_in_time && new Date(record.check_in_time).toLocaleTimeString('vi-VN', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })} - {record.check_out_time ? new Date(record.check_out_time).toLocaleTimeString('vi-VN', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        }) : 'Chưa check-out'}
+                      </div>
+                    </div>
+                  </div>
+                  <Badge variant={record.check_out_time ? "default" : "secondary"}>
+                    {record.check_out_time ? "Hoàn thành" : "Đang làm"}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Chưa có dữ liệu chấm công</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

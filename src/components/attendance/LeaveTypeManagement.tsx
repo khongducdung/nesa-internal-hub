@@ -2,10 +2,36 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Calendar, Clock } from 'lucide-react';
+import { Plus, Calendar, Clock, Edit, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useLeaveTypes, useLeaveTypeMutations } from '@/hooks/useLeaveTypes';
+import { LeaveTypeDialog } from './LeaveTypeDialog';
 
 export function LeaveTypeManagement() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingId, setEditingId] = useState<string | undefined>();
+  const { data: leaveTypes, isLoading } = useLeaveTypes();
+  const { deleteLeaveType } = useLeaveTypeMutations();
+
+  const handleEdit = (id: string) => {
+    setEditingId(id);
+    setShowCreateDialog(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm('Bạn có chắc chắn muốn xóa loại nghỉ này?')) {
+      await deleteLeaveType.mutateAsync(id);
+    }
+  };
+
+  const handleCloseDialog = () => {
+    setShowCreateDialog(false);
+    setEditingId(undefined);
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center p-8">Đang tải...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -21,87 +47,68 @@ export function LeaveTypeManagement() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-green-100 p-3 rounded-lg">
-                <Calendar className="h-6 w-6 text-green-600" />
+        {leaveTypes?.map((leaveType) => (
+          <Card key={leaveType.id}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div 
+                  className="w-12 h-12 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: `${leaveType.color}20` }}
+                >
+                  <Calendar 
+                    className="h-6 w-6" 
+                    style={{ color: leaveType.color }}
+                  />
+                </div>
+                <div className="flex gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleEdit(leaveType.id)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleDelete(leaveType.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-            </div>
-            <h3 className="font-semibold text-lg mb-2">Nghỉ phép năm</h3>
-            <p className="text-gray-600 text-sm mb-4">Nghỉ phép có lương theo quy định</p>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Có lương:</span>
-                <span className="text-green-600 font-medium">Có</span>
+              
+              <h3 className="font-semibold text-lg mb-2">{leaveType.name}</h3>
+              <p className="text-gray-600 text-sm mb-4">{leaveType.description}</p>
+              
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span>Có lương:</span>
+                  <Badge variant={leaveType.is_paid ? "default" : "secondary"}>
+                    {leaveType.is_paid ? 'Có' : 'Không'}
+                  </Badge>
+                </div>
+                <div className="flex justify-between">
+                  <span>Tối đa/năm:</span>
+                  <span className="font-medium">{leaveType.max_days_per_year} ngày</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Cần phê duyệt:</span>
+                  <Badge variant={leaveType.requires_approval ? "outline" : "secondary"}>
+                    {leaveType.requires_approval ? 'Có' : 'Không'}
+                  </Badge>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span>Tối đa/năm:</span>
-                <span className="font-medium">12 ngày</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Cần phê duyệt:</span>
-                <span className="text-yellow-600 font-medium">Có</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-yellow-100 p-3 rounded-lg">
-                <Clock className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div className="w-4 h-4 bg-yellow-500 rounded-full"></div>
-            </div>
-            <h3 className="font-semibold text-lg mb-2">Nghỉ ốm</h3>
-            <p className="text-gray-600 text-sm mb-4">Nghỉ ốm có lương</p>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Có lương:</span>
-                <span className="text-green-600 font-medium">Có</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Tối đa/năm:</span>
-                <span className="font-medium">30 ngày</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Cần phê duyệt:</span>
-                <span className="text-yellow-600 font-medium">Có</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="bg-red-100 p-3 rounded-lg">
-                <Calendar className="h-6 w-6 text-red-600" />
-              </div>
-              <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-            </div>
-            <h3 className="font-semibold text-lg mb-2">Nghỉ không lương</h3>
-            <p className="text-gray-600 text-sm mb-4">Nghỉ không được trả lương</p>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Có lương:</span>
-                <span className="text-red-600 font-medium">Không</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Tối đa/năm:</span>
-                <span className="font-medium">Không giới hạn</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Cần phê duyệt:</span>
-                <span className="text-yellow-600 font-medium">Có</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+
+      <LeaveTypeDialog
+        open={showCreateDialog}
+        onClose={handleCloseDialog}
+        leaveTypeId={editingId}
+      />
     </div>
   );
 }
