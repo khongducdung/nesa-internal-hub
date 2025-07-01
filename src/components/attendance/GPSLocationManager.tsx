@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { MapPin, Edit, Trash2, Navigation, Globe } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { MapPin, Edit, Trash2, Navigation, Globe, AlertCircle, CheckCircle, ExternalLink } from 'lucide-react';
 import { useAttendanceLocations } from '@/hooks/useAttendanceLocations';
 import { useAttendanceLocationMutations } from '@/hooks/useAttendanceLocationMutations';
 import { useToast } from '@/hooks/use-toast';
@@ -33,23 +34,41 @@ interface GoogleMapsProps {
   apiKey: string;
 }
 
+// API Key validation helper
+const validateApiKey = (key: string): boolean => {
+  if (!key || key.trim().length === 0) return false;
+  // Basic Google API key format validation
+  const apiKeyRegex = /^AIza[0-9A-Za-z-_]{35}$/;
+  return apiKeyRegex.test(key.trim());
+};
+
 function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: GoogleMapsProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.Marker | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadRetryCount, setLoadRetryCount] = useState(0);
 
   const initializeMap = useCallback(() => {
-    console.log('Initializing map...');
-    if (!mapRef.current || !window.google) {
-      console.error('Map container or Google Maps not available');
+    console.log('🗺️ Initializing Google Maps...');
+    
+    if (!mapRef.current) {
+      console.error('❌ Map container not found');
+      setLoadError('Container bản đồ không tồn tại');
+      return;
+    }
+
+    if (!window.google?.maps) {
+      console.error('❌ Google Maps API not loaded');
+      setLoadError('Google Maps API chưa được tải');
       return;
     }
 
     try {
       const defaultCenter = selectedLocation || { lat: 21.0285, lng: 105.8542 }; // Hanoi default
-      console.log('Creating map with center:', defaultCenter);
+      console.log('📍 Creating map with center:', defaultCenter);
 
       mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
         center: defaultCenter,
@@ -57,28 +76,38 @@ function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: Goog
         mapTypeControl: true,
         streetViewControl: true,
         fullscreenControl: true,
+        zoomControl: true,
+        mapTypeId: 'roadmap'
       });
 
-      console.log('Map created successfully');
+      console.log('✅ Map created successfully');
 
-      // Add click listener to map
-      mapInstanceRef.current.addListener('click', (event: google.maps.MapMouseEvent) => {
-        console.log('Map clicked:', event.latLng?.lat(), event.latLng?.lng());
-        const lat = event.latLng?.lat();
-        const lng = event.latLng?.lng();
-        
-        if (lat && lng) {
-          updateMarkerPosition(lat, lng);
-          // Get address using Geocoding
-          const geocoder = new window.google.maps.Geocoder();
-          geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-            let address = '';
-            if (status === 'OK' && results?.[0]) {
-              address = results[0].formatted_address;
-              console.log('Address found:', address);
-            }
-            onLocationSelect(lat, lng, address);
-          });
+      // Add click listener with error handling
+      const clickListener = mapInstanceRef.current.addListener('click', (event: google.maps.MapMouseEvent) => {
+        try {
+          console.log('🖱️ Map clicked:', event.latLng?.lat(), event.latLng?.lng());
+          const lat = event.latLng?.lat();
+          const lng = event.latLng?.lng();
+          
+          if (lat && lng) {
+            updateMarkerPosition(lat, lng);
+            
+            // Get address using Geocoding with error handling
+            const geocoder = new window.google.maps.Geocoder();
+            geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+              let address = '';
+              if (status === 'OK' && results?.[0]) {
+                address = results[0].formatted_address;
+                console.log('📍 Address found:', address);
+              } else {
+                console.warn('⚠️ Geocoding failed:', status);
+                address = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+              }
+              onLocationSelect(lat, lng, address);
+            });
+          }
+        } catch (error) {
+          console.error('❌ Error handling map click:', error);
         }
       });
 
@@ -86,115 +115,153 @@ function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: Goog
       if (selectedLocation) {
         updateMarkerPosition(selectedLocation.lat, selectedLocation.lng);
       }
+
+      setLoadError('');
+      console.log('✅ Map initialization complete');
+      
     } catch (error) {
-      console.error('Error initializing map:', error);
-      setLoadError('Lỗi khi khởi tạo bản đồ');
+      console.error('❌ Error initializing map:', error);
+      setLoadError(`Lỗi khi khởi tạo bản đồ: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }, [selectedLocation, onLocationSelect]);
 
   const updateMarkerPosition = (lat: number, lng: number) => {
     if (!mapInstanceRef.current) return;
 
-    if (markerRef.current) {
-      markerRef.current.setPosition({ lat, lng });
-    } else {
-      markerRef.current = new window.google.maps.Marker({
-        position: { lat, lng },
-        map: mapInstanceRef.current,
-        draggable: true,
-        title: 'Vị trí chấm công'
-      });
+    try {
+      if (markerRef.current) {
+        markerRef.current.setPosition({ lat, lng });
+      } else {
+        markerRef.current = new window.google.maps.Marker({
+          position: { lat, lng },
+          map: mapInstanceRef.current,
+          draggable: true,
+          title: 'Vị trí chấm công',
+          animation: window.google.maps.Animation.DROP
+        });
 
-      // Add drag listener to marker
-      markerRef.current.addListener('dragend', () => {
-        const position = markerRef.current?.getPosition();
-        if (position) {
-          const newLat = position.lat();
-          const newLng = position.lng();
-          console.log('Marker dragged to:', newLat, newLng);
-          onLocationSelect(newLat, newLng);
-        }
-      });
+        // Add drag listener to marker with error handling
+        markerRef.current.addListener('dragend', () => {
+          try {
+            const position = markerRef.current?.getPosition();
+            if (position) {
+              const newLat = position.lat();
+              const newLng = position.lng();
+              console.log('🎯 Marker dragged to:', newLat, newLng);
+              onLocationSelect(newLat, newLng);
+            }
+          } catch (error) {
+            console.error('❌ Error handling marker drag:', error);
+          }
+        });
+      }
+
+      // Center map on marker
+      mapInstanceRef.current.setCenter({ lat, lng });
+    } catch (error) {
+      console.error('❌ Error updating marker position:', error);
     }
-
-    // Center map on marker
-    mapInstanceRef.current.setCenter({ lat, lng });
   };
 
+  const loadGoogleMapsScript = useCallback(() => {
+    if (!apiKey || !validateApiKey(apiKey)) {
+      setLoadError('API key không hợp lệ. Vui lòng kiểm tra lại.');
+      return;
+    }
+
+    setIsLoading(true);
+    setLoadError('');
+    console.log('🔄 Loading Google Maps script...');
+
+    // Clean up existing script
+    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+    if (existingScript) {
+      console.log('🧹 Cleaning up existing script');
+      existingScript.remove();
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=3.exp&callback=initMap`;
+    script.async = true;
+    script.defer = true;
+
+    // Setup global callback
+    window.initMap = () => {
+      console.log('✅ Google Maps callback triggered');
+      if (window.google && window.google.maps) {
+        setIsLoaded(true);
+        setIsLoading(false);
+        setLoadError('');
+        setTimeout(initializeMap, 100);
+      } else {
+        console.error('❌ Google Maps not available in callback');
+        setLoadError('Google Maps không khả dụng sau khi tải');
+        setIsLoading(false);
+      }
+    };
+    
+    script.onload = () => {
+      console.log('📜 Google Maps script loaded');
+    };
+
+    script.onerror = (error) => {
+      console.error('❌ Error loading Google Maps script:', error);
+      setIsLoading(false);
+      
+      if (loadRetryCount < 2) {
+        console.log(`🔄 Retrying... (${loadRetryCount + 1}/2)`);
+        setLoadRetryCount(prev => prev + 1);
+        setTimeout(() => loadGoogleMapsScript(), 2000);
+      } else {
+        setLoadError('Không thể tải Google Maps. Vui lòng kiểm tra:\n• API key có đúng không?\n• Đã bật Maps JavaScript API chưa?\n• Domain đã được cấu hình chưa?');
+      }
+    };
+
+    document.head.appendChild(script);
+  }, [apiKey, initializeMap, loadRetryCount]);
+
   useEffect(() => {
-    if (!apiKey) {
-      console.log('No API key provided');
+    if (!apiKey || !validateApiKey(apiKey)) {
+      console.log('⚠️ Invalid or missing API key');
+      setIsLoaded(false);
+      setLoadError('');
       return;
     }
 
     // Check if Google Maps is already loaded
     if (window.google && window.google.maps) {
-      console.log('Google Maps already loaded');
+      console.log('✅ Google Maps already loaded');
       setIsLoaded(true);
+      setIsLoading(false);
       setTimeout(initializeMap, 100);
       return;
     }
 
-    // Clean up existing script
-    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-    if (existingScript) {
-      existingScript.remove();
-    }
-
-    const loadGoogleMaps = () => {
-      console.log('Loading Google Maps API...');
-      
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&v=3`;
-      script.async = true;
-      script.defer = true;
-      
-      script.onload = () => {
-        console.log('Google Maps script loaded successfully');
-        if (window.google && window.google.maps) {
-          setIsLoaded(true);
-          setLoadError('');
-          setTimeout(initializeMap, 100);
-        } else {
-          console.error('Google Maps not available after script load');
-          setLoadError('Google Maps không khả dụng sau khi tải script');
-        }
-      };
-
-      script.onerror = (error) => {
-        console.error('Error loading Google Maps script:', error);
-        setLoadError('Không thể tải Google Maps. Vui lòng kiểm tra API key và kết nối internet.');
-      };
-
-      document.head.appendChild(script);
-    };
-
-    loadGoogleMaps();
+    loadGoogleMapsScript();
 
     return () => {
       // Cleanup on unmount
-      const script = document.querySelector('script[src*="maps.googleapis.com"]');
-      if (script) {
-        script.remove();
+      if (window.initMap) {
+        delete window.initMap;
       }
     };
-  }, [apiKey, initializeMap]);
+  }, [apiKey, initializeMap, loadGoogleMapsScript]);
 
   // Update marker when selectedLocation changes
   useEffect(() => {
     if (isLoaded && selectedLocation && mapInstanceRef.current) {
-      console.log('Updating marker position to:', selectedLocation);
+      console.log('📍 Updating marker position to:', selectedLocation);
       updateMarkerPosition(selectedLocation.lat, selectedLocation.lng);
     }
   }, [selectedLocation, isLoaded]);
 
-  if (!apiKey) {
+  if (!apiKey || !validateApiKey(apiKey)) {
     return (
-      <div className="h-96 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
-        <div className="text-center">
+      <div className="h-96 bg-gray-50 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300">
+        <div className="text-center max-w-md">
           <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500 font-medium">Vui lòng nhập Google Maps API Key</p>
-          <p className="text-gray-400 text-sm">để hiển thị bản đồ</p>
+          <p className="text-gray-600 font-medium mb-2">Vui lòng nhập Google Maps API Key hợp lệ</p>
+          <p className="text-gray-500 text-sm">API key phải có format: AIza...</p>
         </div>
       </div>
     );
@@ -204,16 +271,21 @@ function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: Goog
     return (
       <div className="h-96 bg-red-50 rounded-lg flex items-center justify-center border border-red-200">
         <div className="text-center max-w-md">
-          <div className="text-red-600 font-bold text-lg mb-2">❌ Lỗi tải bản đồ</div>
-          <p className="text-red-600 text-sm mb-4">{loadError}</p>
-          <div className="bg-red-100 p-3 rounded text-xs text-red-700">
-            <strong>Kiểm tra:</strong>
-            <ul className="list-disc list-inside mt-1 text-left">
-              <li>API key Google Maps có hợp lệ không</li>
-              <li>Đã bật Maps JavaScript API chưa</li>
-              <li>Đã cấu hình domain trong Google Console chưa</li>
-            </ul>
-          </div>
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <div className="text-red-700 font-bold text-lg mb-2">Lỗi tải Google Maps</div>
+          <pre className="text-red-600 text-sm mb-4 whitespace-pre-wrap text-left bg-red-100 p-3 rounded">
+            {loadError}
+          </pre>
+          <Button 
+            onClick={() => {
+              setLoadRetryCount(0);
+              loadGoogleMapsScript();
+            }}
+            variant="outline"
+            className="text-red-600 border-red-600 hover:bg-red-50"
+          >
+            Thử lại
+          </Button>
         </div>
       </div>
     );
@@ -222,11 +294,13 @@ function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: Goog
   return (
     <div className="relative h-96 w-full rounded-lg overflow-hidden border">
       <div ref={mapRef} className="w-full h-full" />
-      {!isLoaded && (
+      {(isLoading || !isLoaded) && (
         <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-            <p className="text-gray-600 font-medium">Đang tải Google Maps...</p>
+            <p className="text-gray-600 font-medium">
+              {isLoading ? 'Đang tải Google Maps...' : 'Đang khởi tạo bản đồ...'}
+            </p>
             <p className="text-gray-400 text-sm">Vui lòng chờ...</p>
           </div>
         </div>
@@ -243,6 +317,7 @@ export function GPSLocationManager() {
   const [editingLocation, setEditingLocation] = useState<string | null>(null);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [apiKey, setApiKey] = useState<string>('');
+  const [apiKeyStatus, setApiKeyStatus] = useState<'valid' | 'invalid' | 'unchecked'>('unchecked');
   const [formData, setFormData] = useState<LocationForm>({
     name: '',
     address: '',
@@ -251,8 +326,22 @@ export function GPSLocationManager() {
     radius_meters: 100
   });
 
+  // Validate API key on change
   useEffect(() => {
-    console.log('Getting current location...');
+    if (!apiKey) {
+      setApiKeyStatus('unchecked');
+      return;
+    }
+    
+    if (validateApiKey(apiKey)) {
+      setApiKeyStatus('valid');
+    } else {
+      setApiKeyStatus('invalid');
+    }
+  }, [apiKey]);
+
+  useEffect(() => {
+    console.log('🌍 Getting current location...');
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -260,11 +349,11 @@ export function GPSLocationManager() {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
-          console.log('Current location obtained:', location);
+          console.log('✅ Current location obtained:', location);
           setCurrentLocation(location);
         },
         (error) => {
-          console.error('Error getting location:', error);
+          console.error('❌ Error getting location:', error);
           toast({
             title: 'Không thể lấy vị trí hiện tại',
             description: 'Vui lòng cho phép truy cập vị trí hoặc nhập tọa độ thủ công',
@@ -286,7 +375,7 @@ export function GPSLocationManager() {
         longitude: lng
       }));
       
-      console.log('Set current location to form:', lat, lng);
+      console.log('📍 Set current location to form:', lat, lng);
       toast({
         title: 'Đã lấy vị trí hiện tại',
         description: `Lat: ${lat}, Lng: ${lng}`
@@ -304,7 +393,7 @@ export function GPSLocationManager() {
     const roundedLat = Number(lat.toFixed(6));
     const roundedLng = Number(lng.toFixed(6));
     
-    console.log('Map location selected:', roundedLat, roundedLng, address);
+    console.log('🎯 Map location selected:', roundedLat, roundedLng, address);
     
     setFormData(prev => ({
       ...prev,
@@ -312,6 +401,11 @@ export function GPSLocationManager() {
       longitude: roundedLng,
       address: address || prev.address
     }));
+
+    toast({
+      title: 'Đã chọn vị trí',
+      description: `Lat: ${roundedLat}, Lng: ${roundedLng}`,
+    });
   };
 
   const handleOpenGoogleMaps = () => {
@@ -321,10 +415,14 @@ export function GPSLocationManager() {
     window.open(url, '_blank');
   };
 
+  const validateCoordinates = (lat: number, lng: number): boolean => {
+    return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Submitting form data:', formData);
+    console.log('📝 Submitting form data:', formData);
     
     // Validate required fields
     if (!formData.name.trim()) {
@@ -358,19 +456,10 @@ export function GPSLocationManager() {
     const lat = Number(formData.latitude);
     const lng = Number(formData.longitude);
     
-    if (lat < -90 || lat > 90) {
+    if (!validateCoordinates(lat, lng)) {
       toast({
         title: 'Lỗi',
-        description: 'Vĩ độ phải từ -90 đến 90',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    if (lng < -180 || lng > 180) {
-      toast({
-        title: 'Lỗi',
-        description: 'Kinh độ phải từ -180 đến 180',
+        description: 'Tọa độ không hợp lệ. Vĩ độ: -90 đến 90, Kinh độ: -180 đến 180',
         variant: 'destructive'
       });
       return;
@@ -385,18 +474,18 @@ export function GPSLocationManager() {
       radius_meters: Number(formData.radius_meters)
     };
 
-    console.log('Processed location data:', locationData);
+    console.log('💾 Processed location data:', locationData);
 
     try {
       if (editingLocation) {
-        console.log('Updating location:', editingLocation);
+        console.log('✏️ Updating location:', editingLocation);
         await updateLocation.mutateAsync({ id: editingLocation, data: locationData });
         toast({
           title: 'Thành công',
           description: 'Đã cập nhật địa điểm chấm công'
         });
       } else {
-        console.log('Creating new location');
+        console.log('➕ Creating new location');
         await createLocation.mutateAsync(locationData);
         toast({
           title: 'Thành công',
@@ -414,10 +503,10 @@ export function GPSLocationManager() {
         radius_meters: 100
       });
       
-      console.log('Form reset successfully');
+      console.log('🔄 Form reset successfully');
       
     } catch (error) {
-      console.error('Error saving location:', error);
+      console.error('❌ Error saving location:', error);
       toast({
         title: 'Lỗi',
         description: 'Không thể lưu địa điểm chấm công. Vui lòng thử lại.',
@@ -427,7 +516,7 @@ export function GPSLocationManager() {
   };
 
   const handleEdit = (location: any) => {
-    console.log('Editing location:', location);
+    console.log('✏️ Editing location:', location);
     setFormData({
       name: location.name,
       address: location.address || '',
@@ -439,7 +528,7 @@ export function GPSLocationManager() {
   };
 
   const handleCancelEdit = () => {
-    console.log('Cancelling edit');
+    console.log('❌ Cancelling edit');
     setEditingLocation(null);
     setFormData({
       name: '',
@@ -451,11 +540,11 @@ export function GPSLocationManager() {
   };
 
   const handleDelete = async (id: string) => {
-    console.log('Deleting location:', id);
+    console.log('🗑️ Deleting location:', id);
     try {
       await deleteLocation.mutateAsync(id);
     } catch (error) {
-      console.error('Error deleting location:', error);
+      console.error('❌ Error deleting location:', error);
     }
   };
 
@@ -482,26 +571,52 @@ export function GPSLocationManager() {
             <div className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-blue-600" />
               <Label htmlFor="apiKey" className="font-semibold">Google Maps API Key</Label>
-              {apiKey && <Badge variant="outline" className="text-green-600">✓ Đã nhập</Badge>}
+              {apiKeyStatus === 'valid' && <Badge variant="default" className="text-green-600 bg-green-100"><CheckCircle className="h-3 w-3 mr-1" />Hợp lệ</Badge>}
+              {apiKeyStatus === 'invalid' && <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" />Không hợp lệ</Badge>}
             </div>
             <Input
               id="apiKey"
               type="password"
-              placeholder="Nhập Google Maps API Key..."
+              placeholder="Nhập Google Maps API Key (AIza...)..."
               value={apiKey}
               onChange={(e) => {
-                console.log('API key entered');
+                console.log('🔑 API key entered');
                 setApiKey(e.target.value);
               }}
+              className={apiKeyStatus === 'invalid' ? 'border-red-500' : ''}
             />
-            <div className="text-sm text-gray-600 bg-white p-3 rounded border-l-4 border-blue-400">
-              <strong>Hướng dẫn lấy API key:</strong>
-              <ol className="list-decimal list-inside mt-1 space-y-1">
-                <li>Truy cập <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Google Cloud Console</a></li>
-                <li>Tạo API key mới hoặc sử dụng key có sẵn</li>
-                <li>Bật Maps JavaScript API trong Libraries</li>
-                <li>Cấu hình domain cho API key</li>
-              </ol>
+            
+            {apiKeyStatus === 'invalid' && (
+              <Alert className="border-red-200 bg-red-50">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-700">
+                  API key không đúng format. Google Maps API key phải bắt đầu bằng "AIza" và có 39 ký tự.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="text-sm text-gray-600 bg-white p-4 rounded border-l-4 border-blue-400">
+              <div className="space-y-3">
+                <div>
+                  <strong className="text-blue-700">🔧 Hướng dẫn lấy API key:</strong>
+                  <ol className="list-decimal list-inside mt-2 space-y-1">
+                    <li>Truy cập <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline inline-flex items-center gap-1">Google Cloud Console <ExternalLink className="h-3 w-3" /></a></li>
+                    <li>Tạo API key mới (Create Credentials → API Key)</li>
+                    <li>Bật <strong>Maps JavaScript API</strong> trong Libraries</li>
+                    <li>Thêm domain này vào Authorized domains</li>
+                  </ol>
+                </div>
+                
+                <div>
+                  <strong className="text-orange-700">⚠️ Nếu vẫn lỗi, kiểm tra:</strong>
+                  <ul className="list-disc list-inside mt-1 space-y-1">
+                    <li>API key đã được kích hoạt chưa?</li>
+                    <li>Maps JavaScript API đã được bật chưa?</li>
+                    <li>Domain đã được thêm vào restrictions chưa?</li>
+                    <li>Billing account đã được setup chưa?</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -534,7 +649,7 @@ export function GPSLocationManager() {
                   id="address"
                   value={formData.address}
                   onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                  placeholder="Địa chỉ chi tiết"
+                  placeholder="Địa chỉ chi tiết (tự động điền khi chọn trên bản đồ)"
                 />
               </div>
 
@@ -581,6 +696,7 @@ export function GPSLocationManager() {
                   min="10"
                   max="1000"
                 />
+                <p className="text-xs text-gray-500 mt-1">Khoảng cách tối đa để có thể chấm công (10-1000m)</p>
               </div>
 
               <div className="flex gap-2 flex-wrap">
@@ -624,7 +740,10 @@ export function GPSLocationManager() {
           <CardHeader>
             <CardTitle>Chọn vị trí trên bản đồ</CardTitle>
             <p className="text-sm text-gray-600">
-              Click vào bản đồ để chọn vị trí chấm công. Kéo thả marker để điều chỉnh.
+              {apiKeyStatus === 'valid' 
+                ? 'Click vào bản đồ để chọn vị trí chấm công. Kéo thả marker để điều chỉnh.' 
+                : 'Nhập API key hợp lệ để sử dụng bản đồ.'
+              }
             </p>
           </CardHeader>
           <CardContent>
@@ -672,6 +791,16 @@ export function GPSLocationManager() {
                     >
                       <Edit className="h-3 w-3" />
                     </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        const url = `https://www.google.com/maps?q=${location.latitude},${location.longitude}&z=15`;
+                        window.open(url, '_blank');
+                      }}
+                    >
+                      <Globe className="h-3 w-3" />
+                    </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700">
@@ -705,7 +834,7 @@ export function GPSLocationManager() {
               <div className="col-span-full text-center py-8 text-gray-500">
                 <MapPin className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>Chưa có địa điểm chấm công nào</p>
-                <p className="text-sm">Điền form bên trái và chọn vị trí trên bản đồ để thêm địa điểm</p>
+                <p className="text-sm">Nhập API key Google Maps và điền form để thêm địa điểm</p>
               </div>
             )}
           </div>
