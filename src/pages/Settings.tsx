@@ -193,7 +193,7 @@ export default function Settings() {
                           </div>
                           <Switch 
                             checked={setting.enabled} 
-                            onCheckedChange={setting.onToggle}
+                            onCheckedChange={setting.onToggle || (() => {})}
                           />
                         </div>
                       ))}
