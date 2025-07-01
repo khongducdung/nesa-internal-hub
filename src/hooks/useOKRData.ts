@@ -318,30 +318,17 @@ export function useOKRData() {
         }
       ];
 
-      // Set up alignment relationships
-      const setupAlignments = () => {
-        const allOKRs = [...mockCompanyOKRs, ...mockDepartmentOKRs, ...mockMyOKRs];
-        
-        // Clear existing alignments
-        allOKRs.forEach(okr => {
-          okr.aligned_okrs = [];
-        });
+      // Set up alignment relationships properly
+      const allOKRs = [
+        ...mockCompanyOKRs,
+        ...mockDepartmentOKRs,
+        ...mockMyOKRs
+      ];
 
-        // Set up alignments based on parent_okr_id
-        allOKRs.forEach(okr => {
-          if (okr.parent_okr_id) {
-            const parentOKR = allOKRs.find(parent => parent.id === okr.parent_okr_id);
-            if (parentOKR) {
-              if (!parentOKR.aligned_okrs) {
-                parentOKR.aligned_okrs = [];
-              }
-              parentOKR.aligned_okrs.push(okr);
-            }
-          }
-        });
-      };
-
-      setupAlignments();
+      // Build alignment relationships
+      allOKRs.forEach(okr => {
+        okr.aligned_okrs = allOKRs.filter(child => child.parent_okr_id === okr.id);
+      });
 
       setCycles(mockCycles);
       setCurrentCycle(mockCycles.find(c => c.is_current) || null);
@@ -355,6 +342,22 @@ export function useOKRData() {
   }, [profile]);
 
   const getAllOKRs = () => [...companyOKRs, ...departmentOKRs, ...myOKRs];
+
+  const refreshAlignments = () => {
+    const allOKRs = getAllOKRs();
+    
+    // Update all OKRs with fresh alignment data
+    const updateOKRs = (okrs: OKRObjective[]) => {
+      return okrs.map(okr => ({
+        ...okr,
+        aligned_okrs: allOKRs.filter(child => child.parent_okr_id === okr.id)
+      }));
+    };
+
+    setCompanyOKRs(updateOKRs);
+    setDepartmentOKRs(updateOKRs);
+    setMyOKRs(updateOKRs);
+  };
 
   const createOKR = async (okrData: Partial<OKRObjective>) => {
     const newOKR: OKRObjective = {
@@ -385,65 +388,37 @@ export function useOKRData() {
       setMyOKRs(prev => [...prev, newOKR]);
     }
 
-    // Update parent OKR alignment
-    if (newOKR.parent_okr_id) {
-      updateOKRAlignment(newOKR.parent_okr_id, newOKR.id);
-    }
+    // Refresh alignments after creating new OKR
+    setTimeout(() => refreshAlignments(), 100);
 
     return newOKR;
   };
 
   const updateOKR = async (id: string, updates: Partial<OKRObjective>) => {
-    const updateOKRList = (okrs: OKRObjective[]) =>
+    const updateOKRInList = (okrs: OKRObjective[]) =>
       okrs.map(okr => {
         if (okr.id === id) {
-          const updatedOKR = { ...okr, ...updates, updated_at: new Date().toISOString() };
-          
-          // Handle parent OKR changes
-          if (updates.parent_okr_id !== undefined && updates.parent_okr_id !== okr.parent_okr_id) {
-            // Remove from old parent's aligned_okrs
-            if (okr.parent_okr_id) {
-              removeFromParentAlignment(okr.parent_okr_id, id);
-            }
-            
-            // Add to new parent's aligned_okrs
-            if (updates.parent_okr_id) {
-              updateOKRAlignment(updates.parent_okr_id, id);
-            }
-          }
-          
-          return updatedOKR;
+          return { ...okr, ...updates, updated_at: new Date().toISOString() };
         }
         return okr;
       });
 
-    setCompanyOKRs(updateOKRList);
-    setMyOKRs(updateOKRList);
-    setDepartmentOKRs(updateOKRList);
+    setCompanyOKRs(updateOKRInList);
+    setMyOKRs(updateOKRInList);
+    setDepartmentOKRs(updateOKRInList);
+
+    // Refresh alignments after update
+    setTimeout(() => refreshAlignments(), 100);
   };
 
   const deleteOKR = async (id: string) => {
-    // Remove from parent's aligned_okrs
-    const okrToDelete = getOKRById(id);
-    if (okrToDelete?.parent_okr_id) {
-      removeFromParentAlignment(okrToDelete.parent_okr_id, id);
-    }
-
     // Remove from all lists
     setCompanyOKRs(prev => prev.filter(okr => okr.id !== id));
     setMyOKRs(prev => prev.filter(okr => okr.id !== id));
     setDepartmentOKRs(prev => prev.filter(okr => okr.id !== id));
 
-    // Remove from alignment relationships (as parent)
-    const removeAlignment = (okrs: OKRObjective[]) =>
-      okrs.map(okr => ({
-        ...okr,
-        aligned_okrs: okr.aligned_okrs?.filter(aligned => aligned.id !== id) || []
-      }));
-
-    setCompanyOKRs(removeAlignment);
-    setMyOKRs(removeAlignment);
-    setDepartmentOKRs(removeAlignment);
+    // Refresh alignments after deletion
+    setTimeout(() => refreshAlignments(), 100);
   };
 
   const updateKeyResult = async (okrId: string, keyResultId: string, updates: Partial<KeyResult>) => {
@@ -462,43 +437,6 @@ export function useOKRData() {
     setCompanyOKRs(updateOKRs);
     setMyOKRs(updateOKRs);
     setDepartmentOKRs(updateOKRs);
-  };
-
-  const updateOKRAlignment = (parentId: string, childId: string) => {
-    const updateParentOKR = (okrs: OKRObjective[]) =>
-      okrs.map(okr => {
-        if (okr.id === parentId) {
-          const childOKR = getAllOKRs().find(o => o.id === childId);
-          if (childOKR && !okr.aligned_okrs?.find(a => a.id === childId)) {
-            return {
-              ...okr,
-              aligned_okrs: [...(okr.aligned_okrs || []), childOKR]
-            };
-          }
-        }
-        return okr;
-      });
-
-    setCompanyOKRs(updateParentOKR);
-    setMyOKRs(updateParentOKR);
-    setDepartmentOKRs(updateParentOKR);
-  };
-
-  const removeFromParentAlignment = (parentId: string, childId: string) => {
-    const removeFromParent = (okrs: OKRObjective[]) =>
-      okrs.map(okr => {
-        if (okr.id === parentId) {
-          return {
-            ...okr,
-            aligned_okrs: okr.aligned_okrs?.filter(aligned => aligned.id !== childId) || []
-          };
-        }
-        return okr;
-      });
-
-    setCompanyOKRs(removeFromParent);
-    setMyOKRs(removeFromParent);
-    setDepartmentOKRs(removeFromParent);
   };
 
   const getOKRById = (id: string): OKRObjective | undefined => {
@@ -528,7 +466,7 @@ export function useOKRData() {
     getOKRById,
     getAlignedOKRs,
     getParentOKR,
-    updateOKRAlignment,
-    getAllOKRs
+    getAllOKRs,
+    refreshAlignments
   };
 }

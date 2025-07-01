@@ -39,7 +39,7 @@ type FormData = {
 };
 
 export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogProps) {
-  const { companyOKRs, departmentOKRs, getParentOKR } = useOKRData();
+  const { companyOKRs, departmentOKRs, getParentOKR, refreshAlignments } = useOKRData();
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
@@ -119,7 +119,7 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const keyResults = formData.key_results
       .filter(kr => kr.title && kr.target_value)
       .map(kr => ({
@@ -135,15 +135,20 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
 
     const totalProgress = keyResults.reduce((sum, kr) => sum + (kr.progress * kr.weight / 100), 0);
 
-    onSave({
+    const updatedOKRData = {
       title: formData.title,
       description: formData.description,
       status: formData.status,
       parent_okr_id: formData.parent_okr_id || undefined,
       key_results: keyResults,
       progress: Math.round(totalProgress)
-    });
+    };
 
+    await onSave(updatedOKRData);
+    
+    // Refresh alignments after save
+    setTimeout(() => refreshAlignments(), 100);
+    
     onClose();
   };
 
@@ -328,7 +333,13 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
                   <Link2 className="h-4 w-4" />
                   Liên kết với OKR cấp cao
                 </Label>
-                <Select value={formData.parent_okr_id} onValueChange={(value) => setFormData({ ...formData, parent_okr_id: value })}>
+                <Select 
+                  value={formData.parent_okr_id} 
+                  onValueChange={(value) => {
+                    console.log('Selected parent OKR:', value);
+                    setFormData({ ...formData, parent_okr_id: value });
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn OKR cấp cao để liên kết (tùy chọn)" />
                   </SelectTrigger>
