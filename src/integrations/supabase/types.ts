@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       attendance: {
         Row: {
+          approval_required: boolean | null
           approved_at: string | null
           approved_by: string | null
           attendance_setting_id: string | null
@@ -29,10 +30,12 @@ export type Database = {
           early_leave_minutes: number | null
           employee_id: string
           id: string
+          is_approved: boolean | null
           is_early_leave: boolean | null
           is_late: boolean | null
           late_minutes: number | null
           location_id: string | null
+          manager_notes: string | null
           notes: string | null
           overtime_hours: number | null
           shift_assignment_id: string | null
@@ -46,6 +49,7 @@ export type Database = {
           work_shift_id: string | null
         }
         Insert: {
+          approval_required?: boolean | null
           approved_at?: string | null
           approved_by?: string | null
           attendance_setting_id?: string | null
@@ -64,10 +68,12 @@ export type Database = {
           early_leave_minutes?: number | null
           employee_id: string
           id?: string
+          is_approved?: boolean | null
           is_early_leave?: boolean | null
           is_late?: boolean | null
           late_minutes?: number | null
           location_id?: string | null
+          manager_notes?: string | null
           notes?: string | null
           overtime_hours?: number | null
           shift_assignment_id?: string | null
@@ -81,6 +87,7 @@ export type Database = {
           work_shift_id?: string | null
         }
         Update: {
+          approval_required?: boolean | null
           approved_at?: string | null
           approved_by?: string | null
           attendance_setting_id?: string | null
@@ -99,10 +106,12 @@ export type Database = {
           early_leave_minutes?: number | null
           employee_id?: string
           id?: string
+          is_approved?: boolean | null
           is_early_leave?: boolean | null
           is_late?: boolean | null
           late_minutes?: number | null
           location_id?: string | null
+          manager_notes?: string | null
           notes?: string | null
           overtime_hours?: number | null
           shift_assignment_id?: string | null
@@ -325,6 +334,45 @@ export type Database = {
           name?: string
           radius_meters?: number | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      attendance_reports: {
+        Row: {
+          created_at: string | null
+          date_from: string
+          date_to: string
+          file_url: string | null
+          filters: Json | null
+          generated_at: string | null
+          generated_by: string
+          id: string
+          name: string
+          report_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          date_from: string
+          date_to: string
+          file_url?: string | null
+          filters?: Json | null
+          generated_at?: string | null
+          generated_by: string
+          id?: string
+          name: string
+          report_type: string
+        }
+        Update: {
+          created_at?: string | null
+          date_from?: string
+          date_to?: string
+          file_url?: string | null
+          filters?: Json | null
+          generated_at?: string | null
+          generated_by?: string
+          id?: string
+          name?: string
+          report_type?: string
         }
         Relationships: []
       }
@@ -1069,12 +1117,15 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
+          attachment_url: string | null
           created_at: string | null
           days_count: number
           employee_id: string | null
           end_date: string
           id: string
           leave_type: string
+          leave_type_id: string | null
+          manager_notes: string | null
           reason: string | null
           start_date: string
           status: string | null
@@ -1083,12 +1134,15 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
+          attachment_url?: string | null
           created_at?: string | null
           days_count: number
           employee_id?: string | null
           end_date: string
           id?: string
           leave_type?: string
+          leave_type_id?: string | null
+          manager_notes?: string | null
           reason?: string | null
           start_date: string
           status?: string | null
@@ -1097,12 +1151,15 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
+          attachment_url?: string | null
           created_at?: string | null
           days_count?: number
           employee_id?: string | null
           end_date?: string
           id?: string
           leave_type?: string
+          leave_type_id?: string | null
+          manager_notes?: string | null
           reason?: string | null
           start_date?: string
           status?: string | null
@@ -1123,7 +1180,56 @@ export type Database = {
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "leave_requests_leave_type_id_fkey"
+            columns: ["leave_type_id"]
+            isOneToOne: false
+            referencedRelation: "leave_types"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      leave_types: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_paid: boolean | null
+          max_days_per_year: number | null
+          name: string
+          requires_approval: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_paid?: boolean | null
+          max_days_per_year?: number | null
+          name: string
+          requires_approval?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_paid?: boolean | null
+          max_days_per_year?: number | null
+          name?: string
+          requires_approval?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       okrs: {
         Row: {
@@ -2646,36 +2752,51 @@ export type Database = {
         Row: {
           attendance_setting_id: string | null
           break_duration_minutes: number | null
+          color: string | null
           created_at: string | null
           days_of_week: number[]
           end_time: string
           id: string
           is_active: boolean | null
+          is_flexible: boolean | null
+          max_hours_per_day: number | null
+          min_hours_per_day: number | null
           name: string
+          shift_type: string | null
           start_time: string
           updated_at: string | null
         }
         Insert: {
           attendance_setting_id?: string | null
           break_duration_minutes?: number | null
+          color?: string | null
           created_at?: string | null
           days_of_week: number[]
           end_time: string
           id?: string
           is_active?: boolean | null
+          is_flexible?: boolean | null
+          max_hours_per_day?: number | null
+          min_hours_per_day?: number | null
           name: string
+          shift_type?: string | null
           start_time: string
           updated_at?: string | null
         }
         Update: {
           attendance_setting_id?: string | null
           break_duration_minutes?: number | null
+          color?: string | null
           created_at?: string | null
           days_of_week?: number[]
           end_time?: string
           id?: string
           is_active?: boolean | null
+          is_flexible?: boolean | null
+          max_hours_per_day?: number | null
+          min_hours_per_day?: number | null
           name?: string
+          shift_type?: string | null
           start_time?: string
           updated_at?: string | null
         }
