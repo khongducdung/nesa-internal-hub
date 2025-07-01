@@ -3,16 +3,21 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Target } from 'lucide-react';
+import { useSettings } from '@/components/ui/settings-context';
 
 export function OKRObjectiveManagement() {
+  const { hideDescriptions } = useSettings();
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Quản lý Objectives</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Tạo và quản lý các mục tiêu chính (Objectives) và kết quả then chốt (Key Results)
-          </p>
+          {!hideDescriptions && (
+            <p className="text-sm text-gray-500 mt-1">
+              Tạo và quản lý các mục tiêu chính (Objectives) và kết quả then chốt (Key Results)
+            </p>
+          )}
         </div>
         <Button className="bg-blue-600 hover:bg-blue-700">
           <Plus className="h-4 w-4 mr-2" />

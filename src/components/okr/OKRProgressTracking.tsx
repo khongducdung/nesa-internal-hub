@@ -3,16 +3,21 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TrendingUp, BarChart3 } from 'lucide-react';
+import { useSettings } from '@/components/ui/settings-context';
 
 export function OKRProgressTracking() {
+  const { hideDescriptions } = useSettings();
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Theo dõi tiến độ OKR</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Theo dõi và cập nhật tiến độ thực hiện các OKR
-          </p>
+          {!hideDescriptions && (
+            <p className="text-sm text-gray-500 mt-1">
+              Theo dõi và cập nhật tiến độ thực hiện các OKR
+            </p>
+          )}
         </div>
         <Button className="bg-blue-600 hover:bg-blue-700">
           <TrendingUp className="h-4 w-4 mr-2" />

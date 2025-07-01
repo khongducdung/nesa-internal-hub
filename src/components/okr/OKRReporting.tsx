@@ -3,16 +3,21 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileText, Download } from 'lucide-react';
+import { useSettings } from '@/components/ui/settings-context';
 
 export function OKRReporting() {
+  const { hideDescriptions } = useSettings();
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Báo cáo OKR</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Tạo và xuất các báo cáo hiệu suất OKR
-          </p>
+          {!hideDescriptions && (
+            <p className="text-sm text-gray-500 mt-1">
+              Tạo và xuất các báo cáo hiệu suất OKR
+            </p>
+          )}
         </div>
         <Button className="bg-blue-600 hover:bg-blue-700">
           <Download className="h-4 w-4 mr-2" />
