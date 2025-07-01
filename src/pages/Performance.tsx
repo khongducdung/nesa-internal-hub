@@ -1,11 +1,11 @@
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { PerformanceManagement } from '@/components/performance/PerformanceManagement';
+import { KPIManagement } from '@/components/kpi/KPIManagement';
 
 export default function Performance() {
   return (
     <DashboardLayout>
-      <PerformanceManagement />
+      <KPIManagement />
     </DashboardLayout>
   );
 }

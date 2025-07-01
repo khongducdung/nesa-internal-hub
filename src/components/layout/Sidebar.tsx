@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Users, Building2, Settings, X, Home, FileText, TrendingUp, Target, BarChart3, LogOut, Clock } from 'lucide-react';
@@ -28,9 +27,7 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
     { icon: Users, label: 'Quản lý nhân sự', path: '/hrm', access: 'all' },
     { icon: Clock, label: 'Chấm công & Tính lương', path: '/attendance', access: 'all' },
     { icon: FileText, label: 'Quản lý quy trình', path: '/processes', access: 'all' },
-    { icon: TrendingUp, label: 'Đánh giá hiệu suất', path: '/performance', access: 'all' },
-    { icon: Target, label: 'OKR', path: '/okr', access: 'all' },
-    { icon: BarChart3, label: 'KPI', path: '/kpi', access: 'all' },
+    { icon: TrendingUp, label: 'Quản lý KPI', path: '/performance', access: 'all' },
     { icon: Settings, label: 'Cài đặt hệ thống', path: '/settings', access: 'super_admin' }
   ];
 
