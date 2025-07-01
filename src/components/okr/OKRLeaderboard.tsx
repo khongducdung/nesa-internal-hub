@@ -122,42 +122,52 @@ export function OKRLeaderboard() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 text-white">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
-              <Trophy className="h-6 w-6 text-yellow-300" />
-              Bảng Xếp Hạng OKR
-            </h2>
-            <p className="text-indigo-100">
-              Thành tích và xếp hạng của toàn bộ thành viên trong công ty
-            </p>
+    <div className="space-y-8">
+      {/* Header with blue gradient and decorative circles */}
+      <Card className="border-0 shadow-xl overflow-hidden relative bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700">
+        <CardContent className="p-0">
+          {/* Decorative circles */}
+          <div className="absolute -top-20 -left-20 w-40 h-40 bg-white/10 rounded-full"></div>
+          <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-white/10 rounded-full"></div>
+          <div className="absolute top-10 -right-10 w-20 h-20 bg-white/5 rounded-full"></div>
+          <div className="absolute -bottom-10 -left-10 w-20 h-20 bg-white/5 rounded-full"></div>
+          
+          <div className="relative p-8 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                  <Trophy className="h-6 w-6 text-yellow-300" />
+                  Bảng Xếp Hạng OKR
+                </h2>
+                <p className="text-blue-100">
+                  Thành tích và xếp hạng của toàn bộ thành viên trong công ty
+                </p>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold mb-1">{leaderboardData.length}</div>
+                <p className="text-blue-100 text-sm">Thành viên</p>
+              </div>
+            </div>
           </div>
-          <div className="text-center">
-            <div className="text-4xl font-bold mb-1">{leaderboardData.length}</div>
-            <p className="text-indigo-100 text-sm">Thành viên</p>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <Tabs value={selectedPeriod} onValueChange={setSelectedPeriod} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-white border">
-          <TabsTrigger value="current">Chu kỳ hiện tại</TabsTrigger>
-          <TabsTrigger value="individual">Cá nhân</TabsTrigger>
-          <TabsTrigger value="department">Phòng ban</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-white border shadow-sm">
+          <TabsTrigger value="current" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">Chu kỳ hiện tại</TabsTrigger>
+          <TabsTrigger value="individual" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">Cá nhân</TabsTrigger>
+          <TabsTrigger value="department" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">Phòng ban</TabsTrigger>
         </TabsList>
 
         <TabsContent value="current" className="mt-6">
-          <div className="space-y-3">
+          <div className="space-y-4">
             {leaderboardData.map((person, index) => {
               const rank = index + 1;
               return (
-                <Card key={person.id} className={`transition-all duration-200 hover:shadow-md ${
-                  rank <= 3 ? 'border-2 border-yellow-200 bg-gradient-to-r from-yellow-50 to-orange-50' : 'bg-white'
+                <Card key={person.id} className={`transition-all duration-200 hover:shadow-lg border-0 shadow-md ${
+                  rank <= 3 ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200' : 'bg-white'
                 }`}>
-                  <CardContent className="p-4">
+                  <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         {/* Rank */}
@@ -166,9 +176,9 @@ export function OKRLeaderboard() {
                         </div>
 
                         {/* Avatar & Info */}
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                            <span className="text-white font-semibold text-sm">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-md">
+                            <span className="text-white font-semibold text-lg">
                               {person.name.charAt(0)}
                             </span>
                           </div>
@@ -178,7 +188,7 @@ export function OKRLeaderboard() {
                               {getTrendIcon(person.trend)}
                             </div>
                             <p className="text-sm text-gray-600">{person.position} - {person.department}</p>
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-2 mt-2">
                               <Badge className={`${getLevelColor(person.level)} text-xs`}>
                                 {person.level}
                               </Badge>
@@ -191,7 +201,7 @@ export function OKRLeaderboard() {
                       </div>
 
                       {/* Stats */}
-                      <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-8">
                         <div className="text-center">
                           <div className="text-xl font-bold text-purple-600">{person.total_score}</div>
                           <div className="text-xs text-gray-500">Điểm</div>
@@ -215,16 +225,16 @@ export function OKRLeaderboard() {
 
         <TabsContent value="individual" className="mt-6">
           {/* Top 3 Podium */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {leaderboardData.slice(0, 3).map((person, index) => {
               const rank = index + 1;
               return (
-                <Card key={person.id} className={`text-center ${
-                  rank === 1 ? 'border-2 border-yellow-300 bg-gradient-to-br from-yellow-50 to-orange-50' : 'bg-white'
+                <Card key={person.id} className={`text-center border-0 shadow-lg ${
+                  rank === 1 ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-300' : 'bg-white'
                 }`}>
                   <CardContent className="p-6">
                     <div className="relative mb-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto shadow-lg">
                         <span className="text-white font-bold text-xl">
                           {person.name.charAt(0)}
                         </span>
@@ -247,12 +257,12 @@ export function OKRLeaderboard() {
         </TabsContent>
 
         <TabsContent value="department" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {departmentStats.map((dept, index) => (
-              <Card key={dept.name} className="bg-white">
+              <Card key={dept.name} className="bg-white border-0 shadow-lg">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-12 h-12 ${dept.color} rounded-lg flex items-center justify-center`}>
+                    <div className={`w-12 h-12 ${dept.color} rounded-lg flex items-center justify-center shadow-md`}>
                       <Users className="h-6 w-6 text-white" />
                     </div>
                     <div>
