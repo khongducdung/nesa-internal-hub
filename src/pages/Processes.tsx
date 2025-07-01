@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +19,7 @@ import { ProcessTemplateList } from '@/components/processes/ProcessTemplateList'
 import { ProcessTemplateViewDialog } from '@/components/processes/ProcessTemplateViewDialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useSettings } from '@/components/ui/settings-context';
 
 export default function Processes() {
   const [activeTab, setActiveTab] = useState('list');
@@ -32,6 +34,7 @@ export default function Processes() {
   const updateMutation = useUpdateProcessTemplate();
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
+  const { hideDescriptions } = useSettings();
 
   // Thống kê
   const documentStats = [
@@ -212,7 +215,9 @@ export default function Processes() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Quản lý tài liệu hướng dẫn</h1>
-            <p className="text-gray-600 mt-1">Tạo và quản lý các tài liệu hướng dẫn công việc cho nhân viên</p>
+            {!hideDescriptions && (
+              <p className="text-gray-600 mt-1">Tạo và quản lý các tài liệu hướng dẫn công việc cho nhân viên</p>
+            )}
           </div>
         </div>
 
@@ -231,9 +236,11 @@ export default function Processes() {
                       <p className="text-3xl font-bold text-gray-900 mb-1">
                         {stat.value}
                       </p>
-                      <p className="text-sm text-green-600 font-medium flex items-center">
-                        {stat.change} so với tháng trước
-                      </p>
+                      {!hideDescriptions && (
+                        <p className="text-sm text-green-600 font-medium flex items-center">
+                          {stat.change} so với tháng trước
+                        </p>
+                      )}
                     </div>
                     <div className={`bg-gradient-to-br ${stat.color} p-4 rounded-xl shadow-lg`}>
                       <Icon className="h-6 w-6 text-white" />
