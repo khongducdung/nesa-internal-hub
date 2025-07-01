@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Award, Star, Trophy, Medal, Crown, Target, Flame, Zap, Sparkles, Gift } from 'lucide-react';
+import { Award, Star, Trophy, Medal, Crown, Target, Flame, Zap, Sparkles, Gift, Calendar } from 'lucide-react';
 
 export function OKRAchievements() {
   // Mock data - sẽ thay thế bằng API call
