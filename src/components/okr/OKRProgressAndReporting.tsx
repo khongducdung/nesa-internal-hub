@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
-  TrendingUp, BarChart3, Download, FileText, Calendar, Users, Target, 
+  TrendingUp, BarChart3, Download, Calendar, Users, Target, 
   AlertTriangle, CheckCircle, Clock, Filter, Eye, 
   Building2, User, Award, Zap, Activity, Bell
 } from 'lucide-react';
@@ -22,7 +22,6 @@ import { AdvancedFilterDialog } from './AdvancedFilterDialog';
 export function OKRProgressAndReporting() {
   const { analytics, loading, period, setPeriod, level, setLevel } = useOKRAnalytics();
   const { profile, isAdmin } = useAuth();
-  const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [alertsDialogOpen, setAlertsDialogOpen] = useState(false);
   const [departmentDetailOpen, setDepartmentDetailOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<{ id: string; name: string } | null>(null);
@@ -72,7 +71,7 @@ export function OKRProgressAndReporting() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
             <BarChart3 className="h-5 w-5 text-white" />
           </div>
           <div>
@@ -103,86 +102,7 @@ export function OKRProgressAndReporting() {
             <Download className="h-4 w-4" />
             Xuất Excel
           </Button>
-          
-          <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Tạo báo cáo
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-6xl max-h-[80vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Tạo báo cáo OKR</DialogTitle>
-              </DialogHeader>
-              <OKRReportGenerator />
-            </DialogContent>
-          </Dialog>
         </div>
-      </div>
-
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Tổng OKRs</p>
-                <p className="text-2xl font-bold text-gray-900">{analytics.totalOKRs}</p>
-                <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
-                  <TrendingUp className="h-3 w-3" />
-                  +{analytics.performanceMetrics.improvement}% so với tháng trước
-                </p>
-              </div>
-              <Target className="h-8 w-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-green-500">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Tiến độ trung bình</p>
-                <p className="text-2xl font-bold text-green-600">{analytics.avgProgress}%</p>
-                <Progress value={analytics.avgProgress} className="mt-2 h-2" />
-              </div>
-              <Activity className="h-8 w-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-blue-500">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Đúng tiến độ</p>
-                <p className="text-2xl font-bold text-blue-600">{analytics.onTrackCount}</p>
-                <p className="text-xs text-blue-600 flex items-center gap-1 mt-1">
-                  <CheckCircle className="h-3 w-3" />
-                  {Math.round((analytics.onTrackCount / analytics.totalOKRs) * 100)}% tổng OKRs
-                </p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-orange-500">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Hoàn thành</p>
-                <p className="text-2xl font-bold text-orange-600">{analytics.completedCount}</p>
-                <p className="text-xs text-orange-600 flex items-center gap-1 mt-1">
-                  <Award className="h-3 w-3" />
-                  {Math.round((analytics.completedCount / analytics.totalOKRs) * 100)}% hoàn thành
-                </p>
-              </div>
-              <Award className="h-8 w-8 text-orange-500" />
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Filters */}
@@ -246,7 +166,7 @@ export function OKRProgressAndReporting() {
             Tiến độ
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
+            <BarChart3 className="h-4 w-4" />
             Báo cáo
           </TabsTrigger>
         </TabsList>
@@ -298,14 +218,14 @@ export function OKRProgressAndReporting() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-purple-600" />
+                  <Users className="h-5 w-5 text-blue-600" />
                   Phân tích theo cấp bậc
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {analytics.levelBreakdown.map((level) => (
-                    <div key={level.level} className="p-3 bg-purple-50 rounded-lg">
+                    <div key={level.level} className="p-3 bg-blue-50 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium">{level.level}</span>
                         <Badge variant="outline">{level.avgProgress}%</Badge>
