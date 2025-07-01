@@ -28,6 +28,7 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
     { icon: Clock, label: 'Chấm công & Tính lương', path: '/attendance', access: 'all' },
     { icon: FileText, label: 'Quản lý quy trình', path: '/processes', access: 'all' },
     { icon: TrendingUp, label: 'Quản lý KPI', path: '/performance', access: 'all' },
+    { icon: Target, label: 'Quản lý OKR', path: '/okr', access: 'all' },
     { icon: Settings, label: 'Cài đặt hệ thống', path: '/settings', access: 'super_admin' }
   ];
 
