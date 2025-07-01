@@ -2,6 +2,7 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { useAttendance } from '@/hooks/useAttendance';
+import { formatDate, formatNumber } from '@/utils/formatters';
 
 export function AttendanceList() {
   const { data: attendance, isLoading } = useAttendance();
@@ -40,7 +41,7 @@ export function AttendanceList() {
                 {getStatusBadge(record.status || 'present')}
               </div>
               <div className="text-sm text-gray-600 space-y-1">
-                <p>Ngày: {new Date(record.date).toLocaleDateString('vi-VN')}</p>
+                <p>Ngày: {formatDate(record.date)}</p>
                 {record.check_in_time && (
                   <p>Giờ vào: {new Date(record.check_in_time).toLocaleTimeString('vi-VN')}</p>
                 )}
@@ -48,7 +49,7 @@ export function AttendanceList() {
                   <p>Giờ ra: {new Date(record.check_out_time).toLocaleTimeString('vi-VN')}</p>
                 )}
                 {record.overtime_hours && record.overtime_hours > 0 && (
-                  <p>Giờ làm thêm: {record.overtime_hours} giờ</p>
+                  <p>Giờ làm thêm: {formatNumber(record.overtime_hours)} giờ</p>
                 )}
                 {record.notes && <p>Ghi chú: {record.notes}</p>}
               </div>

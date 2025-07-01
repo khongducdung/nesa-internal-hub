@@ -10,8 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Search, Download, Edit, Plus, Calendar, Filter, Users, Clock } from 'lucide-react';
 import { useAttendance } from '@/hooks/useAttendance';
 import { AttendanceForm } from '../AttendanceForm';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { formatDate, formatNumber } from '@/utils/formatters';
 
 export function AttendanceList() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -58,7 +57,7 @@ export function AttendanceList() {
     const end = new Date(checkOut);
     const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
     
-    return `${hours.toFixed(1)}h`;
+    return `${formatNumber(hours)}h`;
   };
 
   if (isLoading) {
@@ -83,7 +82,7 @@ export function AttendanceList() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Tổng số bản ghi</p>
-                <p className="text-2xl font-bold text-gray-900">{filteredAttendance.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{formatNumber(filteredAttendance.length)}</p>
               </div>
               <Users className="h-8 w-8 text-blue-600" />
             </div>
@@ -96,7 +95,7 @@ export function AttendanceList() {
               <div>
                 <p className="text-sm text-gray-600">Có mặt</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {filteredAttendance.filter(r => r.status === 'present').length}
+                  {formatNumber(filteredAttendance.filter(r => r.status === 'present').length)}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-green-600" />
@@ -110,7 +109,7 @@ export function AttendanceList() {
               <div>
                 <p className="text-sm text-gray-600">Đi muộn</p>
                 <p className="text-2xl font-bold text-yellow-600">
-                  {filteredAttendance.filter(r => r.status === 'late').length}
+                  {formatNumber(filteredAttendance.filter(r => r.status === 'late').length)}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-yellow-600" />
@@ -124,7 +123,7 @@ export function AttendanceList() {
               <div>
                 <p className="text-sm text-gray-600">Vắng mặt</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {filteredAttendance.filter(r => r.status === 'absent').length}
+                  {formatNumber(filteredAttendance.filter(r => r.status === 'absent').length)}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-red-600" />
@@ -141,7 +140,7 @@ export function AttendanceList() {
               <Calendar className="h-5 w-5" />
               <span>Danh sách chấm công</span>
               <Badge variant="outline" className="ml-2">
-                {format(new Date(selectedDate), 'dd/MM/yyyy', { locale: vi })}
+                {formatDate(selectedDate)}
               </Badge>
             </CardTitle>
             
@@ -264,7 +263,7 @@ export function AttendanceList() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {format(new Date(record.date), 'dd/MM/yyyy', { locale: vi })}
+                      {formatDate(record.date)}
                     </TableCell>
                     <TableCell>
                       {record.check_in_time 
@@ -289,7 +288,7 @@ export function AttendanceList() {
                     </TableCell>
                     <TableCell>
                       <span className="text-orange-600 font-medium">
-                        {record.overtime_hours || 0}h
+                        {formatNumber(record.overtime_hours || 0)}h
                       </span>
                     </TableCell>
                     <TableCell>

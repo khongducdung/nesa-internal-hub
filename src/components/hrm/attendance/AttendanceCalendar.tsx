@@ -10,6 +10,7 @@ import { useAttendance } from '@/hooks/useAttendance';
 import { AttendanceForm } from '../AttendanceForm';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { formatDate, formatNumber } from '@/utils/formatters';
 
 export function AttendanceCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -100,7 +101,7 @@ export function AttendanceCalendar() {
       <Card>
         <CardHeader>
           <CardTitle>
-            Chi tiết ngày {format(selectedDate, 'dd/MM/yyyy', { locale: vi })}
+            Chi tiết ngày {formatDate(selectedDate.toISOString())}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -132,7 +133,7 @@ export function AttendanceCalendar() {
                   )}
                   {record.overtime_hours && record.overtime_hours > 0 && (
                     <p className="text-sm text-gray-600">
-                      Tăng ca: {record.overtime_hours}h
+                      Tăng ca: {formatNumber(record.overtime_hours)}h
                     </p>
                   )}
                 </div>

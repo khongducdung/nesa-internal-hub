@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, Users, TrendingUp, Calendar } from 'lucide-react';
 import { useAttendance } from '@/hooks/useAttendance';
 import { useEmployees } from '@/hooks/useEmployees';
+import { formatNumber } from '@/utils/formatters';
 
 export function AttendanceStats() {
   const { data: attendance } = useAttendance();
@@ -26,15 +27,15 @@ export function AttendanceStats() {
   const stats = [
     {
       title: 'Có mặt hôm nay',
-      value: presentToday,
+      value: formatNumber(presentToday),
       icon: Users,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
-      description: `${todayAttendance.length}/${totalEmployees} đã chấm công`
+      description: `${formatNumber(todayAttendance.length)}/${formatNumber(totalEmployees)} đã chấm công`
     },
     {
       title: 'Đi muộn hôm nay',
-      value: lateToday,
+      value: formatNumber(lateToday),
       icon: Clock,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
@@ -42,7 +43,7 @@ export function AttendanceStats() {
     },
     {
       title: 'Vắng mặt hôm nay',
-      value: absentToday,
+      value: formatNumber(absentToday),
       icon: TrendingUp,
       color: 'text-red-600',
       bgColor: 'bg-red-50',
@@ -50,7 +51,7 @@ export function AttendanceStats() {
     },
     {
       title: 'Tỷ lệ chấm công',
-      value: `${attendanceRate.toFixed(1)}%`,
+      value: `${formatNumber(attendanceRate)}%`,
       icon: Calendar,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',

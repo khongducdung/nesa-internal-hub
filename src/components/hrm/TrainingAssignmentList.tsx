@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useEmployeeTrainingAssignments } from '@/hooks/useTrainingRequirements';
 import { Calendar, User, BookOpen } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { formatDate, formatNumber } from '@/utils/formatters';
 
 interface TrainingAssignmentListProps {
   searchTerm: string;
@@ -90,7 +91,7 @@ export function TrainingAssignmentList({ searchTerm }: TrainingAssignmentListPro
                     Hạn hoàn thành:
                   </span>
                   <span className="font-medium">
-                    {new Date(assignment.due_date).toLocaleDateString('vi-VN')}
+                    {formatDate(assignment.due_date)}
                   </span>
                 </div>
 
@@ -98,8 +99,8 @@ export function TrainingAssignmentList({ searchTerm }: TrainingAssignmentListPro
                   <span className="text-gray-700">Thời gian còn lại:</span>
                   <span className={`font-medium ${getDaysRemaining(assignment.due_date) < 0 ? 'text-red-600' : 'text-gray-900'}`}>
                     {getDaysRemaining(assignment.due_date) < 0 
-                      ? `Quá hạn ${Math.abs(getDaysRemaining(assignment.due_date))} ngày`
-                      : `${getDaysRemaining(assignment.due_date)} ngày`
+                      ? `Quá hạn ${formatNumber(Math.abs(getDaysRemaining(assignment.due_date)))} ngày`
+                      : `${formatNumber(getDaysRemaining(assignment.due_date))} ngày`
                     }
                   </span>
                 </div>
@@ -107,7 +108,7 @@ export function TrainingAssignmentList({ searchTerm }: TrainingAssignmentListPro
                 {assignment.started_at && (
                   <div className="flex items-center justify-between">
                     <span className="text-gray-700">Bắt đầu:</span>
-                    <span>{new Date(assignment.started_at).toLocaleDateString('vi-VN')}</span>
+                    <span>{formatDate(assignment.started_at)}</span>
                   </div>
                 )}
 
@@ -115,7 +116,7 @@ export function TrainingAssignmentList({ searchTerm }: TrainingAssignmentListPro
                   <div className="flex items-center justify-between">
                     <span className="text-gray-700">Hoàn thành:</span>
                     <span className="text-green-600 font-medium">
-                      {new Date(assignment.completed_at).toLocaleDateString('vi-VN')}
+                      {formatDate(assignment.completed_at)}
                     </span>
                   </div>
                 )}
@@ -125,7 +126,7 @@ export function TrainingAssignmentList({ searchTerm }: TrainingAssignmentListPro
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-700">Tiến độ</span>
-                    <span className="font-medium">{assignment.progress_percentage}%</span>
+                    <span className="font-medium">{formatNumber(assignment.progress_percentage)}%</span>
                   </div>
                   <Progress value={assignment.progress_percentage} className="h-2" />
                 </div>
@@ -139,7 +140,7 @@ export function TrainingAssignmentList({ searchTerm }: TrainingAssignmentListPro
               )}
 
               <div className="text-xs text-gray-500 pt-2 border-t">
-                Phân công: {new Date(assignment.assigned_date).toLocaleDateString('vi-VN')}
+                Phân công: {formatDate(assignment.assigned_date)}
               </div>
             </CardContent>
           </Card>
