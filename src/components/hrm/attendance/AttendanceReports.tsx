@@ -11,6 +11,7 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { DateRange } from 'react-day-picker';
+import { formatDate, formatNumber } from '@/utils/formatters';
 
 export function AttendanceReports() {
   const [selectedEmployee, setSelectedEmployee] = useState<string>('all');
@@ -111,8 +112,8 @@ export function AttendanceReports() {
       <Card>
         <CardHeader>
           <CardTitle>
-            Báo cáo tổng hợp - {dateRange?.from && format(dateRange.from, 'dd/MM/yyyy', { locale: vi })} 
-            {dateRange?.to && ` đến ${format(dateRange.to, 'dd/MM/yyyy', { locale: vi })}`}
+            Báo cáo tổng hợp - {dateRange?.from && formatDate(dateRange.from.toISOString())} 
+            {dateRange?.to && ` đến ${formatDate(dateRange.to.toISOString())}`}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -136,29 +137,29 @@ export function AttendanceReports() {
                       {record.employeeName}
                     </TableCell>
                     <TableCell className="text-center">
-                      {record.totalDays}
+                      {formatNumber(record.totalDays)}
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge className="bg-green-100 text-green-800">
-                        {record.presentDays}
+                        {formatNumber(record.presentDays)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge className="bg-yellow-100 text-yellow-800">
-                        {record.lateDays}
+                        {formatNumber(record.lateDays)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge className="bg-red-100 text-red-800">
-                        {record.absentDays}
+                        {formatNumber(record.absentDays)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      {record.overtimeHours}
+                      {formatNumber(record.overtimeHours)}
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge variant={record.attendanceRate >= 95 ? 'default' : 'secondary'}>
-                        {record.attendanceRate}%
+                        {formatNumber(record.attendanceRate)}%
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -176,7 +177,7 @@ export function AttendanceReports() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Tổng nhân viên</p>
-                <p className="text-2xl font-bold text-gray-900">45</p>
+                <p className="text-2xl font-bold text-gray-900">{formatNumber(45)}</p>
               </div>
               <div className="bg-blue-50 p-3 rounded-lg">
                 <Calendar className="h-6 w-6 text-blue-600" />
@@ -190,7 +191,7 @@ export function AttendanceReports() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Trung bình có mặt</p>
-                <p className="text-2xl font-bold text-green-600">97.8%</p>
+                <p className="text-2xl font-bold text-green-600">{formatNumber(97.8)}%</p>
               </div>
               <div className="bg-green-50 p-3 rounded-lg">
                 <BarChart3 className="h-6 w-6 text-green-600" />
@@ -204,7 +205,7 @@ export function AttendanceReports() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Tổng giờ tăng ca</p>
-                <p className="text-2xl font-bold text-orange-600">156.5h</p>
+                <p className="text-2xl font-bold text-orange-600">{formatNumber(156.5)}h</p>
               </div>
               <div className="bg-orange-50 p-3 rounded-lg">
                 <Calendar className="h-6 w-6 text-orange-600" />
@@ -218,7 +219,7 @@ export function AttendanceReports() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Đi muộn/tháng</p>
-                <p className="text-2xl font-bold text-red-600">12</p>
+                <p className="text-2xl font-bold text-red-600">{formatNumber(12)}</p>
               </div>
               <div className="bg-red-50 p-3 rounded-lg">
                 <BarChart3 className="h-6 w-6 text-red-600" />

@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Download, FileText } from 'lucide-react';
 import { usePayrollDetails } from '@/hooks/usePayroll';
+import { formatCurrency, formatDate } from '@/utils/formatters';
 
 interface PayrollDetailsViewProps {
   periodId: string;
@@ -24,21 +25,21 @@ export function PayrollDetailsView({ periodId }: PayrollDetailsViewProps) {
       'Họ tên': detail.employee?.full_name || '',
       'Phòng ban': detail.employee?.department?.name || '',
       'Chức vụ': detail.employee?.position?.name || '',
-      'Lương cơ bản': detail.base_salary,
+      'Lương cơ bản': formatCurrency(detail.base_salary),
       'Số ngày làm': detail.working_days,
       'Số ngày có mặt': detail.present_days,
       'Số ngày vắng': detail.absent_days,
       'Số ngày trễ': detail.late_days,
       'Giờ tăng ca': detail.overtime_hours,
-      'Tiền tăng ca': detail.overtime_amount,
-      'Phụ cấp': detail.allowances,
-      'Khấu trừ': detail.deductions,
-      'Thưởng': detail.bonus,
-      'Phạt': detail.penalties,
-      'Lương gốp': detail.gross_salary,
-      'Thuế': detail.tax_amount,
-      'Bảo hiểm': detail.insurance_amount,
-      'Lương thực nhận': detail.net_salary,
+      'Tiền tăng ca': formatCurrency(detail.overtime_amount),
+      'Phụ cấp': formatCurrency(detail.allowances),
+      'Khấu trừ': formatCurrency(detail.deductions),
+      'Thưởng': formatCurrency(detail.bonus),
+      'Phạt': formatCurrency(detail.penalties),
+      'Lương gốp': formatCurrency(detail.gross_salary),
+      'Thuế': formatCurrency(detail.tax_amount),
+      'Bảo hiểm': formatCurrency(detail.insurance_amount),
+      'Lương thực nhận': formatCurrency(detail.net_salary),
       'Ghi chú': detail.notes || '',
     }));
 
@@ -53,7 +54,7 @@ export function PayrollDetailsView({ periodId }: PayrollDetailsViewProps) {
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `bang-luong-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `bang-luong-${formatDate(new Date().toISOString()).replace(/\//g, '-')}.csv`;
     link.click();
   };
 
@@ -139,24 +140,24 @@ export function PayrollDetailsView({ periodId }: PayrollDetailsViewProps) {
                         <div className="text-sm">
                           <div>{detail.overtime_hours}h</div>
                           <div className="text-gray-500">
-                            {detail.overtime_amount.toLocaleString('vi-VN')} VNĐ
+                            {formatCurrency(detail.overtime_amount)} VNĐ
                           </div>
                         </div>
                       ) : '-'}
                     </TableCell>
-                    <TableCell>{detail.gross_salary.toLocaleString('vi-VN')} VNĐ</TableCell>
-                    <TableCell>{detail.allowances.toLocaleString('vi-VN')} VNĐ</TableCell>
+                    <TableCell>{formatCurrency(detail.gross_salary)} VNĐ</TableCell>
+                    <TableCell>{formatCurrency(detail.allowances)} VNĐ</TableCell>
                     <TableCell>
                       {(detail.deductions + detail.penalties) > 0 ? (
                         <span className="text-red-600">
-                          {(detail.deductions + detail.penalties).toLocaleString('vi-VN')} VNĐ
+                          {formatCurrency(detail.deductions + detail.penalties)} VNĐ
                         </span>
                       ) : '-'}
                     </TableCell>
-                    <TableCell>{detail.tax_amount.toLocaleString('vi-VN')} VNĐ</TableCell>
+                    <TableCell>{formatCurrency(detail.tax_amount)} VNĐ</TableCell>
                     <TableCell>
                       <span className="font-medium text-green-600">
-                        {detail.net_salary.toLocaleString('vi-VN')} VNĐ
+                        {formatCurrency(detail.net_salary)} VNĐ
                       </span>
                     </TableCell>
                   </TableRow>

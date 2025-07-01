@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Calendar, Edit, Trash2 } from 'lucide-react';
 import { usePerformanceCycles, useCreatePerformanceCycle } from '@/hooks/usePerformance';
 import { useAuth } from '@/hooks/useAuth';
+import { formatDate } from '@/utils/formatters';
 
 export function KPICycleManagement() {
   const { data: cycles, isLoading } = usePerformanceCycles();
@@ -158,11 +159,11 @@ export function KPICycleManagement() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Bắt đầu:</span>
-                    <span>{startDate.toLocaleDateString('vi-VN')}</span>
+                    <span>{formatDate(cycle.start_date)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Kết thúc:</span>
-                    <span>{endDate.toLocaleDateString('vi-VN')}</span>
+                    <span>{formatDate(cycle.end_date)}</span>
                   </div>
                 </div>
 
@@ -173,7 +174,7 @@ export function KPICycleManagement() {
                 )}
 
                 <div className="text-xs text-gray-400">
-                  Tạo: {new Date(cycle.created_at).toLocaleDateString('vi-VN')}
+                  Tạo: {formatDate(cycle.created_at)}
                 </div>
               </CardContent>
             </Card>
