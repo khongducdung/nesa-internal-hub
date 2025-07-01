@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MapPin, Clock, Calendar, CheckCircle, XCircle, User, Building } from 'lucide-react';
+import { MapPin, Clock, Calendar, CheckCircle, User, Building, PlayCircle, StopCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { LocationPicker } from './LocationPicker';
@@ -111,7 +110,6 @@ export function CheckInOutInterface({ employeeId }: CheckInOutInterfaceProps) {
         status: 'present'
       };
 
-      // Set the appropriate field based on action type
       attendanceData[actionType] = now;
       
       if (checkType === 'shift' && currentShift) {
@@ -133,7 +131,6 @@ export function CheckInOutInterface({ employeeId }: CheckInOutInterfaceProps) {
 
       if (attendanceError) throw attendanceError;
 
-      // Lưu location
       const { error: locationError } = await supabase
         .from('attendance_check_locations')
         .insert([{
@@ -169,8 +166,6 @@ export function CheckInOutInterface({ employeeId }: CheckInOutInterfaceProps) {
       daily_start_check_in: 'Check in đầu ngày',
       daily_end_check_out: 'Check out cuối ngày',
       shift_start_check_in: 'Check in đầu ca',
-      shift_start_check_out: 'Check out đầu ca',
-      shift_end_check_in: 'Check in cuối ca',
       shift_end_check_out: 'Check out cuối ca'
     };
     return labels[actionType] || actionType;
@@ -181,140 +176,177 @@ export function CheckInOutInterface({ employeeId }: CheckInOutInterfaceProps) {
     return Boolean(todayAttendance[actionType]);
   };
 
-  const renderCheckButton = (actionType: string, label: string, variant: 'default' | 'destructive' = 'default', checkType: string) => {
-    const completed = isActionCompleted(actionType);
-    return (
-      <Button
-        onClick={() => handleCheckAction(actionType, checkType)}
-        disabled={completed || isLoading}
-        variant={completed ? 'outline' : variant}
-        className="w-full h-20 text-lg font-semibold"
-      >
-        {completed ? (
-          <div className="flex flex-col items-center">
-            <CheckCircle className="h-6 w-6 mb-1 text-green-600" />
-            <span className="text-sm">Đã {label}</span>
-            {todayAttendance && todayAttendance[actionType] && (
-              <span className="text-xs text-gray-500">
-                {new Date(todayAttendance[actionType]).toLocaleTimeString('vi-VN', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </span>
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center">
-            <Clock className="h-6 w-6 mb-1" />
-            <span>{label}</span>
-            <span className="text-xs opacity-80">{currentTime}</span>
-          </div>
-        )}
-      </Button>
-    );
-  };
-
   return (
     <div className="space-y-6">
-      {/* Header Info */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardContent className="p-4">
+      {/* Employee Info Card */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex items-center space-x-3">
-              <User className="h-8 w-8 text-blue-600" />
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <User className="h-6 w-6 text-blue-600" />
+              </div>
               <div>
                 <p className="text-sm text-gray-600">Nhân viên</p>
-                <p className="font-semibold">Nguyễn Văn A</p>
+                <p className="font-semibold text-gray-900">Nguyễn Văn A</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <Calendar className="h-8 w-8 text-blue-600" />
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <Calendar className="h-6 w-6 text-green-600" />
+              </div>
               <div>
                 <p className="text-sm text-gray-600">Ngày</p>
-                <p className="font-semibold">{new Date().toLocaleDateString('vi-VN')}</p>
+                <p className="font-semibold text-gray-900">{new Date().toLocaleDateString('vi-VN')}</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardContent className="p-4">
             <div className="flex items-center space-x-3">
-              <Building className="h-8 w-8 text-blue-600" />
+              <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                <Building className="h-6 w-6 text-orange-600" />
+              </div>
               <div>
                 <p className="text-sm text-gray-600">Vị trí</p>
-                <p className="font-semibold">
+                <p className="font-semibold text-gray-900">
                   {currentLocation ? 'Đã xác định' : 'Chưa xác định'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Current Shift Info */}
+      {currentShift && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                <Clock className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900">Ca làm việc hiện tại</h4>
+                <p className="text-purple-700 font-medium">{currentShift.work_shifts?.name}</p>
+                <p className="text-sm text-gray-600">
+                  {currentShift.work_shifts?.start_time} - {currentShift.work_shifts?.end_time}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-      </div>
+      )}
 
-      {/* Main Check-in Interface */}
-      <Tabs defaultValue="daily" className="w-full">
-        <TabsList variant="secondary" className="grid w-full grid-cols-2">
-          <TabsTrigger variant="secondary" value="daily">
-            <Calendar className="h-4 w-4 mr-2" />
-            Chấm công theo ngày
-          </TabsTrigger>
-          <TabsTrigger variant="secondary" value="shift">
-            <Clock className="h-4 w-4 mr-2" />
-            Chấm công theo ca
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="daily" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Chấm công theo ngày làm việc
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {renderCheckButton('daily_start_check_in', 'Check In Đầu Ngày', 'default', 'daily')}
-                {renderCheckButton('daily_end_check_out', 'Check Out Cuối Ngày', 'destructive', 'daily')}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="shift" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Chấm công theo ca làm việc
-              </CardTitle>
-              {currentShift && (
-                <div className="p-4 bg-blue-50 rounded-lg mt-4">
-                  <h4 className="font-medium text-blue-900">Ca làm việc hiện tại</h4>
-                  <p className="text-blue-700">{currentShift.work_shifts?.name}</p>
-                  <p className="text-sm text-blue-600">
-                    {currentShift.work_shifts?.start_time} - {currentShift.work_shifts?.end_time}
-                  </p>
+      {/* Main Check-in Buttons */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Daily Check-in */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Calendar className="h-5 w-5 text-blue-600" />
+              Chấm công theo ngày
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button
+              onClick={() => handleCheckAction('daily_start_check_in', 'daily')}
+              disabled={isActionCompleted('daily_start_check_in') || isLoading}
+              className="w-full h-16 text-lg font-semibold bg-[#2563EB] hover:bg-[#1d4ed8]"
+            >
+              {isActionCompleted('daily_start_check_in') ? (
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                  <span>Đã Check In</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <PlayCircle className="h-6 w-6" />
+                  <div className="text-center">
+                    <div>Check In Đầu Ngày</div>
+                    <div className="text-sm opacity-80">{currentTime}</div>
+                  </div>
                 </div>
               )}
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {renderCheckButton('shift_start_check_in', 'Check In Đầu Ca', 'default', 'shift')}
-                {renderCheckButton('shift_start_check_out', 'Check Out Đầu Ca', 'destructive', 'shift')}
-                {renderCheckButton('shift_end_check_in', 'Check In Cuối Ca', 'default', 'shift')}
-                {renderCheckButton('shift_end_check_out', 'Check Out Cuối Ca', 'destructive', 'shift')}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </Button>
+
+            <Button
+              onClick={() => handleCheckAction('daily_end_check_out', 'daily')}
+              disabled={isActionCompleted('daily_end_check_out') || isLoading}
+              variant="destructive"
+              className="w-full h-16 text-lg font-semibold"
+            >
+              {isActionCompleted('daily_end_check_out') ? (
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                  <span>Đã Check Out</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <StopCircle className="h-6 w-6" />
+                  <div className="text-center">
+                    <div>Check Out Cuối Ngày</div>
+                    <div className="text-sm opacity-80">{currentTime}</div>
+                  </div>
+                </div>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Shift Check-in */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Clock className="h-5 w-5 text-purple-600" />
+              Chấm công theo ca
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button
+              onClick={() => handleCheckAction('shift_start_check_in', 'shift')}
+              disabled={isActionCompleted('shift_start_check_in') || isLoading}
+              className="w-full h-16 text-lg font-semibold bg-[#2563EB] hover:bg-[#1d4ed8]"
+            >
+              {isActionCompleted('shift_start_check_in') ? (
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                  <span>Đã Check In Ca</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <PlayCircle className="h-6 w-6" />
+                  <div className="text-center">
+                    <div>Check In Đầu Ca</div>
+                    <div className="text-sm opacity-80">{currentTime}</div>
+                  </div>
+                </div>
+              )}
+            </Button>
+
+            <Button
+              onClick={() => handleCheckAction('shift_end_check_out', 'shift')}
+              disabled={isActionCompleted('shift_end_check_out') || isLoading}
+              variant="destructive"
+              className="w-full h-16 text-lg font-semibold"
+            >
+              {isActionCompleted('shift_end_check_out') ? (
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                  <span>Đã Check Out Ca</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <StopCircle className="h-6 w-6" />
+                  <div className="text-center">
+                    <div>Check Out Cuối Ca</div>
+                    <div className="text-sm opacity-80">{currentTime}</div>
+                  </div>
+                </div>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Location Section */}
       <Card>

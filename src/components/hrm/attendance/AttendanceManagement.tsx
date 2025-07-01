@@ -71,28 +71,40 @@ export function AttendanceManagement() {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - Simple 4 Tab Layout */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Tabs defaultValue="checkin" className="w-full">
-          {/* Navigation Tabs - Menu chính với variant primary */}
+          {/* Simple 4 Tab Navigation */}
           <div className="mb-8">
-            <TabsList variant="primary" className="grid grid-cols-4 w-full">
-              <TabsTrigger variant="primary" value="checkin">
+            <TabsList className="grid grid-cols-4 w-full h-14 bg-white border border-gray-200 p-1 rounded-xl shadow-sm">
+              <TabsTrigger 
+                value="checkin" 
+                className="h-12 rounded-lg text-sm font-medium data-[state=active]:bg-[#2563EB] data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+              >
                 <Clock className="h-4 w-4 mr-2" />
                 Chấm công
               </TabsTrigger>
               
-              <TabsTrigger variant="primary" value="shifts">
+              <TabsTrigger 
+                value="shifts"
+                className="h-12 rounded-lg text-sm font-medium data-[state=active]:bg-[#2563EB] data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+              >
                 <Calendar className="h-4 w-4 mr-2" />
                 Quản lý ca
               </TabsTrigger>
               
-              <TabsTrigger variant="primary" value="list">
+              <TabsTrigger 
+                value="list"
+                className="h-12 rounded-lg text-sm font-medium data-[state=active]:bg-[#2563EB] data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+              >
                 <Users className="h-4 w-4 mr-2" />
                 Danh sách
               </TabsTrigger>
               
-              <TabsTrigger variant="primary" value="reports">
+              <TabsTrigger 
+                value="reports"
+                className="h-12 rounded-lg text-sm font-medium data-[state=active]:bg-[#2563EB] data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
+              >
                 <FileText className="h-4 w-4 mr-2" />
                 Báo cáo
               </TabsTrigger>
@@ -102,15 +114,11 @@ export function AttendanceManagement() {
           {/* Tab Contents */}
           <div className="space-y-6">
             <TabsContent value="checkin" className="m-0">
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <CheckInOutInterface employeeId={currentEmployeeId} />
-              </div>
+              <CheckInOutInterface employeeId={currentEmployeeId} />
             </TabsContent>
 
             <TabsContent value="shifts" className="m-0">
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <ShiftManagement />
-              </div>
+              <ShiftManagement />
             </TabsContent>
 
             <TabsContent value="list" className="m-0">
