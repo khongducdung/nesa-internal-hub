@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { OKRDashboard } from './OKRDashboard';
 import { OKRCycleManagement } from './OKRCycleManagement';
 import { OKRObjectiveManagement } from './OKRObjectiveManagement';
@@ -14,6 +16,17 @@ import { OKRLeaderboard } from './OKRLeaderboard';
 import { EmotionalRewards } from './EmotionalRewards';
 import { OKRSettings } from './OKRSettings';
 import { useAuth } from '@/hooks/useAuth';
+import { 
+  Award, 
+  Trophy, 
+  Heart, 
+  Target, 
+  Users, 
+  BarChart3, 
+  Settings,
+  Plus,
+  Building2
+} from 'lucide-react';
 
 export function OKRManagement() {
   const { profile } = useAuth();
@@ -22,87 +35,205 @@ export function OKRManagement() {
   const isManager = true; // Tạm thời set true, sau này có thể check thực tế
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Quản lý OKR</h1>
-        <p className="text-gray-600 mt-1">
-          Objectives and Key Results - Mục tiêu chiến lược và kết quả then chốt
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      {/* Header với gradient và typography hiện đại */}
+      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white">
+        <div className="container mx-auto px-6 py-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                OKR Management
+              </h1>
+              <p className="text-indigo-100 text-lg">
+                Objectives & Key Results - Định hướng thành công, tạo động lực vượt trội
+              </p>
+            </div>
+            <div className="hidden md:flex items-center space-x-4">
+              <div className="text-right">
+                <div className="text-2xl font-bold">Q1 2024</div>
+                <div className="text-indigo-200 text-sm">Chu kỳ hiện tại</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Tabs defaultValue="dashboard" className="w-full">
-        <TabsList className={`grid w-full ${isManager ? 'grid-cols-12' : 'grid-cols-7'}`}>
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-          <TabsTrigger value="company-okr">OKR Công ty</TabsTrigger>
-          <TabsTrigger value="my-okrs">OKR của tôi</TabsTrigger>
-          <TabsTrigger value="achievements">Huy hiệu</TabsTrigger>
-          <TabsTrigger value="leaderboard">Xếp hạng</TabsTrigger>
-          <TabsTrigger value="emotional-rewards">Thưởng cảm xúc</TabsTrigger>
-          <TabsTrigger value="collaborative">Tạo OKR</TabsTrigger>
-          
-          {isManager && (
-            <>
-              <TabsTrigger value="cycles">Chu kỳ OKR</TabsTrigger>
-              <TabsTrigger value="objectives">Quản lý Objectives</TabsTrigger>
-              <TabsTrigger value="tracking">Theo dõi tiến độ</TabsTrigger>
-              <TabsTrigger value="reporting">Báo cáo OKR</TabsTrigger>
-              <TabsTrigger value="settings">Cài đặt</TabsTrigger>
-            </>
-          )}
-        </TabsList>
+      {/* Top Action Bar - 3 tính năng chính */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              <Tabs defaultValue="achievements" className="flex-1">
+                <TabsList className="bg-gray-100 p-1 rounded-xl">
+                  <TabsTrigger 
+                    value="achievements" 
+                    className="flex items-center gap-2 px-6 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                  >
+                    <Award className="h-4 w-4" />
+                    <span className="font-medium">Huy hiệu</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="leaderboard"
+                    className="flex items-center gap-2 px-6 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                  >
+                    <Trophy className="h-4 w-4" />
+                    <span className="font-medium">Xếp hạng</span>
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="emotional-rewards"
+                    className="flex items-center gap-2 px-6 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                  >
+                    <Heart className="h-4 w-4" />
+                    <span className="font-medium">Thưởng cảm xúc</span>
+                  </TabsTrigger>
+                </TabsList>
 
-        <TabsContent value="dashboard" className="mt-6">
-          <OKRDashboard />
-        </TabsContent>
+                <div className="mt-6">
+                  <TabsContent value="achievements">
+                    <OKRAchievements />
+                  </TabsContent>
+                  <TabsContent value="leaderboard">
+                    <OKRLeaderboard />
+                  </TabsContent>
+                  <TabsContent value="emotional-rewards">
+                    <EmotionalRewards />
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </div>
 
-        <TabsContent value="company-okr" className="mt-6">
-          <CompanyOKRView />
-        </TabsContent>
+            {/* Quick Actions */}
+            <div className="flex items-center space-x-3">
+              <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg">
+                <Plus className="h-4 w-4 mr-2" />
+                Tạo OKR mới
+              </Button>
+              {isManager && (
+                <Button variant="outline" className="border-gray-300 hover:bg-gray-50">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Quản trị
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <TabsContent value="my-okrs" className="mt-6">
-          <MyOKRTasks />
-        </TabsContent>
+      {/* Main Content Area */}
+      <div className="container mx-auto px-6 py-8">
+        <Tabs defaultValue="dashboard" className="w-full">
+          <div className="mb-8">
+            <TabsList className="bg-white shadow-sm border border-gray-200 p-1 rounded-2xl">
+              <TabsTrigger 
+                value="dashboard" 
+                className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Dashboard
+              </TabsTrigger>
+              <TabsTrigger 
+                value="company-okr"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md"
+              >
+                <Building2 className="h-4 w-4" />
+                OKR Công ty
+              </TabsTrigger>
+              <TabsTrigger 
+                value="my-okrs"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md"
+              >
+                <Target className="h-4 w-4" />
+                OKR của tôi
+              </TabsTrigger>
+              <TabsTrigger 
+                value="collaborative"
+                className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md"
+              >
+                <Users className="h-4 w-4" />
+                Cộng tác
+              </TabsTrigger>
+              
+              {isManager && (
+                <>
+                  <TabsTrigger 
+                    value="cycles"
+                    className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md"
+                  >
+                    Chu kỳ OKR
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="objectives"
+                    className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md"
+                  >
+                    Quản lý Objectives
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="tracking"
+                    className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md"
+                  >
+                    Theo dõi tiến độ
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="reporting"
+                    className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md"
+                  >
+                    Báo cáo OKR
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="settings"
+                    className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md"
+                  >
+                    Cài đặt
+                  </TabsTrigger>
+                </>
+              )}
+            </TabsList>
+          </div>
 
-        <TabsContent value="achievements" className="mt-6">
-          <OKRAchievements />
-        </TabsContent>
-
-        <TabsContent value="leaderboard" className="mt-6">
-          <OKRLeaderboard />
-        </TabsContent>
-
-        <TabsContent value="emotional-rewards" className="mt-6">
-          <EmotionalRewards />
-        </TabsContent>
-
-        <TabsContent value="collaborative" className="mt-6">
-          <CollaborativeOKRForm />
-        </TabsContent>
-
-        {isManager && (
-          <>
-            <TabsContent value="cycles" className="mt-6">
-              <OKRCycleManagement />
+          {/* Tab Contents */}
+          <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+            <TabsContent value="dashboard" className="m-0 p-8">
+              <OKRDashboard />
             </TabsContent>
 
-            <TabsContent value="objectives" className="mt-6">
-              <OKRObjectiveManagement />
+            <TabsContent value="company-okr" className="m-0 p-8">
+              <CompanyOKRView />
             </TabsContent>
 
-            <TabsContent value="tracking" className="mt-6">
-              <OKRProgressTracking />
+            <TabsContent value="my-okrs" className="m-0 p-8">
+              <MyOKRTasks />
             </TabsContent>
 
-            <TabsContent value="reporting" className="mt-6">
-              <OKRReporting />
+            <TabsContent value="collaborative" className="m-0 p-8">
+              <CollaborativeOKRForm />
             </TabsContent>
 
-            <TabsContent value="settings" className="mt-6">
-              <OKRSettings />
-            </TabsContent>
-          </>
-        )}
-      </Tabs>
+            {isManager && (
+              <>
+                <TabsContent value="cycles" className="m-0 p-8">
+                  <OKRCycleManagement />
+                </TabsContent>
+
+                <TabsContent value="objectives" className="m-0 p-8">
+                  <OKRObjectiveManagement />
+                </TabsContent>
+
+                <TabsContent value="tracking" className="m-0 p-8">
+                  <OKRProgressTracking />
+                </TabsContent>
+
+                <TabsContent value="reporting" className="m-0 p-8">
+                  <OKRReporting />
+                </TabsContent>
+
+                <TabsContent value="settings" className="m-0 p-8">
+                  <OKRSettings />
+                </TabsContent>
+              </>
+            )}
+          </div>
+        </Tabs>
+      </div>
     </div>
   );
 }
