@@ -1,17 +1,36 @@
+
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { EmployeeJobDescription } from '@/components/dashboard/EmployeeJobDescription';
 import { EmployeeTrainingDashboard } from '@/components/dashboard/EmployeeTrainingDashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useEmployees } from '@/hooks/useEmployees';
-import { Calendar, CheckCheck, FileText, HelpCircle } from 'lucide-react';
+import { Calendar, CheckCheck, FileText, HelpCircle, Clock, TrendingUp } from 'lucide-react';
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { data: employees } = useEmployees();
 
   const totalEmployees = employees?.length || 0;
   const activeEmployees = employees?.filter(emp => emp.work_status === 'active').length || 0;
+
+  const getCurrentDate = () => {
+    const now = new Date();
+    const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+    const months = ['tháng 1', 'tháng 2', 'tháng 3', 'tháng 4', 'tháng 5', 'tháng 6', 
+                   'tháng 7', 'tháng 8', 'tháng 9', 'tháng 10', 'tháng 11', 'tháng 12'];
+    
+    return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}, ${now.getFullYear()}`;
+  };
+
+  const motivationalQuotes = [
+    "🎯 Hôm nay là một ngày tuyệt vời để đạt được mục tiêu!",
+    "⭐ Sẵn sáng cho một ngày làm việc hiệu quả",
+    "🚀 Cùng nhau xây dựng một tương lai tốt đẹp!",
+    "💪 Mỗi ngày là một cơ hội mới để phát triển!"
+  ];
+  const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
 
   const dashboardStats = [
     {
@@ -72,11 +91,53 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Chào mừng bạn quay trại lại hệ thống</p>
-        </div>
+        {/* Hero Welcome Section */}
+        <Card className="bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 text-white border-0 shadow-xl overflow-hidden relative">
+          <CardContent className="p-0">
+            <div className="relative bg-gradient-to-r from-blue-500/90 via-blue-600/90 to-purple-600/90 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+              <div className="relative p-8">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                        <TrendingUp className="h-5 w-5 text-white" />
+                      </div>
+                      <span className="text-white/80 text-sm font-medium">Chào buổi chiều</span>
+                    </div>
+                    
+                    <h1 className="text-3xl font-bold mb-3 text-white">
+                      Chào mừng trở lại, {profile?.full_name || 'Người dùng'}!
+                    </h1>
+                    
+                    <p className="text-blue-100 text-lg mb-6 leading-relaxed">
+                      {randomQuote}
+                    </p>
+                    
+                    <div className="flex items-center gap-2 text-white/80 text-sm mb-6">
+                      <Clock className="h-4 w-4" />
+                      <span>{getCurrentDate()}</span>
+                    </div>
+                    
+                    <div className="flex gap-3">
+                      <Button size="sm" variant="secondary" className="bg-white/20 border-white/30 hover:bg-white/30 backdrop-blur-sm text-white hover:text-white">
+                        <CheckCheck className="h-4 w-4 mr-2" />
+                        Tạo Task
+                      </Button>
+                      <Button size="sm" variant="secondary" className="bg-white/20 border-white/30 hover:bg-white/30 backdrop-blur-sm text-white hover:text-white">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Lên lịch Meeting
+                      </Button>
+                      <Button size="sm" className="bg-white text-blue-600 hover:bg-white/90 font-medium">
+                        Xem báo cáo →
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

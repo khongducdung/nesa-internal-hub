@@ -19,7 +19,8 @@ import {
   Medal,
   Sparkles,
   CheckCircle,
-  BarChart3
+  BarChart3,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { OKRAchievements } from './OKRAchievements';
@@ -59,54 +60,81 @@ export function OKRDashboard() {
     daysLeft: daysLeft
   };
 
+  const getCurrentDate = () => {
+    const now = new Date();
+    const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+    const months = ['tháng 1', 'tháng 2', 'tháng 3', 'tháng 4', 'tháng 5', 'tháng 6', 
+                   'tháng 7', 'tháng 8', 'tháng 9', 'tháng 10', 'tháng 11', 'tháng 12'];
+    
+    return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}, ${now.getFullYear()}`;
+  };
+
   return (
     <div className="space-y-8">
-      {/* Welcome Hero Section */}
-      <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-lg">
-        <CardContent className="p-8">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                  <Target className="h-8 w-8 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold mb-2">Chào {profile?.full_name || 'Admin'}! 👋</h1>
-                  <p className="text-blue-100 text-lg">{randomQuote}</p>
-                </div>
-              </div>
-              
-              <div className="flex gap-3">
-                <Button size="sm" variant="secondary" className="bg-white/20 border-white/30 hover:bg-white/30 backdrop-blur-sm text-white">
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Feedback
-                </Button>
-                <Dialog open={emotionalRewardsOpen} onOpenChange={setEmotionalRewardsOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" variant="secondary" className="bg-white/20 border-white/30 hover:bg-white/30 backdrop-blur-sm text-white">
-                      <Heart className="h-4 w-4 mr-2" />
-                      Gửi thưởng
+      {/* Welcome Hero Section with gradient background */}
+      <Card className="bg-gradient-to-r from-blue-500 via-blue-600 to-purple-600 text-white border-0 shadow-xl overflow-hidden relative">
+        <CardContent className="p-0">
+          <div className="relative bg-gradient-to-r from-blue-500/90 via-blue-600/90 to-purple-600/90 backdrop-blur-sm">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+            <div className="relative p-8">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                      <Target className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-white/80 text-sm font-medium">Chào buổi chiều</span>
+                  </div>
+                  
+                  <h1 className="text-3xl font-bold mb-3 text-white">
+                    Chào mừng trở lại, {profile?.full_name || 'Người dùng'}!
+                  </h1>
+                  
+                  <p className="text-blue-100 text-lg mb-6 leading-relaxed">
+                    {randomQuote}
+                  </p>
+                  
+                  <div className="flex items-center gap-2 text-white/80 text-sm mb-6">
+                    <Clock className="h-4 w-4" />
+                    <span>{getCurrentDate()}</span>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <Button size="sm" variant="secondary" className="bg-white/20 border-white/30 hover:bg-white/30 backdrop-blur-sm text-white hover:text-white">
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Feedback
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Thưởng cảm xúc</DialogTitle>
-                    </DialogHeader>
-                    <EmotionalRewards />
-                  </DialogContent>
-                </Dialog>
+                    <Dialog open={emotionalRewardsOpen} onOpenChange={setEmotionalRewardsOpen}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="secondary" className="bg-white/20 border-white/30 hover:bg-white/30 backdrop-blur-sm text-white hover:text-white">
+                          <Heart className="h-4 w-4 mr-2" />
+                          Gửi thưởng
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Thưởng cảm xúc</DialogTitle>
+                        </DialogHeader>
+                        <EmotionalRewards />
+                      </DialogContent>
+                    </Dialog>
+                    <Button size="sm" className="bg-white text-blue-600 hover:bg-white/90 font-medium">
+                      Xem báo cáo →
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Quarter Information Badge */}
+                <div className="text-center ml-8">
+                  <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex flex-col items-center justify-center shadow-xl mb-3 border-4 border-white/30">
+                    <span className="text-white text-xs font-medium">#{rewardData.myRank}</span>
+                    <span className="text-white text-lg font-bold">Q1</span>
+                  </div>
+                  <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
+                    {currentQuarter.name}
+                  </Badge>
+                </div>
               </div>
-            </div>
-            
-            {/* Quarter Information Badge */}
-            <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex flex-col items-center justify-center shadow-xl mb-3 border-4 border-white/30">
-                <span className="text-white text-xs font-medium">#{rewardData.myRank}</span>
-                <span className="text-white text-lg font-bold">Q1</span>
-              </div>
-              <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
-                {currentQuarter.name}
-              </Badge>
             </div>
           </div>
         </CardContent>
