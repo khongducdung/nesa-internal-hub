@@ -1,10 +1,8 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Calendar, Users, Settings, Plus, Edit, Trash2, MapPin } from 'lucide-react';
-import { AttendanceSettingsManagement } from './AttendanceSettingsManagement';
+import { Clock, Calendar, Users, Plus, Edit, Trash2, MapPin } from 'lucide-react';
 
 export function ShiftManagement() {
   const [activeView, setActiveView] = useState('overview');
@@ -61,10 +59,6 @@ export function ShiftManagement() {
     }
   ];
 
-  if (activeView === 'settings') {
-    return <AttendanceSettingsManagement />;
-  }
-
   return (
     <div className="space-y-6">
       {/* Header with Navigation */}
@@ -107,17 +101,6 @@ export function ShiftManagement() {
             >
               <Users className="h-4 w-4 mr-2 inline" />
               Phân công
-            </button>
-            <button
-              onClick={() => setActiveView('settings')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeView === 'settings' 
-                  ? 'bg-white text-[#2563EB] shadow-sm' 
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Settings className="h-4 w-4 mr-2 inline" />
-              Cài đặt
             </button>
           </div>
           <Button className="bg-[#2563EB] hover:bg-[#1d4ed8] text-white">
