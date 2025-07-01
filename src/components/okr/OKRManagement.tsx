@@ -18,15 +18,15 @@ export function OKRManagement() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Tabs defaultValue="dashboard" className="w-full">
-          {/* Navigation Tabs - Updated to 4 columns */}
+          {/* Navigation Tabs - Full Width */}
           <div className="mb-8">
-            <TabsList className="w-full h-12 items-center justify-start rounded-lg bg-white p-1 shadow-sm border border-gray-200 grid grid-cols-4">
+            <TabsList className="w-full h-12 items-center justify-start rounded-lg bg-white p-1 shadow-sm border border-gray-200 grid grid-cols-5">
               <TabsTrigger 
                 value="dashboard" 
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
               >
                 <BarChart3 className="h-4 w-4 mr-2" />
-                Tổng quan
+                Dashboard
               </TabsTrigger>
               
               <TabsTrigger 
