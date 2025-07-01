@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -77,5 +78,33 @@ export function useAttendanceSettingMutations() {
     }
   });
 
-  return { createSetting };
+  const updateSetting = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<AttendanceSetting> }) => {
+      const { data: result, error } = await supabase
+        .from('attendance_settings')
+        .update({ ...data, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['attendance-settings'] });
+    },
+    onError: (error) => {
+      console.error('Error updating attendance setting:', error);
+      toast({
+        title: 'Lỗi cập nhật cài đặt chấm công',
+        description: 'Không thể cập nhật cài đặt chấm công. Vui lòng thử lại.',
+        variant: 'destructive'
+      });
+    }
+  });
+
+  return { 
+    createSetting,
+    updateSetting
+  };
 }

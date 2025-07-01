@@ -7,6 +7,7 @@ interface WorkSession {
   name: string;
   start_time: string;
   end_time: string;
+  [key: string]: any; // Add index signature for Json compatibility
 }
 
 interface CreateWorkShiftData {
@@ -34,9 +35,16 @@ export function useWorkShiftMutations() {
 
   const createShift = useMutation({
     mutationFn: async (data: CreateWorkShiftData) => {
+      // Convert WorkSession arrays to Json for database
+      const dbData = {
+        ...data,
+        work_sessions: data.work_sessions as any,
+        saturday_work_sessions: data.saturday_work_sessions as any
+      };
+
       const { data: result, error } = await supabase
         .from('work_shifts')
-        .insert([data])
+        .insert([dbData])
         .select()
         .single();
 
@@ -58,9 +66,17 @@ export function useWorkShiftMutations() {
 
   const updateShift = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<CreateWorkShiftData> }) => {
+      // Convert WorkSession arrays to Json for database
+      const dbData = {
+        ...data,
+        work_sessions: data.work_sessions as any,
+        saturday_work_sessions: data.saturday_work_sessions as any,
+        updated_at: new Date().toISOString()
+      };
+
       const { data: result, error } = await supabase
         .from('work_shifts')
-        .update({ ...data, updated_at: new Date().toISOString() })
+        .update(dbData)
         .eq('id', id)
         .select()
         .single();

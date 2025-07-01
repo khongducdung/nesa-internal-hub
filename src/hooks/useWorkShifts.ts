@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -5,6 +6,7 @@ export interface WorkSession {
   name: string;
   start_time: string;
   end_time: string;
+  [key: string]: any; // Add index signature for Json compatibility
 }
 
 export interface WorkShift {
@@ -41,7 +43,13 @@ export function useWorkShifts() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as WorkShift[];
+      
+      // Convert Json fields to proper types
+      return (data as any[]).map(shift => ({
+        ...shift,
+        work_sessions: shift.work_sessions as WorkSession[] || [],
+        saturday_work_sessions: shift.saturday_work_sessions as WorkSession[] || []
+      })) as WorkShift[];
     }
   });
 }
@@ -57,7 +65,13 @@ export function useWorkShift(id: string) {
         .single();
 
       if (error) throw error;
-      return data as WorkShift;
+      
+      // Convert Json fields to proper types
+      return {
+        ...data,
+        work_sessions: data.work_sessions as WorkSession[] || [],
+        saturday_work_sessions: data.saturday_work_sessions as WorkSession[] || []
+      } as WorkShift;
     },
     enabled: !!id
   });
