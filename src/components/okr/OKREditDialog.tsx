@@ -19,14 +19,33 @@ interface OKREditDialogProps {
   onSave: (okrData: Partial<OKRObjective>) => void;
 }
 
+type KeyResultFormData = {
+  id: string;
+  title: string;
+  target_value: string;
+  current_value: string;
+  unit: string;
+  weight: number;
+  progress: number;
+  status: 'not_started' | 'on_track' | 'at_risk' | 'completed';
+};
+
+type FormData = {
+  title: string;
+  description: string;
+  status: 'draft' | 'active' | 'completed' | 'cancelled';
+  parent_okr_id: string;
+  key_results: KeyResultFormData[];
+};
+
 export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogProps) {
   const { companyOKRs, departmentOKRs } = useOKRData();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
-    status: 'active' as const,
+    status: 'active',
     parent_okr_id: '',
-    key_results: [{ id: '', title: '', target_value: '', current_value: '', unit: '', weight: 100, progress: 0, status: 'not_started' as const }]
+    key_results: [{ id: '', title: '', target_value: '', current_value: '', unit: '', weight: 100, progress: 0, status: 'not_started' }]
   });
 
   useEffect(() => {
@@ -61,7 +80,7 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
         unit: '',
         weight: 100,
         progress: 0,
-        status: 'not_started' as const
+        status: 'not_started'
       }]
     });
   };
@@ -167,7 +186,7 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
 
               <div className="space-y-2">
                 <Label>Trạng thái</Label>
-                <Select value={formData.status} onValueChange={(value: any) => setFormData({ ...formData, status: value })}>
+                <Select value={formData.status} onValueChange={(value: 'draft' | 'active' | 'completed' | 'cancelled') => setFormData({ ...formData, status: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
