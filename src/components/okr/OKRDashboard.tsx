@@ -50,6 +50,15 @@ export function OKRDashboard() {
   const completedObjectives = 5;
   const totalObjectives = 8;
 
+  // Quarter information
+  const currentQuarter = {
+    name: "Q1 2024",
+    progress: cycleProgress,
+    startDate: "01/01/2024",
+    endDate: "31/03/2024",
+    daysLeft: daysLeft
+  };
+
   return (
     <div className="space-y-8">
       {/* Welcome Hero Section */}
@@ -89,12 +98,15 @@ export function OKRDashboard() {
               </div>
             </div>
             
-            {/* Rank Badge */}
+            {/* Quarter Information Badge */}
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center shadow-xl mb-3 border-4 border-white/30">
-                <span className="text-white text-xl font-bold">#{rewardData.myRank}</span>
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex flex-col items-center justify-center shadow-xl mb-3 border-4 border-white/30">
+                <span className="text-white text-xs font-medium">#{rewardData.myRank}</span>
+                <span className="text-white text-lg font-bold">Q1</span>
               </div>
-              <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">Xếp hạng công ty</Badge>
+              <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
+                {currentQuarter.name}
+              </Badge>
             </div>
           </div>
         </CardContent>
@@ -106,25 +118,25 @@ export function OKRDashboard() {
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-6">
               <Calendar className="h-6 w-6 text-blue-600" />
-              <h2 className="text-2xl font-bold text-gray-900">Chu kỳ Q1 2024</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Chu kỳ {currentQuarter.name}</h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
               <div className="text-center">
-                <div className="text-5xl font-bold text-blue-600 mb-2">{cycleProgress}%</div>
+                <div className="text-5xl font-bold text-blue-600 mb-2">{currentQuarter.progress}%</div>
                 <div className="text-gray-600 mb-3">Tiến độ tổng thể</div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <div 
                     className="bg-blue-600 h-3 rounded-full transition-all duration-500" 
-                    style={{ width: `${cycleProgress}%` }}
+                    style={{ width: `${currentQuarter.progress}%` }}
                   ></div>
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-5xl font-bold text-orange-600 mb-2">{daysLeft}</div>
+                <div className="text-5xl font-bold text-orange-600 mb-2">{currentQuarter.daysLeft}</div>
                 <div className="text-gray-600 mb-3">Ngày còn lại</div>
                 <Badge variant="outline" className="border-orange-200 text-orange-700 bg-orange-50">
-                  Còn {daysLeft} ngày
+                  Còn {currentQuarter.daysLeft} ngày
                 </Badge>
               </div>
               <div className="text-center">

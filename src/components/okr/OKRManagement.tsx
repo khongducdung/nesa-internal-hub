@@ -15,32 +15,12 @@ export function OKRManagement() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header Section */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                OKR Management
-              </h1>
-              <p className="text-gray-600">
-                Objectives & Key Results - Định hướng thành công, tạo động lực vượt trội
-              </p>
-            </div>
-            <div className="text-right">
-              <div className="text-lg font-semibold text-blue-600">Q1 2024</div>
-              <div className="text-sm text-gray-500">Chu kỳ hiện tại</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Tabs defaultValue="dashboard" className="w-full">
-          {/* Navigation Tabs */}
+          {/* Navigation Tabs - Full Width */}
           <div className="mb-8">
-            <TabsList className="inline-flex h-12 items-center justify-center rounded-lg bg-white p-1 shadow-sm border border-gray-200">
+            <TabsList className="w-full h-12 items-center justify-start rounded-lg bg-white p-1 shadow-sm border border-gray-200 grid grid-cols-5">
               <TabsTrigger 
                 value="dashboard" 
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm"
