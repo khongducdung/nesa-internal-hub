@@ -1,4 +1,3 @@
-
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Users, Building2, Settings, X, Home, FileText, TrendingUp, Target, BarChart3, LogOut, Clock } from 'lucide-react';
@@ -91,8 +90,8 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
         </div>
 
         {/* Profile Section */}
-        <div className={`p-4 border-b border-white/20 ${isCollapsed ? 'px-2' : ''}`}>
-          <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} bg-white/10 rounded-lg p-3 backdrop-blur-sm`}>
+        <div className={`p-3 border-b border-white/20 ${isCollapsed ? 'px-2' : ''}`}>
+          <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} bg-white/10 rounded-lg p-3`}>
             <div className="flex items-center">
               <div className={`w-10 h-10 bg-white rounded-full flex items-center justify-center flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`}>
                 <span className="text-primary font-bold text-sm">
@@ -143,8 +142,8 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
           </div>
         </div>
 
-        {/* Navigation Menu - Adjusted spacing and positioning */}
-        <nav className="flex-1 px-3 pt-6 pb-3 space-y-1 overflow-y-auto">
+        {/* Navigation Menu */}
+        <nav className="flex-1 p-3 space-y-2 overflow-y-auto">
           {menuItems.map(item => {
             if (!hasAccess(item.access)) return null;
             const isActive = location.pathname === item.path;
@@ -154,15 +153,15 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
               <Button
                 key={item.path}
                 variant="ghost"
-                className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start px-4'} h-11 text-left menu-item-hover ${
+                className={`w-full ${isCollapsed ? 'justify-center px-0' : 'justify-start px-4'} h-12 text-left menu-item-hover ${
                   isActive 
-                    ? 'bg-white/15 text-white border-r-2 border-white/50' 
-                    : 'text-white/90 hover:bg-white/10 hover:text-white'
+                    ? 'bg-white/10 text-white' 
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
                 }`}
                 onClick={() => handleNavigation(item.path)}
                 title={isCollapsed ? item.label : undefined}
               >
-                <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-white/90'} ${isCollapsed ? '' : 'mr-3'}`} />
+                <Icon className={`h-5 w-5 ${isActive ? 'text-white' : ''} ${isCollapsed ? '' : 'mr-3'}`} />
                 {!isCollapsed && <span className="text-sm font-medium">{item.label}</span>}
               </Button>
             );
