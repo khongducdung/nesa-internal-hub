@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,74 +70,72 @@ export function OKRDashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Welcome Hero Section with image-based background */}
-      <Card className="border-0 shadow-xl overflow-hidden relative" style={{
-        backgroundImage: 'url(/lovable-uploads/e6c395cd-68c2-46ec-8fef-ddaecbf68791.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }}>
+      {/* Welcome Hero Section with blue gradient and decorative circles */}
+      <Card className="border-0 shadow-xl overflow-hidden relative bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700">
         <CardContent className="p-0">
-          <div className="relative bg-black/20 backdrop-blur-sm">
-            <div className="absolute inset-0 bg-gradient-to-br from-black/10 to-transparent"></div>
-            <div className="relative p-8 text-white">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                      <Target className="h-5 w-5 text-white" />
-                    </div>
-                    <span className="text-white/80 text-sm font-medium">Chào buổi chiều</span>
+          {/* Decorative circles */}
+          <div className="absolute -top-20 -left-20 w-40 h-40 bg-white/10 rounded-full"></div>
+          <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-white/10 rounded-full"></div>
+          <div className="absolute top-10 -right-10 w-20 h-20 bg-white/5 rounded-full"></div>
+          <div className="absolute -bottom-10 -left-10 w-20 h-20 bg-white/5 rounded-full"></div>
+          
+          <div className="relative p-8 text-white">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                    <Target className="h-5 w-5 text-white" />
                   </div>
-                  
-                  <h1 className="text-3xl font-bold mb-3 text-white">
-                    Chào mừng trở lại, {profile?.full_name || 'Người dùng'}!
-                  </h1>
-                  
-                  <p className="text-white/90 text-lg mb-6 leading-relaxed">
-                    {randomQuote}
-                  </p>
-                  
-                  <div className="flex items-center gap-2 text-white/80 text-sm mb-6">
-                    <Clock className="h-4 w-4" />
-                    <span>{getCurrentDate()}</span>
-                  </div>
-                  
-                  <div className="flex gap-3">
-                    <Button size="sm" variant="secondary" className="bg-white/20 border-white/30 hover:bg-white/30 backdrop-blur-sm text-white hover:text-white">
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Feedback
-                    </Button>
-                    <Dialog open={emotionalRewardsOpen} onOpenChange={setEmotionalRewardsOpen}>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="secondary" className="bg-white/20 border-white/30 hover:bg-white/30 backdrop-blur-sm text-white hover:text-white">
-                          <Heart className="h-4 w-4 mr-2" />
-                          Gửi thưởng
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle>Thưởng cảm xúc</DialogTitle>
-                        </DialogHeader>
-                        <EmotionalRewards />
-                      </DialogContent>
-                    </Dialog>
-                    <Button size="sm" className="bg-white text-gray-800 hover:bg-white/90 font-medium">
-                      Xem báo cáo →
-                    </Button>
-                  </div>
+                  <span className="text-white/80 text-sm font-medium">Chào buổi chiều</span>
                 </div>
                 
-                {/* Quarter Information Badge */}
-                <div className="text-center ml-8">
-                  <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex flex-col items-center justify-center shadow-xl mb-3 border-4 border-white/30">
-                    <span className="text-white text-xs font-medium">#{rewardData.myRank}</span>
-                    <span className="text-white text-lg font-bold">Q1</span>
-                  </div>
-                  <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
-                    {currentQuarter.name}
-                  </Badge>
+                <h1 className="text-3xl font-bold mb-3 text-white">
+                  Chào mừng trở lại, {profile?.full_name || 'Người dùng'}!
+                </h1>
+                
+                <p className="text-white/90 text-lg mb-6 leading-relaxed">
+                  {randomQuote}
+                </p>
+                
+                <div className="flex items-center gap-2 text-white/80 text-sm mb-6">
+                  <Clock className="h-4 w-4" />
+                  <span>{getCurrentDate()}</span>
                 </div>
+                
+                <div className="flex gap-3">
+                  <Button size="sm" variant="secondary" className="bg-white/20 border-white/30 hover:bg-white/30 backdrop-blur-sm text-white hover:text-white">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Feedback
+                  </Button>
+                  <Dialog open={emotionalRewardsOpen} onOpenChange={setEmotionalRewardsOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="secondary" className="bg-white/20 border-white/30 hover:bg-white/30 backdrop-blur-sm text-white hover:text-white">
+                        <Heart className="h-4 w-4 mr-2" />
+                        Gửi thưởng
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Thưởng cảm xúc</DialogTitle>
+                      </DialogHeader>
+                      <EmotionalRewards />
+                    </DialogContent>
+                  </Dialog>
+                  <Button size="sm" className="bg-white text-blue-600 hover:bg-white/90 font-medium">
+                    Xem báo cáo →
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Quarter Information Badge */}
+              <div className="text-center ml-8">
+                <div className="w-20 h-20 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex flex-col items-center justify-center shadow-xl mb-3 border-4 border-white/30">
+                  <span className="text-white text-xs font-medium">#{rewardData.myRank}</span>
+                  <span className="text-white text-lg font-bold">Q1</span>
+                </div>
+                <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
+                  {currentQuarter.name}
+                </Badge>
               </div>
             </div>
           </div>
