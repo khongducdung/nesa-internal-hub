@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -15,27 +14,40 @@ import { useShiftAssignmentMutations } from '@/hooks/useShiftAssignmentMutations
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { format, parse } from 'date-fns';
-
 interface ShiftAssignmentDialogProps {
   open: boolean;
   onClose: () => void;
 }
-
-export function ShiftAssignmentDialog({ open, onClose }: ShiftAssignmentDialogProps) {
-  const { profile } = useAuth();
-  const { data: workShifts } = useWorkShifts();
-  const { data: employees } = useEmployees();
-  const { data: departments } = useDepartments();
-  const { data: positions } = usePositions();
-  const { createAssignment } = useShiftAssignmentMutations();
-  const { toast } = useToast();
-
+export function ShiftAssignmentDialog({
+  open,
+  onClose
+}: ShiftAssignmentDialogProps) {
+  const {
+    profile
+  } = useAuth();
+  const {
+    data: workShifts
+  } = useWorkShifts();
+  const {
+    data: employees
+  } = useEmployees();
+  const {
+    data: departments
+  } = useDepartments();
+  const {
+    data: positions
+  } = usePositions();
+  const {
+    createAssignment
+  } = useShiftAssignmentMutations();
+  const {
+    toast
+  } = useToast();
   const [assignmentType, setAssignmentType] = useState<'employee' | 'department' | 'position'>('employee');
   const [selectedShift, setSelectedShift] = useState('');
   const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
   const [effectiveFrom, setEffectiveFrom] = useState(format(new Date(), 'dd/MM/yyyy'));
   const [effectiveTo, setEffectiveTo] = useState('');
-
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
     try {
@@ -45,7 +57,6 @@ export function ShiftAssignmentDialog({ open, onClose }: ShiftAssignmentDialogPr
       return dateString;
     }
   };
-
   const getTargetOptions = () => {
     switch (assignmentType) {
       case 'employee':
@@ -70,7 +81,6 @@ export function ShiftAssignmentDialog({ open, onClose }: ShiftAssignmentDialogPr
         return [];
     }
   };
-
   const handleSubmit = async () => {
     if (!selectedShift || selectedTargets.length === 0 || !profile?.employee_id) {
       toast({
@@ -80,7 +90,6 @@ export function ShiftAssignmentDialog({ open, onClose }: ShiftAssignmentDialogPr
       });
       return;
     }
-
     try {
       for (const targetId of selectedTargets) {
         const assignmentData = {
@@ -88,14 +97,18 @@ export function ShiftAssignmentDialog({ open, onClose }: ShiftAssignmentDialogPr
           effective_from: formatDate(effectiveFrom),
           effective_to: effectiveTo ? formatDate(effectiveTo) : undefined,
           created_by: profile.employee_id,
-          ...(assignmentType === 'employee' && { employee_id: targetId }),
-          ...(assignmentType === 'department' && { department_id: targetId }),
-          ...(assignmentType === 'position' && { position_id: targetId })
+          ...(assignmentType === 'employee' && {
+            employee_id: targetId
+          }),
+          ...(assignmentType === 'department' && {
+            department_id: targetId
+          }),
+          ...(assignmentType === 'position' && {
+            position_id: targetId
+          })
         };
-
         await createAssignment.mutateAsync(assignmentData);
       }
-
       toast({
         title: 'Thành công',
         description: `Đã phân công ca cho ${selectedTargets.length} đối tượng`
@@ -111,19 +124,11 @@ export function ShiftAssignmentDialog({ open, onClose }: ShiftAssignmentDialogPr
       console.error('Error creating assignments:', error);
     }
   };
-
   const handleTargetToggle = (targetId: string) => {
-    setSelectedTargets(prev => 
-      prev.includes(targetId)
-        ? prev.filter(id => id !== targetId)
-        : [...prev, targetId]
-    );
+    setSelectedTargets(prev => prev.includes(targetId) ? prev.filter(id => id !== targetId) : [...prev, targetId]);
   };
-
   const targetOptions = getTargetOptions();
-
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
+  return <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Phân công ca làm việc</DialogTitle>
@@ -137,11 +142,9 @@ export function ShiftAssignmentDialog({ open, onClose }: ShiftAssignmentDialogPr
                 <SelectValue placeholder="Chọn ca làm việc" />
               </SelectTrigger>
               <SelectContent>
-                {workShifts?.map((shift) => (
-                  <SelectItem key={shift.id} value={shift.id}>
+                {workShifts?.map(shift => <SelectItem key={shift.id} value={shift.id}>
                     {shift.name} ({shift.start_time} - {shift.end_time})
-                  </SelectItem>
-                ))}
+                  </SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -149,36 +152,24 @@ export function ShiftAssignmentDialog({ open, onClose }: ShiftAssignmentDialogPr
           <div className="space-y-2">
             <Label>Phân công cho</Label>
             <div className="grid grid-cols-3 gap-2">
-              <Button
-                variant={assignmentType === 'employee' ? 'default' : 'outline'}
-                onClick={() => {
-                  setAssignmentType('employee');
-                  setSelectedTargets([]);
-                }}
-                className="flex items-center gap-2"
-              >
+              <Button variant={assignmentType === 'employee' ? 'default' : 'outline'} onClick={() => {
+              setAssignmentType('employee');
+              setSelectedTargets([]);
+            }} className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 Nhân viên
               </Button>
-              <Button
-                variant={assignmentType === 'department' ? 'default' : 'outline'}
-                onClick={() => {
-                  setAssignmentType('department');
-                  setSelectedTargets([]);
-                }}
-                className="flex items-center gap-2"
-              >
+              <Button variant={assignmentType === 'department' ? 'default' : 'outline'} onClick={() => {
+              setAssignmentType('department');
+              setSelectedTargets([]);
+            }} className="flex items-center gap-2">
                 <Building className="h-4 w-4" />
                 Phòng ban
               </Button>
-              <Button
-                variant={assignmentType === 'position' ? 'default' : 'outline'}
-                onClick={() => {
-                  setAssignmentType('position');
-                  setSelectedTargets([]);
-                }}
-                className="flex items-center gap-2"
-              >
+              <Button variant={assignmentType === 'position' ? 'default' : 'outline'} onClick={() => {
+              setAssignmentType('position');
+              setSelectedTargets([]);
+            }} className="flex items-center gap-2">
                 <Briefcase className="h-4 w-4" />
                 Vị trí
               </Button>
@@ -187,22 +178,12 @@ export function ShiftAssignmentDialog({ open, onClose }: ShiftAssignmentDialogPr
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="effective_from">Ngày bắt đầu (dd/mm/yyyy)</Label>
-              <Input
-                id="effective_from"
-                value={effectiveFrom}
-                onChange={(e) => setEffectiveFrom(e.target.value)}
-                placeholder="dd/mm/yyyy"
-              />
+              <Label htmlFor="effective_from">Ngày bắt đầu</Label>
+              <Input id="effective_from" value={effectiveFrom} onChange={e => setEffectiveFrom(e.target.value)} placeholder="dd/mm/yyyy" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="effective_to">Ngày kết thúc (dd/mm/yyyy)</Label>
-              <Input
-                id="effective_to"
-                value={effectiveTo}
-                onChange={(e) => setEffectiveTo(e.target.value)}
-                placeholder="dd/mm/yyyy (để trống nếu vô thời hạn)"
-              />
+              <Label htmlFor="effective_to">Ngày kết thúc</Label>
+              <Input id="effective_to" value={effectiveTo} onChange={e => setEffectiveTo(e.target.value)} placeholder="dd/mm/yyyy (để trống nếu vô thời hạn)" />
             </div>
           </div>
 
@@ -221,42 +202,26 @@ export function ShiftAssignmentDialog({ open, onClose }: ShiftAssignmentDialogPr
                 </div>
 
                 <div className="max-h-60 overflow-y-auto space-y-2">
-                  {targetOptions.map((option) => (
-                    <div
-                      key={option.id}
-                      className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
-                        selectedTargets.includes(option.id) ? 'border-blue-500 bg-blue-50' : ''
-                      }`}
-                      onClick={() => handleTargetToggle(option.id)}
-                    >
+                  {targetOptions.map(option => <div key={option.id} className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${selectedTargets.includes(option.id) ? 'border-blue-500 bg-blue-50' : ''}`} onClick={() => handleTargetToggle(option.id)}>
                       <div>
                         <div className="font-medium">{option.name}</div>
                         <div className="text-sm text-gray-500">{option.subtitle}</div>
                       </div>
-                      <div className={`w-4 h-4 rounded border-2 ${
-                        selectedTargets.includes(option.id) 
-                          ? 'bg-blue-500 border-blue-500' 
-                          : 'border-gray-300'
-                      }`}>
-                        {selectedTargets.includes(option.id) && (
-                          <div className="w-full h-full bg-blue-500 rounded flex items-center justify-center">
+                      <div className={`w-4 h-4 rounded border-2 ${selectedTargets.includes(option.id) ? 'bg-blue-500 border-blue-500' : 'border-gray-300'}`}>
+                        {selectedTargets.includes(option.id) && <div className="w-full h-full bg-blue-500 rounded flex items-center justify-center">
                             <div className="w-2 h-2 bg-white rounded-full" />
-                          </div>
-                        )}
+                          </div>}
                       </div>
-                    </div>
-                  ))}
+                    </div>)}
 
-                  {targetOptions.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
+                  {targetOptions.length === 0 && <div className="text-center py-8 text-gray-500">
                       <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
                       <p>
                         {assignmentType === 'employee' && 'Không có nhân viên nào'}
                         {assignmentType === 'department' && 'Không có phòng ban nào'}
                         {assignmentType === 'position' && 'Không có vị trí nào'}
                       </p>
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </div>
             </CardContent>
@@ -266,15 +231,11 @@ export function ShiftAssignmentDialog({ open, onClose }: ShiftAssignmentDialogPr
             <Button variant="outline" onClick={onClose}>
               Hủy
             </Button>
-            <Button 
-              onClick={handleSubmit}
-              disabled={!selectedShift || selectedTargets.length === 0 || createAssignment.isPending}
-            >
+            <Button onClick={handleSubmit} disabled={!selectedShift || selectedTargets.length === 0 || createAssignment.isPending}>
               Phân công ({selectedTargets.length})
             </Button>
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
