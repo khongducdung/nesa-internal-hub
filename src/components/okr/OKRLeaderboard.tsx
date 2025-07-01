@@ -123,7 +123,7 @@ export function OKRLeaderboard() {
 
   return (
     <div className="space-y-8">
-      {/* Hero Header with blue gradient and decorative circles */}
+      {/* Header with blue gradient and decorative circles */}
       <Card className="border-0 shadow-xl overflow-hidden relative bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700">
         <CardContent className="p-0">
           {/* Decorative circles */}
@@ -153,10 +153,10 @@ export function OKRLeaderboard() {
       </Card>
 
       <Tabs value={selectedPeriod} onValueChange={setSelectedPeriod} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 tabs-list-branded">
-          <TabsTrigger value="current" className="tabs-trigger-branded">Chu kỳ hiện tại</TabsTrigger>
-          <TabsTrigger value="individual" className="tabs-trigger-branded">Cá nhân</TabsTrigger>
-          <TabsTrigger value="department" className="tabs-trigger-branded">Phòng ban</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-white border shadow-sm">
+          <TabsTrigger value="current" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">Chu kỳ hiện tại</TabsTrigger>
+          <TabsTrigger value="individual" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">Cá nhân</TabsTrigger>
+          <TabsTrigger value="department" className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">Phòng ban</TabsTrigger>
         </TabsList>
 
         <TabsContent value="current" className="mt-6">
