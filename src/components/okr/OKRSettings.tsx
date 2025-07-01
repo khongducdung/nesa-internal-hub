@@ -31,14 +31,43 @@ import {
   Shield,
   Zap,
   Clock,
-  TrendingUp
+  TrendingUp,
+  Eye
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { RuleEditDialog } from './dialogs/RuleEditDialog';
+import { AchievementCreateDialog } from './dialogs/AchievementCreateDialog';
+
+interface RewardRule {
+  id: number;
+  category: string;
+  action: string;
+  reward: string;
+  conditions: string;
+  status: string;
+  priority: string;
+  usage_count: number;
+}
+
+interface Achievement {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  type: string;
+  points: number;
+  status: string;
+}
 
 export function OKRSettings() {
   const { toast } = useToast();
   const [loading, setSaving] = useState(false);
   const [newRuleOpen, setNewRuleOpen] = useState(false);
+  const [editRuleOpen, setEditRuleOpen] = useState(false);
+  const [selectedRule, setSelectedRule] = useState<RewardRule | null>(null);
+  const [createAchievementOpen, setCreateAchievementOpen] = useState(false);
+  const [editAchievementOpen, setEditAchievementOpen] = useState(false);
+  const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   
   const [settings, setSettings] = useState({
     // Reward System Settings
@@ -68,15 +97,7 @@ export function OKRSettings() {
     weekly_summary: true
   });
 
-  const [newRule, setNewRule] = useState({
-    category: '',
-    action: '',
-    reward: '',
-    conditions: '',
-    priority: 'medium'
-  });
-
-  const rewardRules = [
+  const [rewardRules, setRewardRules] = useState<RewardRule[]>([
     {
       id: 1,
       category: 'OKR Completion',
@@ -127,9 +148,9 @@ export function OKRSettings() {
       priority: 'high',
       usage_count: 8
     }
-  ];
+  ]);
 
-  const achievements = [
+  const [achievements, setAchievements] = useState<Achievement[]>([
     {
       id: 1,
       name: 'First Goal',
@@ -166,7 +187,7 @@ export function OKRSettings() {
       points: 500,
       status: 'draft'
     }
-  ];
+  ]);
 
   const handleSaveSettings = async () => {
     setSaving(true);
@@ -196,30 +217,68 @@ export function OKRSettings() {
     }));
   };
 
-  const handleAddRule = () => {
-    if (!newRule.category || !newRule.action || !newRule.reward) {
-      toast({
-        title: "Thiếu thông tin",
-        description: "Vui lòng điền đầy đủ thông tin quy tắc",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleEditRule = (rule: RewardRule) => {
+    setSelectedRule(rule);
+    setEditRuleOpen(true);
+  };
 
-    // Add rule logic here
+  const handleViewRule = (rule: RewardRule) => {
+    setSelectedRule(rule);
+    // Could open a view-only dialog
     toast({
-      title: "Quy tắc đã được thêm",
-      description: "Quy tắc mới đã được tạo thành công",
+      title: "Xem chi tiết quy tắc",
+      description: `${rule.action} - ${rule.reward}`,
     });
-    
-    setNewRule({
-      category: '',
-      action: '',
-      reward: '',
-      conditions: '',
-      priority: 'medium'
+  };
+
+  const handleDeleteRule = (ruleId: number) => {
+    setRewardRules(prev => prev.filter(rule => rule.id !== ruleId));
+    toast({
+      title: "Đã xóa quy tắc",
+      description: "Quy tắc thưởng đã được xóa thành công",
     });
-    setNewRuleOpen(false);
+  };
+
+  const handleSaveRule = (updatedRule: RewardRule) => {
+    if (updatedRule.id === 0) {
+      // New rule
+      const newRule = { ...updatedRule, id: Date.now(), usage_count: 0 };
+      setRewardRules(prev => [...prev, newRule]);
+    } else {
+      // Edit existing rule
+      setRewardRules(prev => prev.map(rule => 
+        rule.id === updatedRule.id ? updatedRule : rule
+      ));
+    }
+  };
+
+  const handleEditAchievement = (achievement: Achievement) => {
+    setSelectedAchievement(achievement);
+    setEditAchievementOpen(true);
+  };
+
+  const handleDeleteAchievement = (achievementId: number) => {
+    setAchievements(prev => prev.filter(ach => ach.id !== achievementId));
+    toast({
+      title: "Đã xóa huy hiệu",
+      description: "Huy hiệu đã được xóa thành công",
+    });
+  };
+
+  const handleSaveAchievement = (achievementData: Omit<Achievement, 'id'>) => {
+    if (selectedAchievement) {
+      // Edit existing achievement
+      setAchievements(prev => prev.map(ach => 
+        ach.id === selectedAchievement.id 
+          ? { ...achievementData, id: selectedAchievement.id }
+          : ach
+      ));
+    } else {
+      // New achievement
+      const newAchievement = { ...achievementData, id: Date.now() };
+      setAchievements(prev => [...prev, newAchievement]);
+    }
+    setSelectedAchievement(null);
   };
 
   const getPriorityColor = (priority: string) => {
@@ -417,87 +476,16 @@ export function OKRSettings() {
               <h3 className="text-lg font-semibold">Quy tắc thưởng tự động</h3>
               <p className="text-gray-600">Quản lý các điều kiện và mức thưởng cho từng hành động</p>
             </div>
-            <Dialog open={newRuleOpen} onOpenChange={setNewRuleOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-green-600 hover:bg-green-700">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Thêm quy tắc
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Tạo quy tắc thưởng mới</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Danh mục</Label>
-                      <Select value={newRule.category} onValueChange={(value) => setNewRule({...newRule, category: value})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Chọn danh mục" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="completion">OKR Completion</SelectItem>
-                          <SelectItem value="excellence">Excellence</SelectItem>
-                          <SelectItem value="collaboration">Collaboration</SelectItem>
-                          <SelectItem value="leadership">Leadership</SelectItem>
-                          <SelectItem value="innovation">Innovation</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Độ ưu tiên</Label>
-                      <Select value={newRule.priority} onValueChange={(value) => setNewRule({...newRule, priority: value})}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="high">Cao</SelectItem>
-                          <SelectItem value="medium">Trung bình</SelectItem>
-                          <SelectItem value="low">Thấp</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Hành động kích hoạt</Label>
-                    <Input
-                      value={newRule.action}
-                      onChange={(e) => setNewRule({...newRule, action: e.target.value})}
-                      placeholder="VD: Hoàn thành OKR trước hạn 2 tuần"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Phần thưởng</Label>
-                    <Input
-                      value={newRule.reward}
-                      onChange={(e) => setNewRule({...newRule, reward: e.target.value})}
-                      placeholder="VD: 200 OKR Coins + 20 Trust Points + Badge"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Điều kiện (tùy chọn)</Label>
-                    <Textarea
-                      value={newRule.conditions}
-                      onChange={(e) => setNewRule({...newRule, conditions: e.target.value})}
-                      placeholder="Mô tả điều kiện cụ thể để nhận thưởng..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end gap-3">
-                  <Button variant="outline" onClick={() => setNewRuleOpen(false)}>
-                    Hủy
-                  </Button>
-                  <Button onClick={handleAddRule}>
-                    Tạo quy tắc
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button 
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => {
+                setSelectedRule(null);
+                setNewRuleOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Thêm quy tắc
+            </Button>
           </div>
 
           <Card>
@@ -525,10 +513,26 @@ export function OKRSettings() {
                       <div className="text-xs text-gray-400 mt-2">Đã sử dụng: {rule.usage_count} lần</div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleViewRule(rule)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleEditRule(rule)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => handleDeleteRule(rule.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -544,9 +548,15 @@ export function OKRSettings() {
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-lg font-semibold">Quản lý huy hiệu</h3>
-              <p className="text-gray-600">Tạo và quản lý các huy hiệu thành tích</p>
+              <p className="text-gray-600">Tạo và quản lý các huy hiệu thành tích danh giá</p>
             </div>
-            <Button className="bg-purple-600 hover:bg-purple-700">
+            <Button 
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              onClick={() => {
+                setSelectedAchievement(null);
+                setCreateAchievementOpen(true);
+              }}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Tạo huy hiệu
             </Button>
@@ -554,10 +564,10 @@ export function OKRSettings() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {achievements.map((achievement) => (
-              <Card key={achievement.id} className="hover:shadow-md transition-shadow">
+              <Card key={achievement.id} className="hover:shadow-lg transition-all hover:scale-105 bg-gradient-to-br from-white to-gray-50">
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
-                    <div className="text-2xl">{achievement.icon}</div>
+                    <div className="text-3xl filter drop-shadow-lg">{achievement.icon}</div>
                     <Badge className={`text-xs ${
                       achievement.status === 'active' 
                         ? 'bg-green-100 text-green-800' 
@@ -566,10 +576,10 @@ export function OKRSettings() {
                       {achievement.status === 'active' ? 'Hoạt động' : 'Nháp'}
                     </Badge>
                   </div>
-                  <h4 className="font-semibold text-gray-900 mb-2">{achievement.name}</h4>
+                  <h4 className="font-bold text-gray-900 mb-2">{achievement.name}</h4>
                   <p className="text-sm text-gray-600 mb-3">{achievement.description}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-sm text-blue-600">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-1 text-sm text-blue-600 font-medium">
                       <Star className="h-4 w-4" />
                       {achievement.points} điểm
                     </div>
@@ -577,12 +587,22 @@ export function OKRSettings() {
                       {achievement.type}
                     </Badge>
                   </div>
-                  <div className="flex gap-2 mt-3">
-                    <Button variant="ghost" size="sm" className="flex-1">
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleEditAchievement(achievement)}
+                    >
                       <Edit className="h-4 w-4 mr-1" />
                       Sửa
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-red-600">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-red-600"
+                      onClick={() => handleDeleteAchievement(achievement.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -695,7 +715,6 @@ export function OKRSettings() {
           </Card>
         </TabsContent>
 
-        {/* Notification Settings */}
         <TabsContent value="notifications" className="space-y-6">
           <Card>
             <CardHeader>
@@ -823,6 +842,35 @@ export function OKRSettings() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialogs */}
+      <RuleEditDialog
+        open={newRuleOpen}
+        onOpenChange={setNewRuleOpen}
+        rule={null}
+        onSave={handleSaveRule}
+      />
+      
+      <RuleEditDialog
+        open={editRuleOpen}
+        onOpenChange={setEditRuleOpen}
+        rule={selectedRule}
+        onSave={handleSaveRule}
+      />
+
+      <AchievementCreateDialog
+        open={createAchievementOpen}
+        onOpenChange={setCreateAchievementOpen}
+        achievement={null}
+        onSave={handleSaveAchievement}
+      />
+
+      <AchievementCreateDialog
+        open={editAchievementOpen}
+        onOpenChange={setEditAchievementOpen}
+        achievement={selectedAchievement}
+        onSave={handleSaveAchievement}
+      />
     </div>
   );
 }
