@@ -14,11 +14,9 @@ import { CollaborativeOKRForm } from './CollaborativeOKRForm';
 import { OKRSettings } from './OKRSettings';
 import { useAuth } from '@/hooks/useAuth';
 import { Target, Users, BarChart3, Settings, Plus, Building2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export function OKRManagement() {
   const { profile, isAdmin } = useAuth();
-  const [settingsOpen, setSettingsOpen] = React.useState(false);
 
   // Kiểm tra xem user có phải là manager không
   const isManager = true; // Tạm thời set true, sau này có thể check thực tế
@@ -45,11 +43,6 @@ export function OKRManagement() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Top Action Bar */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        
       </div>
 
       {/* Main Content Area */}
@@ -89,6 +82,14 @@ export function OKRManagement() {
                     Báo cáo OKR
                   </TabsTrigger>
                 </>
+              )}
+
+              {/* Cài đặt OKR tab - chỉ hiển thị cho admin */}
+              {isAdmin && (
+                <TabsTrigger value="settings" className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-gray-500 data-[state=active]:to-gray-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+                  <Settings className="h-4 w-4" />
+                  Cài đặt OKR
+                </TabsTrigger>
               )}
             </TabsList>
           </div>
@@ -130,35 +131,16 @@ export function OKRManagement() {
                 </TabsContent>
               </>
             )}
+
+            {/* Cài đặt OKR content - chỉ hiển thị cho admin */}
+            {isAdmin && (
+              <TabsContent value="settings" className="m-0 p-8">
+                <OKRSettings />
+              </TabsContent>
+            )}
           </div>
         </Tabs>
       </div>
-
-      {/* Floating Settings Button for Admin */}
-      {isAdmin && (
-        <div className="fixed bottom-8 right-8 z-50">
-          <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-            <DialogTrigger asChild>
-              <Button className="relative w-16 h-16 bg-gradient-to-r from-orange-400 to-orange-600 hover:from-orange-500 hover:to-orange-700 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 group">
-                <Settings className="h-7 w-7 transition-transform group-hover:rotate-90" />
-                {/* Notification Badge */}
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-bold animate-pulse">
-                  3
-                </span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                  <Settings className="h-6 w-6 text-orange-600" />
-                  Cài đặt hệ thống OKR
-                </DialogTitle>
-              </DialogHeader>
-              <OKRSettings />
-            </DialogContent>
-          </Dialog>
-        </div>
-      )}
     </div>
   );
 }
