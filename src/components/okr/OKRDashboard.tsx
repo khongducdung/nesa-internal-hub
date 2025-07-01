@@ -43,7 +43,8 @@ import {
   BarChart3,
   Activity,
   Building2,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  Settings
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useOKRAnalytics } from '@/hooks/useOKRAnalytics';
