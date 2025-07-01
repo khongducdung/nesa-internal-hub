@@ -11,6 +11,13 @@ import { useAttendanceLocations } from '@/hooks/useAttendanceLocations';
 import { useAttendanceLocationMutations } from '@/hooks/useAttendanceLocationMutations';
 import { useToast } from '@/hooks/use-toast';
 
+// Declare global google object
+declare global {
+  interface Window {
+    google: typeof google;
+  }
+}
+
 interface LocationForm {
   name: string;
   address: string;
@@ -36,7 +43,7 @@ function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: Goog
 
     const defaultCenter = selectedLocation || { lat: 21.0285, lng: 105.8542 }; // Hanoi default
 
-    mapInstanceRef.current = new google.maps.Map(mapRef.current, {
+    mapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
       center: defaultCenter,
       zoom: 15,
       mapTypeControl: true,
@@ -54,7 +61,7 @@ function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: Goog
         if (markerRef.current) {
           markerRef.current.setPosition({ lat, lng });
         } else {
-          markerRef.current = new google.maps.Marker({
+          markerRef.current = new window.google.maps.Marker({
             position: { lat, lng },
             map: mapInstanceRef.current,
             draggable: true,
@@ -72,7 +79,7 @@ function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: Goog
         }
 
         // Get address using Geocoding
-        const geocoder = new google.maps.Geocoder();
+        const geocoder = new window.google.maps.Geocoder();
         geocoder.geocode({ location: { lat, lng } }, (results, status) => {
           let address = '';
           if (status === 'OK' && results?.[0]) {
@@ -85,7 +92,7 @@ function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: Goog
 
     // Add existing marker if we have selected location
     if (selectedLocation) {
-      markerRef.current = new google.maps.Marker({
+      markerRef.current = new window.google.maps.Marker({
         position: selectedLocation,
         map: mapInstanceRef.current,
         draggable: true,
@@ -133,7 +140,7 @@ function GoogleMapComponent({ onLocationSelect, selectedLocation, apiKey }: Goog
       if (markerRef.current) {
         markerRef.current.setPosition(selectedLocation);
       } else {
-        markerRef.current = new google.maps.Marker({
+        markerRef.current = new window.google.maps.Marker({
           position: selectedLocation,
           map: mapInstanceRef.current,
           draggable: true,
