@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { Upload, FileText, X } from 'lucide-react';
+import { formatCurrency, formatDateInput, formatDateFromInput } from '@/utils/formatters';
 
 const employeeFormSchema = z.object({
   employee_code: z.string().min(1, 'Mã nhân viên là bắt buộc'),
@@ -111,8 +112,8 @@ export function EmployeeForm({ onClose, employeeId }: EmployeeFormProps) {
           phone: data.phone || '',
           department_id: data.department_id || '',
           position_id: data.position_id || '',
-          hire_date: data.hire_date || '',
-          salary: data.salary?.toString() || '',
+          hire_date: data.hire_date ? formatDateInput(new Date(data.hire_date)) : '',
+          salary: data.salary ? formatCurrency(data.salary) : '',
           employee_level: validEmployeeLevel,
           work_status: validWorkStatus,
           address: data.address || '',
@@ -158,6 +159,21 @@ export function EmployeeForm({ onClose, employeeId }: EmployeeFormProps) {
     }
   };
 
+  const formatSalaryInput = (value: string) => {
+    // Remove all non-numeric characters
+    const numericValue = value.replace(/[^\d]/g, '');
+    
+    // Format with thousand separators
+    if (numericValue) {
+      return parseInt(numericValue).toLocaleString('vi-VN');
+    }
+    return '';
+  };
+
+  const parseSalaryValue = (value: string) => {
+    return parseFloat(value.replace(/[,.]/g, '')) || 0;
+  };
+
   const onSubmit = async (data: EmployeeFormData) => {
     setIsLoading(true);
     try {
@@ -201,7 +217,7 @@ export function EmployeeForm({ onClose, employeeId }: EmployeeFormProps) {
         department_id: data.department_id || null,
         position_id: data.position_id || null,
         hire_date: data.hire_date || null,
-        salary: data.salary ? parseFloat(data.salary) : null,
+        salary: data.salary ? parseSalaryValue(data.salary) : null,
         employee_level: data.employee_level,
         work_status: data.work_status,
         address: data.address || null,
@@ -392,7 +408,11 @@ export function EmployeeForm({ onClose, employeeId }: EmployeeFormProps) {
               <FormItem>
                 <FormLabel>Ngày vào làm</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input 
+                    type="date" 
+                    {...field}
+                    placeholder="dd/mm/yyyy"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -406,7 +426,14 @@ export function EmployeeForm({ onClose, employeeId }: EmployeeFormProps) {
               <FormItem>
                 <FormLabel>Lương (VNĐ)</FormLabel>
                 <FormControl>
-                  <Input type="number" placeholder="15000000" {...field} />
+                  <Input 
+                    placeholder="15,000,000"
+                    {...field}
+                    onChange={(e) => {
+                      const formatted = formatSalaryInput(e.target.value);
+                      field.onChange(formatted);
+                    }}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
