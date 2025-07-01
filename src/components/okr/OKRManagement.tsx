@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,23 +12,16 @@ import { CompanyOKRView } from './CompanyOKRView';
 import { CollaborativeOKRForm } from './CollaborativeOKRForm';
 import { OKRSettings } from './OKRSettings';
 import { useAuth } from '@/hooks/useAuth';
-import { 
-  Target, 
-  Users, 
-  BarChart3, 
-  Settings,
-  Plus,
-  Building2
-} from 'lucide-react';
-
+import { Target, Users, BarChart3, Settings, Plus, Building2 } from 'lucide-react';
 export function OKRManagement() {
-  const { profile } = useAuth();
-  
+  const {
+    profile
+  } = useAuth();
+
   // Kiểm tra xem user có phải là manager không
   const isManager = true; // Tạm thời set true, sau này có thể check thực tế
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+  return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header với gradient và typography hiện đại */}
       <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white">
         <div className="container mx-auto px-6 py-8">
@@ -54,29 +46,7 @@ export function OKRManagement() {
 
       {/* Top Action Bar */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <div className="text-lg font-semibold text-gray-700">
-                Chào {profile?.full_name || 'Admin'}! Sẵn sàng chinh phục mục tiêu hôm nay?
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="flex items-center space-x-3">
-              <Button className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white shadow-lg">
-                <Plus className="h-4 w-4 mr-2" />
-                Tạo OKR mới
-              </Button>
-              {isManager && (
-                <Button variant="outline" className="border-gray-300 hover:bg-gray-50">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Quản trị
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
+        
       </div>
 
       {/* Main Content Area */}
@@ -84,69 +54,40 @@ export function OKRManagement() {
         <Tabs defaultValue="dashboard" className="w-full">
           <div className="mb-8">
             <TabsList className="bg-white shadow-sm border border-gray-200 p-1 rounded-2xl">
-              <TabsTrigger 
-                value="dashboard" 
-                className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-              >
+              <TabsTrigger value="dashboard" className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md">
                 <BarChart3 className="h-4 w-4" />
                 Dashboard
               </TabsTrigger>
-              <TabsTrigger 
-                value="company-okr"
-                className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-              >
+              <TabsTrigger value="company-okr" className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md">
                 <Building2 className="h-4 w-4" />
                 OKR Công ty
               </TabsTrigger>
-              <TabsTrigger 
-                value="my-okrs"
-                className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-              >
+              <TabsTrigger value="my-okrs" className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md">
                 <Target className="h-4 w-4" />
                 OKR của tôi
               </TabsTrigger>
-              <TabsTrigger 
-                value="collaborative"
-                className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-              >
+              <TabsTrigger value="collaborative" className="flex items-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-md">
                 <Users className="h-4 w-4" />
                 Cộng tác
               </TabsTrigger>
               
-              {isManager && (
-                <>
-                  <TabsTrigger 
-                    value="cycles"
-                    className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-                  >
+              {isManager && <>
+                  <TabsTrigger value="cycles" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
                     Chu kỳ OKR
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="objectives"
-                    className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-                  >
+                  <TabsTrigger value="objectives" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
                     Quản lý Objectives
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="tracking"
-                    className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-                  >
+                  <TabsTrigger value="tracking" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
                     Theo dõi tiến độ
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="reporting"
-                    className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-                  >
+                  <TabsTrigger value="reporting" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
                     Báo cáo OKR
                   </TabsTrigger>
-                  <TabsTrigger 
-                    value="settings"
-                    className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md"
-                  >
+                  <TabsTrigger value="settings" className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-red-500 data-[state=active]:text-white data-[state=active]:shadow-md">
                     Cài đặt
                   </TabsTrigger>
-                </>
-              )}
+                </>}
             </TabsList>
           </div>
 
@@ -168,8 +109,7 @@ export function OKRManagement() {
               <CollaborativeOKRForm />
             </TabsContent>
 
-            {isManager && (
-              <>
+            {isManager && <>
                 <TabsContent value="cycles" className="m-0 p-8">
                   <OKRCycleManagement />
                 </TabsContent>
@@ -189,11 +129,9 @@ export function OKRManagement() {
                 <TabsContent value="settings" className="m-0 p-8">
                   <OKRSettings />
                 </TabsContent>
-              </>
-            )}
+              </>}
           </div>
         </Tabs>
       </div>
-    </div>
-  );
+    </div>;
 }
