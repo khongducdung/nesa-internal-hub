@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +14,14 @@ import { useWorkShifts } from '@/hooks/useWorkShifts';
 import { useAttendanceSettings } from '@/hooks/useAttendanceSettings';
 import { useToast } from '@/components/ui/use-toast';
 import { ColorPicker } from '@/components/ui/color-picker';
+import { WorkSessionsManager } from './WorkSessionsManager';
 import { Clock, Users, MapPin, Settings, Calendar, AlertCircle } from 'lucide-react';
+
+interface WorkSession {
+  name: string;
+  start_time: string;
+  end_time: string;
+}
 
 interface WorkShiftFormAdvancedProps {
   onClose: () => void;
@@ -42,6 +48,11 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
     max_hours_per_day: 8,
     color: '#3B82F6',
     attendance_setting_id: '',
+    // New fields
+    work_sessions: [] as WorkSession[],
+    saturday_work_type: 'off' as 'off' | 'full' | 'half_morning' | 'half_afternoon',
+    saturday_work_sessions: [] as WorkSession[],
+    total_work_coefficient: 1.0,
     // Advanced features
     is_night_shift: false,
     allow_early_checkin_minutes: 15,
@@ -70,6 +81,11 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
         max_hours_per_day: currentShift.max_hours_per_day || 8,
         color: currentShift.color || '#3B82F6',
         attendance_setting_id: currentShift.attendance_setting_id || '',
+        // New fields
+        work_sessions: currentShift.work_sessions || [],
+        saturday_work_type: currentShift.saturday_work_type || 'off',
+        saturday_work_sessions: currentShift.saturday_work_sessions || [],
+        total_work_coefficient: currentShift.total_work_coefficient || 1.0,
         // Advanced features (default values for existing shifts)
         is_night_shift: false,
         allow_early_checkin_minutes: 15,
@@ -84,7 +100,11 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
     } else if (attendanceSettings && attendanceSettings.length > 0) {
       setFormData(prev => ({
         ...prev,
-        attendance_setting_id: attendanceSettings[0].id
+        attendance_setting_id: attendanceSettings[0].id,
+        work_sessions: [
+          { name: 'Ca sáng', start_time: '08:00', end_time: '12:00' },
+          { name: 'Ca chiều', start_time: '13:00', end_time: '17:00' }
+        ]
       }));
     }
   }, [currentShift, attendanceSettings]);
@@ -98,16 +118,29 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
     }));
   };
 
-  const calculateWorkHours = () => {
-    const start = new Date(`2000-01-01T${formData.start_time}:00`);
-    const end = new Date(`2000-01-01T${formData.end_time}:00`);
-    let diff = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-    if (diff < 0) diff += 24; // Handle overnight shifts
-    return Math.max(0, diff - (formData.break_duration_minutes / 60));
+  const calculateTotalWorkHours = () => {
+    const sessionHours = formData.work_sessions.reduce((total, session) => {
+      const start = new Date(`2000-01-01T${session.start_time}:00`);
+      const end = new Date(`2000-01-01T${session.end_time}:00`);
+      let diff = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+      if (diff < 0) diff += 24;
+      return total + diff;
+    }, 0);
+    
+    return sessionHours * formData.total_work_coefficient;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (formData.work_sessions.length === 0) {
+      toast({
+        title: 'Thiếu thông tin',
+        description: 'Vui lòng thêm ít nhất một ca làm việc',
+        variant: 'destructive'
+      });
+      return;
+    }
     
     try {
       const submitData = {
@@ -142,7 +175,7 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
     { value: 6, label: 'Thứ 7', short: 'T7' }
   ];
 
-  const workHours = calculateWorkHours();
+  const totalWorkHours = calculateTotalWorkHours();
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -259,89 +292,82 @@ export function WorkShiftFormAdvanced({ onClose, shiftId }: WorkShiftFormAdvance
               </SelectContent>
             </Select>
           </div>
+          
+          <div className="space-y-2">
+            <Label>Hệ số công việc</Label>
+            <Input
+              type="number"
+              step="0.1"
+              min="0.1"
+              max="2.0"
+              value={formData.total_work_coefficient}
+              onChange={(e) => setFormData(prev => ({ ...prev, total_work_coefficient: parseFloat(e.target.value) || 1.0 }))}
+            />
+            <p className="text-sm text-gray-600">
+              Hệ số 1.0 = 1 công. Hệ số 0.5 = 0.5 công (làm nửa ngày)
+            </p>
+          </div>
         </div>
       )}
 
       {/* Schedule Tab */}
       {activeTab === 'schedule' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="start_time">Giờ bắt đầu *</Label>
-              <Input
-                id="start_time"
-                type="time"
-                value={formData.start_time}
-                onChange={(e) => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
-                required
-              />
-            </div>
+          {/* Work Sessions */}
+          <WorkSessionsManager
+            title="Ca làm việc trong ngày"
+            sessions={formData.work_sessions}
+            onChange={(sessions) => setFormData(prev => ({ ...prev, work_sessions: sessions }))}
+          />
 
-            <div className="space-y-2">
-              <Label htmlFor="end_time">Giờ kết thúc *</Label>
-              <Input
-                id="end_time"
-                type="time"
-                value={formData.end_time}
-                onChange={(e) => setFormData(prev => ({ ...prev, end_time: e.target.value }))}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="break_duration">Nghỉ trưa (phút)</Label>
-              <Input
-                id="break_duration"
-                type="number"
-                value={formData.break_duration_minutes}
-                onChange={(e) => setFormData(prev => ({ ...prev, break_duration_minutes: parseInt(e.target.value) || 0 }))}
-                min="0"
-              />
-            </div>
-          </div>
-
-          {/* Work Hours Summary */}
+          {/* Total Work Hours Summary */}
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Tổng giờ làm việc:</span>
+                <span className="text-sm text-gray-600">Tổng giờ làm việc (sau hệ số):</span>
                 <Badge variant="outline" className="text-lg font-semibold">
-                  {workHours.toFixed(1)} giờ
+                  {totalWorkHours.toFixed(1)} giờ
                 </Badge>
               </div>
             </CardContent>
           </Card>
 
-          {formData.shift_type === 'flexible' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Saturday Work Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Cấu hình thứ 7</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="min_hours">Giờ tối thiểu/ngày</Label>
-                <Input
-                  id="min_hours"
-                  type="number"
-                  step="0.5"
-                  value={formData.min_hours_per_day}
-                  onChange={(e) => setFormData(prev => ({ ...prev, min_hours_per_day: parseFloat(e.target.value) || 0 }))}
-                  min="0"
-                  max="24"
-                />
+                <Label>Loại làm việc thứ 7</Label>
+                <Select 
+                  value={formData.saturday_work_type} 
+                  onValueChange={(value: any) => setFormData(prev => ({ ...prev, saturday_work_type: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="off">Không làm</SelectItem>
+                    <SelectItem value="full">Làm cả ngày</SelectItem>
+                    <SelectItem value="half_morning">Nửa ngày sáng</SelectItem>
+                    <SelectItem value="half_afternoon">Nửa ngày chiều</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="max_hours">Giờ tối đa/ngày</Label>
-                <Input
-                  id="max_hours"
-                  type="number"
-                  step="0.5"
-                  value={formData.max_hours_per_day}
-                  onChange={(e) => setFormData(prev => ({ ...prev, max_hours_per_day: parseFloat(e.target.value) || 0 }))}
-                  min="0"
-                  max="24"
+              {formData.saturday_work_type !== 'off' && (
+                <WorkSessionsManager
+                  title="Ca làm việc thứ 7"
+                  sessions={formData.saturday_work_sessions}
+                  onChange={(sessions) => setFormData(prev => ({ ...prev, saturday_work_sessions: sessions }))}
+                  maxSessions={formData.saturday_work_type === 'full' ? 4 : 2}
                 />
-              </div>
-            </div>
-          )}
+              )}
+            </CardContent>
+          </Card>
 
+          {/* Days of Week */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">

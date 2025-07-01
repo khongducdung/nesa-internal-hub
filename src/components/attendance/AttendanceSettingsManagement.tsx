@@ -1,11 +1,11 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Settings, MapPin, Clock, Save } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Settings, MapPin, Clock, Save, Timer, Calendar } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { useAttendanceSettings, useAttendanceSettingMutations } from '@/hooks/useAttendanceSettings';
 import { useToast } from '@/components/ui/use-toast';
@@ -24,6 +24,13 @@ interface SettingsFormData {
   allow_multiple_checkins: boolean;
   require_daily_start_checkin: boolean;
   require_daily_end_checkout: boolean;
+  // New fields
+  early_checkin_allowed_minutes: number;
+  late_checkout_allowed_minutes: number;
+  count_early_checkin_as_work: boolean;
+  count_late_checkout_as_work: boolean;
+  saturday_work_enabled: boolean;
+  saturday_work_type: 'off' | 'full' | 'half_morning' | 'half_afternoon';
 }
 
 export function AttendanceSettingsManagement() {
@@ -49,6 +56,13 @@ export function AttendanceSettingsManagement() {
       allow_multiple_checkins: defaultSetting?.allow_multiple_checkins || false,
       require_daily_start_checkin: defaultSetting?.require_daily_start_checkin || true,
       require_daily_end_checkout: defaultSetting?.require_daily_end_checkout || true,
+      // New fields
+      early_checkin_allowed_minutes: defaultSetting?.early_checkin_allowed_minutes || 15,
+      late_checkout_allowed_minutes: defaultSetting?.late_checkout_allowed_minutes || 15,
+      count_early_checkin_as_work: defaultSetting?.count_early_checkin_as_work || false,
+      count_late_checkout_as_work: defaultSetting?.count_late_checkout_as_work || true,
+      saturday_work_enabled: defaultSetting?.saturday_work_enabled || false,
+      saturday_work_type: defaultSetting?.saturday_work_type || 'off',
     }
   });
 
@@ -151,6 +165,99 @@ export function AttendanceSettingsManagement() {
                   {...register('early_leave_threshold_minutes', { valueAsNumber: true })}
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* New Advanced Time Settings Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Timer className="h-5 w-5" />
+                Cài đặt thời gian linh hoạt
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="early-checkin-allowed">Cho phép check-in sớm (phút)</Label>
+                <Input 
+                  id="early-checkin-allowed" 
+                  type="number" 
+                  {...register('early_checkin_allowed_minutes', { valueAsNumber: true })}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Tính thời gian check-in sớm vào giờ làm</Label>
+                  <p className="text-sm text-gray-600">Check-in sớm có được tính vào giờ làm việc</p>
+                </div>
+                <Switch 
+                  checked={watch('count_early_checkin_as_work')}
+                  onCheckedChange={(checked) => setValue('count_early_checkin_as_work', checked)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="late-checkout-allowed">Cho phép check-out muộn (phút)</Label>
+                <Input 
+                  id="late-checkout-allowed" 
+                  type="number" 
+                  {...register('late_checkout_allowed_minutes', { valueAsNumber: true })}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Tính thời gian check-out muộn vào giờ làm</Label>
+                  <p className="text-sm text-gray-600">Check-out muộn có được tính vào giờ làm việc</p>
+                </div>
+                <Switch 
+                  checked={watch('count_late_checkout_as_work')}
+                  onCheckedChange={(checked) => setValue('count_late_checkout_as_work', checked)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Saturday Work Settings Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Cài đặt thứ 7
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Cho phép làm việc thứ 7</Label>
+                  <p className="text-sm text-gray-600">Nhân viên có thể chấm công vào thứ 7</p>
+                </div>
+                <Switch 
+                  checked={watch('saturday_work_enabled')}
+                  onCheckedChange={(checked) => setValue('saturday_work_enabled', checked)}
+                />
+              </div>
+
+              {watch('saturday_work_enabled') && (
+                <div className="space-y-2">
+                  <Label>Loại làm việc thứ 7 mặc định</Label>
+                  <Select 
+                    value={watch('saturday_work_type')} 
+                    onValueChange={(value: any) => setValue('saturday_work_type', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="off">Không làm</SelectItem>
+                      <SelectItem value="full">Làm cả ngày</SelectItem>
+                      <SelectItem value="half_morning">Nửa ngày sáng</SelectItem>
+                      <SelectItem value="half_afternoon">Nửa ngày chiều</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </CardContent>
           </Card>
 

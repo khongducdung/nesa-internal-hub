@@ -1,6 +1,11 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+
+export interface WorkSession {
+  name: string;
+  start_time: string;
+  end_time: string;
+}
 
 export interface WorkShift {
   id: string;
@@ -18,6 +23,11 @@ export interface WorkShift {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  // New fields
+  work_sessions?: WorkSession[];
+  saturday_work_type?: 'off' | 'full' | 'half_morning' | 'half_afternoon';
+  saturday_work_sessions?: WorkSession[];
+  total_work_coefficient?: number;
 }
 
 export function useWorkShifts() {

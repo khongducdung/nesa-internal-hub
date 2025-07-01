@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -25,6 +24,13 @@ export interface AttendanceSetting {
   created_at: string;
   updated_at: string;
   created_by: string;
+  // New fields
+  early_checkin_allowed_minutes?: number;
+  late_checkout_allowed_minutes?: number;
+  count_early_checkin_as_work?: boolean;
+  count_late_checkout_as_work?: boolean;
+  saturday_work_enabled?: boolean;
+  saturday_work_type?: 'off' | 'full' | 'half_morning' | 'half_afternoon';
 }
 
 export function useAttendanceSettings() {

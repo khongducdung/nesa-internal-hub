@@ -382,13 +382,17 @@ export type Database = {
           break_end_time: string | null
           break_start_time: string | null
           check_type_config: string | null
+          count_early_checkin_as_work: boolean | null
+          count_late_checkout_as_work: boolean | null
           created_at: string | null
           created_by: string
           description: string | null
+          early_checkin_allowed_minutes: number | null
           early_leave_threshold_minutes: number | null
           gps_radius_meters: number | null
           id: string
           is_default: boolean | null
+          late_checkout_allowed_minutes: number | null
           late_threshold_minutes: number | null
           name: string
           overtime_start_after_minutes: number | null
@@ -399,6 +403,8 @@ export type Database = {
           require_shift_end_checkout: boolean | null
           require_shift_start_checkin: boolean | null
           require_shift_start_checkout: boolean | null
+          saturday_work_enabled: boolean | null
+          saturday_work_type: string | null
           status: string | null
           updated_at: string | null
           weekend_work_allowed: boolean | null
@@ -410,13 +416,17 @@ export type Database = {
           break_end_time?: string | null
           break_start_time?: string | null
           check_type_config?: string | null
+          count_early_checkin_as_work?: boolean | null
+          count_late_checkout_as_work?: boolean | null
           created_at?: string | null
           created_by: string
           description?: string | null
+          early_checkin_allowed_minutes?: number | null
           early_leave_threshold_minutes?: number | null
           gps_radius_meters?: number | null
           id?: string
           is_default?: boolean | null
+          late_checkout_allowed_minutes?: number | null
           late_threshold_minutes?: number | null
           name: string
           overtime_start_after_minutes?: number | null
@@ -427,6 +437,8 @@ export type Database = {
           require_shift_end_checkout?: boolean | null
           require_shift_start_checkin?: boolean | null
           require_shift_start_checkout?: boolean | null
+          saturday_work_enabled?: boolean | null
+          saturday_work_type?: string | null
           status?: string | null
           updated_at?: string | null
           weekend_work_allowed?: boolean | null
@@ -438,13 +450,17 @@ export type Database = {
           break_end_time?: string | null
           break_start_time?: string | null
           check_type_config?: string | null
+          count_early_checkin_as_work?: boolean | null
+          count_late_checkout_as_work?: boolean | null
           created_at?: string | null
           created_by?: string
           description?: string | null
+          early_checkin_allowed_minutes?: number | null
           early_leave_threshold_minutes?: number | null
           gps_radius_meters?: number | null
           id?: string
           is_default?: boolean | null
+          late_checkout_allowed_minutes?: number | null
           late_threshold_minutes?: number | null
           name?: string
           overtime_start_after_minutes?: number | null
@@ -455,6 +471,8 @@ export type Database = {
           require_shift_end_checkout?: boolean | null
           require_shift_start_checkin?: boolean | null
           require_shift_start_checkout?: boolean | null
+          saturday_work_enabled?: boolean | null
+          saturday_work_type?: string | null
           status?: string | null
           updated_at?: string | null
           weekend_work_allowed?: boolean | null
@@ -2762,9 +2780,13 @@ export type Database = {
           max_hours_per_day: number | null
           min_hours_per_day: number | null
           name: string
+          saturday_work_sessions: Json | null
+          saturday_work_type: string | null
           shift_type: string | null
           start_time: string
+          total_work_coefficient: number | null
           updated_at: string | null
+          work_sessions: Json | null
         }
         Insert: {
           attendance_setting_id?: string | null
@@ -2779,9 +2801,13 @@ export type Database = {
           max_hours_per_day?: number | null
           min_hours_per_day?: number | null
           name: string
+          saturday_work_sessions?: Json | null
+          saturday_work_type?: string | null
           shift_type?: string | null
           start_time: string
+          total_work_coefficient?: number | null
           updated_at?: string | null
+          work_sessions?: Json | null
         }
         Update: {
           attendance_setting_id?: string | null
@@ -2796,9 +2822,13 @@ export type Database = {
           max_hours_per_day?: number | null
           min_hours_per_day?: number | null
           name?: string
+          saturday_work_sessions?: Json | null
+          saturday_work_type?: string | null
           shift_type?: string | null
           start_time?: string
+          total_work_coefficient?: number | null
           updated_at?: string | null
+          work_sessions?: Json | null
         }
         Relationships: [
           {

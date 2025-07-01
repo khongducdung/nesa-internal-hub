@@ -3,6 +3,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
+interface WorkSession {
+  name: string;
+  start_time: string;
+  end_time: string;
+}
+
 interface CreateWorkShiftData {
   name: string;
   description?: string;
@@ -15,6 +21,11 @@ interface CreateWorkShiftData {
   max_hours_per_day?: number;
   color?: string;
   attendance_setting_id: string;
+  // New fields
+  work_sessions?: WorkSession[];
+  saturday_work_type?: 'off' | 'full' | 'half_morning' | 'half_afternoon';
+  saturday_work_sessions?: WorkSession[];
+  total_work_coefficient?: number;
 }
 
 export function useWorkShiftMutations() {
