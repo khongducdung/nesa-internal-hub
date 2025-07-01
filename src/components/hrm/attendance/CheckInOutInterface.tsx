@@ -3,17 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Clock, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MapPin, Clock, Calendar, CheckCircle, XCircle, User, Building } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { LocationPicker } from './LocationPicker';
 
 interface CheckInOutInterfaceProps {
   employeeId: string;
-  checkType: 'daily' | 'shift';
 }
 
-export function CheckInOutInterface({ employeeId, checkType }: CheckInOutInterfaceProps) {
+export function CheckInOutInterface({ employeeId }: CheckInOutInterfaceProps) {
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [todayAttendance, setTodayAttendance] = useState<any>(null);
@@ -21,6 +21,10 @@ export function CheckInOutInterface({ employeeId, checkType }: CheckInOutInterfa
   const { toast } = useToast();
 
   const today = new Date().toISOString().split('T')[0];
+  const currentTime = new Date().toLocaleTimeString('vi-VN', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
 
   useEffect(() => {
     loadTodayAttendance();
@@ -56,7 +60,6 @@ export function CheckInOutInterface({ employeeId, checkType }: CheckInOutInterfa
         .select('*')
         .eq('employee_id', employeeId)
         .eq('date', today)
-        .eq('check_type', checkType)
         .maybeSingle();
 
       if (error) throw error;
@@ -87,11 +90,11 @@ export function CheckInOutInterface({ employeeId, checkType }: CheckInOutInterfa
     }
   };
 
-  const handleCheckIn = async (actionType: string) => {
+  const handleCheckAction = async (actionType: string, checkType: string) => {
     if (!currentLocation) {
       toast({
         title: 'Chưa có vị trí',
-        description: 'Vui lòng chọn vị trí để check in',
+        description: 'Vui lòng chọn vị trí để thực hiện chấm công',
         variant: 'destructive'
       });
       return;
@@ -108,18 +111,11 @@ export function CheckInOutInterface({ employeeId, checkType }: CheckInOutInterfa
         status: 'present'
       };
 
-      if (checkType === 'daily') {
-        if (actionType === 'daily_start') {
-          attendanceData.daily_start_check_in = now;
-        } else {
-          attendanceData.daily_end_check_out = now;
-        }
-      } else {
-        // shift check in/out
-        attendanceData[actionType] = now;
-        if (currentShift) {
-          attendanceData.shift_assignment_id = currentShift.id;
-        }
+      // Set the appropriate field based on action type
+      attendanceData[actionType] = now;
+      
+      if (checkType === 'shift' && currentShift) {
+        attendanceData.shift_assignment_id = currentShift.id;
       }
 
       const { data: attendance, error: attendanceError } = todayAttendance
@@ -170,8 +166,8 @@ export function CheckInOutInterface({ employeeId, checkType }: CheckInOutInterfa
 
   const getActionLabel = (actionType: string) => {
     const labels: Record<string, string> = {
-      daily_start: 'Check in đầu ngày',
-      daily_end: 'Check out cuối ngày',
+      daily_start_check_in: 'Check in đầu ngày',
+      daily_end_check_out: 'Check out cuối ngày',
       shift_start_check_in: 'Check in đầu ca',
       shift_start_check_out: 'Check out đầu ca',
       shift_end_check_in: 'Check in cuối ca',
@@ -185,25 +181,34 @@ export function CheckInOutInterface({ employeeId, checkType }: CheckInOutInterfa
     return Boolean(todayAttendance[actionType]);
   };
 
-  const renderCheckButton = (actionType: string, label: string, variant: 'default' | 'destructive' = 'default') => {
+  const renderCheckButton = (actionType: string, label: string, variant: 'default' | 'destructive' = 'default', checkType: string) => {
     const completed = isActionCompleted(actionType);
     return (
       <Button
-        onClick={() => handleCheckIn(actionType)}
+        onClick={() => handleCheckAction(actionType, checkType)}
         disabled={completed || isLoading}
         variant={completed ? 'outline' : variant}
-        className="w-full h-16 text-lg font-semibold"
+        className="w-full h-20 text-lg font-semibold"
       >
         {completed ? (
-          <>
-            <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
-            Đã {label}
-          </>
+          <div className="flex flex-col items-center">
+            <CheckCircle className="h-6 w-6 mb-1 text-green-600" />
+            <span className="text-sm">Đã {label}</span>
+            {todayAttendance && todayAttendance[actionType] && (
+              <span className="text-xs text-gray-500">
+                {new Date(todayAttendance[actionType]).toLocaleTimeString('vi-VN', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
+            )}
+          </div>
         ) : (
-          <>
-            <Clock className="h-5 w-5 mr-2" />
-            {label}
-          </>
+          <div className="flex flex-col items-center">
+            <Clock className="h-6 w-6 mb-1" />
+            <span>{label}</span>
+            <span className="text-xs opacity-80">{currentTime}</span>
+          </div>
         )}
       </Button>
     );
@@ -211,49 +216,128 @@ export function CheckInOutInterface({ employeeId, checkType }: CheckInOutInterfa
 
   return (
     <div className="space-y-6">
+      {/* Header Info */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <User className="h-8 w-8 text-blue-600" />
+              <div>
+                <p className="text-sm text-gray-600">Nhân viên</p>
+                <p className="font-semibold">Nguyễn Văn A</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <Calendar className="h-8 w-8 text-blue-600" />
+              <div>
+                <p className="text-sm text-gray-600">Ngày</p>
+                <p className="font-semibold">{new Date().toLocaleDateString('vi-VN')}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <Building className="h-8 w-8 text-blue-600" />
+              <div>
+                <p className="text-sm text-gray-600">Vị trí</p>
+                <p className="font-semibold">
+                  {currentLocation ? 'Đã xác định' : 'Chưa xác định'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Check-in Interface */}
+      <Tabs defaultValue="daily" className="w-full">
+        <TabsList variant="secondary" className="grid w-full grid-cols-2">
+          <TabsTrigger variant="secondary" value="daily">
+            <Calendar className="h-4 w-4 mr-2" />
+            Chấm công theo ngày
+          </TabsTrigger>
+          <TabsTrigger variant="secondary" value="shift">
+            <Clock className="h-4 w-4 mr-2" />
+            Chấm công theo ca
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="daily" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Chấm công theo ngày làm việc
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {renderCheckButton('daily_start_check_in', 'Check In Đầu Ngày', 'default', 'daily')}
+                {renderCheckButton('daily_end_check_out', 'Check Out Cuối Ngày', 'destructive', 'daily')}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="shift" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Chấm công theo ca làm việc
+              </CardTitle>
+              {currentShift && (
+                <div className="p-4 bg-blue-50 rounded-lg mt-4">
+                  <h4 className="font-medium text-blue-900">Ca làm việc hiện tại</h4>
+                  <p className="text-blue-700">{currentShift.work_shifts?.name}</p>
+                  <p className="text-sm text-blue-600">
+                    {currentShift.work_shifts?.start_time} - {currentShift.work_shifts?.end_time}
+                  </p>
+                </div>
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {renderCheckButton('shift_start_check_in', 'Check In Đầu Ca', 'default', 'shift')}
+                {renderCheckButton('shift_start_check_out', 'Check Out Đầu Ca', 'destructive', 'shift')}
+                {renderCheckButton('shift_end_check_in', 'Check In Cuối Ca', 'default', 'shift')}
+                {renderCheckButton('shift_end_check_out', 'Check Out Cuối Ca', 'destructive', 'shift')}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Location Section */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Chấm công {checkType === 'daily' ? 'theo ngày' : 'theo ca'}
+            <MapPin className="h-5 w-5" />
+            Vị trí chấm công
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {checkType === 'shift' && currentShift && (
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-medium text-blue-900">Ca làm việc hiện tại</h4>
-              <p className="text-blue-700">{currentShift.work_shifts?.name}</p>
-              <p className="text-sm text-blue-600">
-                {currentShift.work_shifts?.start_time} - {currentShift.work_shifts?.end_time}
-              </p>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {checkType === 'daily' ? (
-              <>
-                {renderCheckButton('daily_start_check_in', 'Check In Đầu Ngày')}
-                {renderCheckButton('daily_end_check_out', 'Check Out Cuối Ngày', 'destructive')}
-              </>
-            ) : (
-              <>
-                {renderCheckButton('shift_start_check_in', 'Check In Đầu Ca')}
-                {renderCheckButton('shift_start_check_out', 'Check Out Đầu Ca', 'destructive')}
-                {renderCheckButton('shift_end_check_in', 'Check In Cuối Ca')}
-                {renderCheckButton('shift_end_check_out', 'Check Out Cuối Ca', 'destructive')}
-              </>
-            )}
-          </div>
-
+        <CardContent>
           <LocationPicker 
             onLocationSelect={setCurrentLocation}
             currentLocation={currentLocation}
           />
-
+          
           {currentLocation && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <MapPin className="h-4 w-4" />
-              <span>Vị trí: {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}</span>
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center gap-2 text-green-800">
+                <MapPin className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  Vị trí: {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
+                </span>
+              </div>
             </div>
           )}
         </CardContent>
