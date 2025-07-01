@@ -38,7 +38,7 @@ export function KPIEvaluationManagement() {
   const completedCount = completedEvaluations.length;
   const pendingCount = pendingEvaluations.length;
   const averageScore = completedEvaluations.length > 0 
-    ? completedEvaluations.reduce((sum, eval) => sum + (eval.performance_evaluations?.[0]?.final_score || 0), 0) / completedEvaluations.length
+    ? completedEvaluations.reduce((sum, evaluation) => sum + (evaluation.performance_evaluations?.[0]?.final_score || 0), 0) / completedEvaluations.length
     : 0;
 
   const handleEvaluate = (assignment: any) => {
