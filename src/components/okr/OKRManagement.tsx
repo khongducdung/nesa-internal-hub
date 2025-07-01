@@ -10,6 +10,7 @@ import { MyOKRTasks } from './MyOKRTasks';
 import { CompanyOKRView } from './CompanyOKRView';
 import { OKRAchievements } from './OKRAchievements';
 import { CollaborativeOKRForm } from './CollaborativeOKRForm';
+import { OKRLeaderboard } from './OKRLeaderboard';
 import { useAuth } from '@/hooks/useAuth';
 
 export function OKRManagement() {
@@ -27,23 +28,32 @@ export function OKRManagement() {
         </p>
       </div>
 
-      <Tabs defaultValue={isManager ? "dashboard" : "company-okr"} className="w-full">
-        <TabsList className={`grid w-full ${isManager ? 'grid-cols-9' : 'grid-cols-4'}`}>
+      <Tabs defaultValue="dashboard" className="w-full">
+        <TabsList className={`grid w-full ${isManager ? 'grid-cols-10' : 'grid-cols-5'}`}>
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="company-okr">OKR Công ty</TabsTrigger>
           <TabsTrigger value="my-okrs">OKR của tôi</TabsTrigger>
           <TabsTrigger value="achievements">Huy hiệu</TabsTrigger>
-          <TabsTrigger value="collaborative">Tạo OKR</TabsTrigger>
+          <TabsTrigger value="leaderboard">Xếp hạng</TabsTrigger>
           
           {isManager && (
             <>
-              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+              <TabsTrigger value="collaborative">Tạo OKR</TabsTrigger>
               <TabsTrigger value="cycles">Chu kỳ OKR</TabsTrigger>
               <TabsTrigger value="objectives">Quản lý Objectives</TabsTrigger>
               <TabsTrigger value="tracking">Theo dõi tiến độ</TabsTrigger>
               <TabsTrigger value="reporting">Báo cáo OKR</TabsTrigger>
             </>
           )}
+          
+          {!isManager && (
+            <TabsTrigger value="collaborative">Tạo OKR</TabsTrigger>
+          )}
         </TabsList>
+
+        <TabsContent value="dashboard" className="mt-6">
+          <OKRDashboard />
+        </TabsContent>
 
         <TabsContent value="company-okr" className="mt-6">
           <CompanyOKRView />
@@ -57,16 +67,16 @@ export function OKRManagement() {
           <OKRAchievements />
         </TabsContent>
 
+        <TabsContent value="leaderboard" className="mt-6">
+          <OKRLeaderboard />
+        </TabsContent>
+
         <TabsContent value="collaborative" className="mt-6">
           <CollaborativeOKRForm />
         </TabsContent>
 
         {isManager && (
           <>
-            <TabsContent value="dashboard" className="mt-6">
-              <OKRDashboard />
-            </TabsContent>
-
             <TabsContent value="cycles" className="mt-6">
               <OKRCycleManagement />
             </TabsContent>
