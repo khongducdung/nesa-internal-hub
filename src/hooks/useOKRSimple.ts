@@ -12,6 +12,7 @@ export interface OKRObjective {
   progress: number;
   status: 'draft' | 'active' | 'completed' | 'cancelled';
   owner_type: 'company' | 'department' | 'individual';
+  owner_id: string;
   department_id?: string;
   employee_id?: string;
   parent_okr_id?: string;
@@ -330,6 +331,20 @@ export const useCreateOKR = () => {
         throw new Error('User not authenticated');
       }
 
+      // Prepare owner_id based on owner_type
+      let owner_id = '';
+      if (data.owner_type === 'company') {
+        owner_id = 'company';
+      } else if (data.owner_type === 'department') {
+        owner_id = data.department_id || profile?.department_id || '';
+      } else if (data.owner_type === 'individual') {
+        owner_id = data.employee_id || profile?.employee_id || '';
+      }
+
+      if (!owner_id) {
+        throw new Error('Cannot determine owner_id for OKR');
+      }
+
       // Prepare OKR data for insertion
       const okrData: any = {
         title: data.title,
@@ -340,6 +355,7 @@ export const useCreateOKR = () => {
         progress: 0,
         status: 'active',
         owner_type: data.owner_type,
+        owner_id: owner_id,
         parent_okr_id: data.parent_okr_id || null,
         start_date: currentCycle?.start_date || new Date().toISOString().split('T')[0],
         end_date: currentCycle?.end_date || new Date().toISOString().split('T')[0],
