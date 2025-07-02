@@ -241,7 +241,7 @@ export const useCreateKPIMeasurement = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: Omit<KPIMeasurement, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (data: Omit<KPIMeasurement, 'id' | 'created_at' | 'updated_at' | 'verified_at' | 'verified_by'>) => {
       const { data: result, error } = await supabase
         .from('kpi_measurements')
         .insert(data)
@@ -282,7 +282,7 @@ export const useCreateKPITarget = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: Omit<KPITarget, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (data: Omit<KPITarget, 'id' | 'created_at' | 'updated_at' | 'approved_at' | 'approved_by' | 'set_by'>) => {
       const { data: result, error } = await supabase
         .from('kpi_targets')
         .insert(data)
@@ -354,7 +354,7 @@ export const useCreateKPIActionPlan = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: Omit<KPIActionPlan, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (data: Omit<KPIActionPlan, 'id' | 'created_at' | 'updated_at' | 'actual_impact'>) => {
       const { data: result, error } = await supabase
         .from('kpi_action_plans')
         .insert(data)
