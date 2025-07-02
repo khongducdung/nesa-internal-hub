@@ -1078,55 +1078,506 @@ export type Database = {
         }
         Relationships: []
       }
-      kpis: {
+      kpi_action_plans: {
+        Row: {
+          action_type: string | null
+          actual_impact: string | null
+          assigned_to: string | null
+          created_at: string | null
+          created_by: string
+          description: string
+          due_date: string | null
+          expected_impact: string | null
+          id: string
+          kpi_id: string
+          priority: string | null
+          progress_percentage: number | null
+          resources_required: Json | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          action_type?: string | null
+          actual_impact?: string | null
+          assigned_to?: string | null
+          created_at?: string | null
+          created_by: string
+          description: string
+          due_date?: string | null
+          expected_impact?: string | null
+          id?: string
+          kpi_id: string
+          priority?: string | null
+          progress_percentage?: number | null
+          resources_required?: Json | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          action_type?: string | null
+          actual_impact?: string | null
+          assigned_to?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string
+          due_date?: string | null
+          expected_impact?: string | null
+          id?: string
+          kpi_id?: string
+          priority?: string | null
+          progress_percentage?: number | null
+          resources_required?: Json | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kpi_action_plans_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kpi_action_plans_kpi_id_fkey"
+            columns: ["kpi_id"]
+            isOneToOne: false
+            referencedRelation: "kpis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kpi_categories: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      kpi_frameworks: {
         Row: {
           created_at: string | null
-          current_value: number | null
+          created_by: string
+          department_id: string | null
           description: string | null
-          employee_id: string
+          framework_type: string
           id: string
+          is_active: boolean | null
           name: string
-          period: string
-          status: string | null
-          target_value: number | null
-          unit: string | null
+          position_id: string | null
+          target_level: string
           updated_at: string | null
-          year: number
         }
         Insert: {
           created_at?: string | null
-          current_value?: number | null
+          created_by: string
+          department_id?: string | null
           description?: string | null
-          employee_id: string
+          framework_type: string
           id?: string
+          is_active?: boolean | null
           name: string
-          period: string
-          status?: string | null
-          target_value?: number | null
-          unit?: string | null
+          position_id?: string | null
+          target_level: string
           updated_at?: string | null
-          year: number
         }
         Update: {
           created_at?: string | null
-          current_value?: number | null
+          created_by?: string
+          department_id?: string | null
           description?: string | null
-          employee_id?: string
+          framework_type?: string
           id?: string
+          is_active?: boolean | null
           name?: string
-          period?: string
+          position_id?: string | null
+          target_level?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kpi_frameworks_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kpi_frameworks_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kpi_measurements: {
+        Row: {
+          created_at: string | null
+          evidence_urls: Json | null
+          id: string
+          kpi_id: string
+          measured_by: string | null
+          measured_value: number
+          measurement_date: string
+          measurement_period: string
+          notes: string | null
+          updated_at: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          evidence_urls?: Json | null
+          id?: string
+          kpi_id: string
+          measured_by?: string | null
+          measured_value: number
+          measurement_date?: string
+          measurement_period: string
+          notes?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          evidence_urls?: Json | null
+          id?: string
+          kpi_id?: string
+          measured_by?: string | null
+          measured_value?: number
+          measurement_date?: string
+          measurement_period?: string
+          notes?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kpi_measurements_kpi_id_fkey"
+            columns: ["kpi_id"]
+            isOneToOne: false
+            referencedRelation: "kpis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kpi_measurements_measured_by_fkey"
+            columns: ["measured_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kpi_measurements_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kpi_reviews: {
+        Row: {
+          achievement_percentage: number | null
+          approved_at: string | null
+          approved_by: string | null
+          corrective_actions: string | null
+          created_at: string | null
+          id: string
+          kpi_id: string
+          performance_rating: string | null
+          recommendations: string | null
+          review_period: string
+          review_type: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          root_cause_analysis: string | null
+          status: string | null
+          updated_at: string | null
+          variance_analysis: string | null
+        }
+        Insert: {
+          achievement_percentage?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          corrective_actions?: string | null
+          created_at?: string | null
+          id?: string
+          kpi_id: string
+          performance_rating?: string | null
+          recommendations?: string | null
+          review_period: string
+          review_type?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          root_cause_analysis?: string | null
+          status?: string | null
+          updated_at?: string | null
+          variance_analysis?: string | null
+        }
+        Update: {
+          achievement_percentage?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          corrective_actions?: string | null
+          created_at?: string | null
+          id?: string
+          kpi_id?: string
+          performance_rating?: string | null
+          recommendations?: string | null
+          review_period?: string
+          review_type?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          root_cause_analysis?: string | null
+          status?: string | null
+          updated_at?: string | null
+          variance_analysis?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kpi_reviews_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kpi_reviews_kpi_id_fkey"
+            columns: ["kpi_id"]
+            isOneToOne: false
+            referencedRelation: "kpis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kpi_reviews_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kpi_targets: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string | null
+          excellent_threshold: number | null
+          id: string
+          kpi_id: string
+          minimum_acceptable: number | null
+          notes: string | null
+          set_by: string | null
+          target_period: string
+          target_type: string | null
+          target_value: number
+          updated_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          excellent_threshold?: number | null
+          id?: string
+          kpi_id: string
+          minimum_acceptable?: number | null
+          notes?: string | null
+          set_by?: string | null
+          target_period: string
+          target_type?: string | null
+          target_value: number
+          updated_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          excellent_threshold?: number | null
+          id?: string
+          kpi_id?: string
+          minimum_acceptable?: number | null
+          notes?: string | null
+          set_by?: string | null
+          target_period?: string
+          target_type?: string | null
+          target_value?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kpi_targets_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kpi_targets_kpi_id_fkey"
+            columns: ["kpi_id"]
+            isOneToOne: false
+            referencedRelation: "kpis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kpi_targets_set_by_fkey"
+            columns: ["set_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kpis: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          baseline_value: number | null
+          calculation_method: string | null
+          created_at: string | null
+          current_value: number | null
+          data_source: string | null
+          description: string | null
+          employee_id: string
+          end_date: string | null
+          id: string
+          kpi_category_id: string | null
+          kpi_framework_id: string | null
+          kpi_type: string | null
+          measurement_frequency: string | null
+          name: string
+          period: string
+          responsible_person_id: string | null
+          start_date: string | null
+          status: string | null
+          target_value: number | null
+          trend_direction: string | null
+          unit: string | null
+          updated_at: string | null
+          weight: number | null
+          year: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          baseline_value?: number | null
+          calculation_method?: string | null
+          created_at?: string | null
+          current_value?: number | null
+          data_source?: string | null
+          description?: string | null
+          employee_id: string
+          end_date?: string | null
+          id?: string
+          kpi_category_id?: string | null
+          kpi_framework_id?: string | null
+          kpi_type?: string | null
+          measurement_frequency?: string | null
+          name: string
+          period: string
+          responsible_person_id?: string | null
+          start_date?: string | null
           status?: string | null
           target_value?: number | null
+          trend_direction?: string | null
           unit?: string | null
           updated_at?: string | null
+          weight?: number | null
+          year: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          baseline_value?: number | null
+          calculation_method?: string | null
+          created_at?: string | null
+          current_value?: number | null
+          data_source?: string | null
+          description?: string | null
+          employee_id?: string
+          end_date?: string | null
+          id?: string
+          kpi_category_id?: string | null
+          kpi_framework_id?: string | null
+          kpi_type?: string | null
+          measurement_frequency?: string | null
+          name?: string
+          period?: string
+          responsible_person_id?: string | null
+          start_date?: string | null
+          status?: string | null
+          target_value?: number | null
+          trend_direction?: string | null
+          unit?: string | null
+          updated_at?: string | null
+          weight?: number | null
           year?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "kpis_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "kpis_employee_id_fkey"
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kpis_kpi_category_id_fkey"
+            columns: ["kpi_category_id"]
+            isOneToOne: false
+            referencedRelation: "kpi_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kpis_kpi_framework_id_fkey"
+            columns: ["kpi_framework_id"]
+            isOneToOne: false
+            referencedRelation: "kpi_frameworks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kpis_responsible_person_id_fkey"
+            columns: ["responsible_person_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
         ]

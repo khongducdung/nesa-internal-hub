@@ -15,6 +15,7 @@ import Attendance from "./pages/Attendance";
 import Processes from "./pages/Processes";
 import Performance from "./pages/Performance";
 import OKR from "./pages/OKR";
+import KPI from "./pages/KPI";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/processes" element={<ProtectedRoute><Processes /></ProtectedRoute>} />
             <Route path="/performance" element={<ProtectedRoute><Performance /></ProtectedRoute>} />
             <Route path="/okr" element={<ProtectedRoute><OKR /></ProtectedRoute>} />
+            <Route path="/kpi" element={<ProtectedRoute><KPI /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
