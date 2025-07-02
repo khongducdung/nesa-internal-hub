@@ -96,6 +96,7 @@ export function useOKRData() {
             status: 'not_started' as const,
             due_date: kr.due_date || undefined,
             linked_okr_id: kr.linked_okr_id || undefined,
+            linked_department_id: kr.linked_department_id || undefined,
           };
           
           await createKeyResultMutation.mutateAsync(krData);
@@ -146,6 +147,7 @@ export function useOKRData() {
             status: kr.status || 'not_started' as const,
             due_date: kr.due_date || undefined,
             linked_okr_id: kr.linked_okr_id || undefined,
+            linked_department_id: kr.linked_department_id || undefined,
           };
           
           await createKeyResultMutation.mutateAsync(krData);

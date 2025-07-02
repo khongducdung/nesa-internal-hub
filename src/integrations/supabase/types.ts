@@ -1941,11 +1941,14 @@ export type Database = {
         Row: {
           created_at: string | null
           created_by: string | null
+          cycle_type: string | null
           description: string | null
           end_date: string
           id: string
           is_current: boolean | null
+          month: number | null
           name: string
+          parent_cycle_id: string | null
           quarter: string
           start_date: string
           status: Database["public"]["Enums"]["okr_cycle_status"] | null
@@ -1955,11 +1958,14 @@ export type Database = {
         Insert: {
           created_at?: string | null
           created_by?: string | null
+          cycle_type?: string | null
           description?: string | null
           end_date: string
           id?: string
           is_current?: boolean | null
+          month?: number | null
           name: string
+          parent_cycle_id?: string | null
           quarter: string
           start_date: string
           status?: Database["public"]["Enums"]["okr_cycle_status"] | null
@@ -1969,18 +1975,29 @@ export type Database = {
         Update: {
           created_at?: string | null
           created_by?: string | null
+          cycle_type?: string | null
           description?: string | null
           end_date?: string
           id?: string
           is_current?: boolean | null
+          month?: number | null
           name?: string
+          parent_cycle_id?: string | null
           quarter?: string
           start_date?: string
           status?: Database["public"]["Enums"]["okr_cycle_status"] | null
           updated_at?: string | null
           year?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "okr_cycles_parent_cycle_id_fkey"
+            columns: ["parent_cycle_id"]
+            isOneToOne: false
+            referencedRelation: "okr_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       okr_key_result_updates: {
         Row: {
@@ -2034,6 +2051,8 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          linked_department_id: string | null
+          linked_kr_id: string | null
           measurement_frequency: string | null
           notes: string | null
           okr_id: string | null
@@ -2052,6 +2071,8 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          linked_department_id?: string | null
+          linked_kr_id?: string | null
           measurement_frequency?: string | null
           notes?: string | null
           okr_id?: string | null
@@ -2070,6 +2091,8 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          linked_department_id?: string | null
+          linked_kr_id?: string | null
           measurement_frequency?: string | null
           notes?: string | null
           okr_id?: string | null
@@ -2083,8 +2106,67 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "okr_key_results_linked_department_id_fkey"
+            columns: ["linked_department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "okr_key_results_linked_kr_id_fkey"
+            columns: ["linked_kr_id"]
+            isOneToOne: false
+            referencedRelation: "okr_key_results"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "okr_key_results_okr_id_fkey"
             columns: ["okr_id"]
+            isOneToOne: false
+            referencedRelation: "okr_objectives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      okr_links: {
+        Row: {
+          child_okr_id: string
+          contribution_percentage: number | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          link_type: string
+          parent_okr_id: string
+        }
+        Insert: {
+          child_okr_id: string
+          contribution_percentage?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          link_type: string
+          parent_okr_id: string
+        }
+        Update: {
+          child_okr_id?: string
+          contribution_percentage?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          link_type?: string
+          parent_okr_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "okr_links_child_okr_id_fkey"
+            columns: ["child_okr_id"]
+            isOneToOne: false
+            referencedRelation: "okr_objectives"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "okr_links_parent_okr_id_fkey"
+            columns: ["parent_okr_id"]
             isOneToOne: false
             referencedRelation: "okr_objectives"
             referencedColumns: ["id"]

@@ -21,17 +21,27 @@ export function OKRCycleForm({ open, onOpenChange, onCycleCreated }: OKRCycleFor
   const [formData, setFormData] = useState({
     name: '',
     year: new Date().getFullYear(),
+    cycle_type: 'quarterly' as 'monthly' | 'quarterly' | 'yearly',
     quarter: 'Q1',
+    month: 1,
     start_date: '',
     end_date: '',
     description: '',
-    status: 'planning' as 'planning' | 'active' | 'review' | 'closed'
+    status: 'planning' as 'planning' | 'active' | 'review' | 'closed',
+    parent_cycle_id: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const generateCycleName = () => {
-    const name = `${formData.quarter} ${formData.year}`;
+    let name = '';
+    if (formData.cycle_type === 'monthly') {
+      name = `Tháng ${formData.month}/${formData.year}`;
+    } else if (formData.cycle_type === 'quarterly') {
+      name = `${formData.quarter} ${formData.year}`;
+    } else {
+      name = `Năm ${formData.year}`;
+    }
     setFormData({ ...formData, name });
   };
 
@@ -39,25 +49,35 @@ export function OKRCycleForm({ open, onOpenChange, onCycleCreated }: OKRCycleFor
     const year = formData.year;
     let start_date, end_date;
 
-    switch (formData.quarter) {
-      case 'Q1':
-        start_date = `${year}-01-01`;
-        end_date = `${year}-03-31`;
-        break;
-      case 'Q2':
-        start_date = `${year}-04-01`;
-        end_date = `${year}-06-30`;
-        break;
-      case 'Q3':
-        start_date = `${year}-07-01`;
-        end_date = `${year}-09-30`;
-        break;
-      case 'Q4':
-        start_date = `${year}-10-01`;
-        end_date = `${year}-12-31`;
-        break;
-      default:
-        return;
+    if (formData.cycle_type === 'monthly') {
+      const month = formData.month.toString().padStart(2, '0');
+      const daysInMonth = new Date(year, formData.month, 0).getDate();
+      start_date = `${year}-${month}-01`;
+      end_date = `${year}-${month}-${daysInMonth}`;
+    } else if (formData.cycle_type === 'quarterly') {
+      switch (formData.quarter) {
+        case 'Q1':
+          start_date = `${year}-01-01`;
+          end_date = `${year}-03-31`;
+          break;
+        case 'Q2':
+          start_date = `${year}-04-01`;
+          end_date = `${year}-06-30`;
+          break;
+        case 'Q3':
+          start_date = `${year}-07-01`;
+          end_date = `${year}-09-30`;
+          break;
+        case 'Q4':
+          start_date = `${year}-10-01`;
+          end_date = `${year}-12-31`;
+          break;
+        default:
+          return;
+      }
+    } else {
+      start_date = `${year}-01-01`;
+      end_date = `${year}-12-31`;
     }
 
     setFormData({ ...formData, start_date, end_date });
@@ -68,18 +88,23 @@ export function OKRCycleForm({ open, onOpenChange, onCycleCreated }: OKRCycleFor
     setIsSubmitting(true);
 
     try {
+      const insertData = {
+        name: formData.name,
+        year: formData.year,
+        cycle_type: formData.cycle_type,
+        quarter: formData.cycle_type === 'quarterly' ? formData.quarter : null,
+        month: formData.cycle_type === 'monthly' ? formData.month : null,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        description: formData.description,
+        status: formData.status,
+        is_current: false,
+        parent_cycle_id: formData.parent_cycle_id || null
+      };
+
       const { data, error } = await supabase
         .from('okr_cycles')
-        .insert({
-          name: formData.name,
-          year: formData.year,
-          quarter: formData.quarter,
-          start_date: formData.start_date,
-          end_date: formData.end_date,
-          description: formData.description,
-          status: formData.status,
-          is_current: false
-        })
+        .insert(insertData)
         .select()
         .single();
 
@@ -97,11 +122,14 @@ export function OKRCycleForm({ open, onOpenChange, onCycleCreated }: OKRCycleFor
       setFormData({
         name: '',
         year: new Date().getFullYear(),
+        cycle_type: 'quarterly',
         quarter: 'Q1',
+        month: 1,
         start_date: '',
         end_date: '',
         description: '',
-        status: 'planning'
+        status: 'planning',
+        parent_cycle_id: ''
       });
 
     } catch (error) {
@@ -124,6 +152,23 @@ export function OKRCycleForm({ open, onOpenChange, onCycleCreated }: OKRCycleFor
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="cycle_type">Loại chu kỳ *</Label>
+            <Select
+              value={formData.cycle_type}
+              onValueChange={(value: 'monthly' | 'quarterly' | 'yearly') => setFormData({ ...formData, cycle_type: value })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="monthly">Tháng</SelectItem>
+                <SelectItem value="quarterly">Quý</SelectItem>
+                <SelectItem value="yearly">Năm</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="year">Năm *</Label>
@@ -138,23 +183,46 @@ export function OKRCycleForm({ open, onOpenChange, onCycleCreated }: OKRCycleFor
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="quarter">Quý *</Label>
-              <Select
-                value={formData.quarter}
-                onValueChange={(value) => setFormData({ ...formData, quarter: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Q1">Quý 1 (Tháng 1-3)</SelectItem>
-                  <SelectItem value="Q2">Quý 2 (Tháng 4-6)</SelectItem>
-                  <SelectItem value="Q3">Quý 3 (Tháng 7-9)</SelectItem>
-                  <SelectItem value="Q4">Quý 4 (Tháng 10-12)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {formData.cycle_type === 'quarterly' && (
+              <div className="space-y-2">
+                <Label htmlFor="quarter">Quý *</Label>
+                <Select
+                  value={formData.quarter}
+                  onValueChange={(value) => setFormData({ ...formData, quarter: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Q1">Quý 1 (Tháng 1-3)</SelectItem>
+                    <SelectItem value="Q2">Quý 2 (Tháng 4-6)</SelectItem>
+                    <SelectItem value="Q3">Quý 3 (Tháng 7-9)</SelectItem>
+                    <SelectItem value="Q4">Quý 4 (Tháng 10-12)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {formData.cycle_type === 'monthly' && (
+              <div className="space-y-2">
+                <Label htmlFor="month">Tháng *</Label>
+                <Select
+                  value={formData.month.toString()}
+                  onValueChange={(value) => setFormData({ ...formData, month: Number(value) })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                      <SelectItem key={month} value={month.toString()}>
+                        Tháng {month}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -199,7 +267,7 @@ export function OKRCycleForm({ open, onOpenChange, onCycleCreated }: OKRCycleFor
 
           <div className="flex justify-center">
             <Button type="button" variant="outline" onClick={generateDates}>
-              Tự động tạo ngày theo quý
+              Tự động tạo ngày theo {formData.cycle_type === 'monthly' ? 'tháng' : formData.cycle_type === 'quarterly' ? 'quý' : 'năm'}
             </Button>
           </div>
 

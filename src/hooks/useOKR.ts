@@ -41,6 +41,8 @@ export interface KeyResult {
   due_date?: string;
   notes?: string;
   linked_okr_id?: string;
+  linked_department_id?: string;
+  linked_kr_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -49,13 +51,16 @@ export interface OKRCycle {
   id: string;
   name: string;
   year: number;
-  quarter: string;
+  quarter?: string;
+  month?: number;
+  cycle_type: 'monthly' | 'quarterly' | 'yearly';
   start_date: string;
   end_date: string;
   status: 'planning' | 'active' | 'review' | 'closed';
   is_current: boolean;
   description?: string;
   created_by?: string;
+  parent_cycle_id?: string;
   created_at: string;
   updated_at: string;
 }

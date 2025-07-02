@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { X, Plus } from 'lucide-react';
 import { useOKRData } from '@/hooks/useOKRData';
+import { useDepartments } from '@/hooks/useDepartments';
 
 // Use a simplified interface for form data
 export interface KeyResultFormData {
@@ -19,6 +20,8 @@ export interface KeyResultFormData {
   weight: number;
   due_date?: string;
   linked_okr_id?: string;
+  linked_department_id?: string;
+  linked_kr_id?: string;
 }
 
 interface KeyResultFormProps {
@@ -29,6 +32,7 @@ interface KeyResultFormProps {
 
 export function KeyResultForm({ keyResults, onKeyResultsChange, ownerType }: KeyResultFormProps) {
   const { getAllOKRs } = useOKRData();
+  const { data: departments = [] } = useDepartments();
 
   const addKeyResult = () => {
     const newKR: KeyResultFormData = {
@@ -186,39 +190,72 @@ export function KeyResultForm({ keyResults, onKeyResultsChange, ownerType }: Key
               </div>
             </div>
 
-            {/* OKR Linking for hierarchy */}
-            {availableOKRs.length > 0 && (
-              <div className="space-y-2">
-                <Label htmlFor={`kr-link-${index}`}>
-                  Liên kết đến OKR cấp cao
-                  <span className="text-sm text-gray-500 ml-2">
-                    (KR này sẽ đóng góp vào OKR nào?)
-                  </span>
-                </Label>
-                <Select
-                  value={kr.linked_okr_id || ''}
-                  onValueChange={(value) => updateKeyResult(index, { linked_okr_id: value || undefined })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Chọn OKR để liên kết" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Không liên kết</SelectItem>
-                    {availableOKRs.map((okr) => (
-                      <SelectItem key={okr.id} value={okr.id}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{okr.title}</span>
-                          <span className="text-xs text-gray-500">
-                            {okr.owner_type === 'company' ? 'Công ty' : 
-                             okr.owner_type === 'department' ? 'Phòng ban' : 'Cá nhân'}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+            {/* Enhanced Linking System */}
+            <div className="space-y-4 border-t pt-4">
+              <h4 className="text-sm font-medium text-gray-900">Liên kết phân cấp</h4>
+              
+              {/* Company KR linking to departments */}
+              {ownerType === 'company' && (
+                <div className="space-y-2">
+                  <Label htmlFor={`kr-dept-link-${index}`}>
+                    Liên kết đến phòng ban *
+                    <span className="text-sm text-gray-500 ml-2">
+                      (KR này sẽ ảnh hưởng đến phòng ban nào?)
+                    </span>
+                  </Label>
+                  <Select
+                    value={kr.linked_department_id || ''}
+                    onValueChange={(value) => updateKeyResult(index, { linked_department_id: value || undefined })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn phòng ban" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Không liên kết cụ thể</SelectItem>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Upward OKR linking */}
+              {availableOKRs.length > 0 && (
+                <div className="space-y-2">
+                  <Label htmlFor={`kr-okr-link-${index}`}>
+                    {ownerType === 'individual' ? 'Liên kết đến OKR phòng ban *' : 'Liên kết đến OKR cấp cao'}
+                    <span className="text-sm text-gray-500 ml-2">
+                      (KR này đóng góp vào OKR nào?)
+                    </span>
+                  </Label>
+                  <Select
+                    value={kr.linked_okr_id || ''}
+                    onValueChange={(value) => updateKeyResult(index, { linked_okr_id: value || undefined })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn OKR để liên kết" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Không liên kết</SelectItem>
+                      {availableOKRs.map((okr) => (
+                        <SelectItem key={okr.id} value={okr.id}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{okr.title}</span>
+                            <span className="text-xs text-gray-500">
+                              {okr.owner_type === 'company' ? 'Công ty' : 
+                               okr.owner_type === 'department' ? 'Phòng ban' : 'Cá nhân'}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       ))}

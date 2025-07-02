@@ -76,6 +76,7 @@ export function OKREditDialog({
           weight: kr.weight,
           due_date: kr.due_date || '',
           linked_okr_id: kr.linked_okr_id || '',
+          linked_department_id: kr.linked_department_id || '',
         })));
       }
     } else {
@@ -133,6 +134,19 @@ export function OKREditDialog({
         variant: "destructive",
       });
       return;
+    }
+
+    // Validate hierarchical linking for individual OKRs
+    if (formData.owner_type === 'individual') {
+      const hasLinkedKR = keyResults.some(kr => kr.linked_okr_id);
+      if (!hasLinkedKR) {
+        toast({
+          title: "Lỗi",
+          description: "OKR cá nhân phải có ít nhất 1 Key Result liên kết với OKR phòng ban hoặc công ty",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     try {
@@ -341,6 +355,25 @@ export function OKREditDialog({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+
+            {/* Hierarchical Linking Information */}
+            {formData.owner_type === 'individual' && (
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h4 className="text-sm font-medium text-blue-900 mb-2">📋 Yêu cầu liên kết phân cấp</h4>
+                <p className="text-xs text-blue-700">
+                  OKR cá nhân phải có ít nhất 1 Key Result liên kết với OKR phòng ban hoặc công ty để đảm bảo sự đồng bộ trong tổ chức.
+                </p>
+              </div>
+            )}
+
+            {formData.owner_type === 'company' && (
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h4 className="text-sm font-medium text-green-900 mb-2">🏢 Liên kết phòng ban</h4>
+                <p className="text-xs text-green-700">
+                  Khuyến nghị liên kết các Key Results của công ty với các phòng ban cụ thể để tạo sự rõ ràng trong trách nhiệm thực hiện.
+                </p>
               </div>
             )}
 
