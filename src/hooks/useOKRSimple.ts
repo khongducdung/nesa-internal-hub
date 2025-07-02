@@ -14,12 +14,19 @@ export interface OKRObjective {
   owner_type: 'company' | 'department' | 'individual';
   department_id?: string;
   employee_id?: string;
+  parent_okr_id?: string;
   created_by: string;
   start_date: string;
   end_date: string;
   created_at: string;
   updated_at: string;
   key_results?: KeyResult[];
+  parent_okr?: {
+    id: string;
+    title: string;
+    owner_type: string;
+  };
+  child_okrs_count?: number;
 }
 
 export interface KeyResult {
@@ -93,13 +100,30 @@ export const useCompanyOKRs = () => {
         .from('okr_objectives')
         .select(`
           *,
-          key_results:okr_key_results(*)
+          key_results:okr_key_results(*),
+          parent_okr:parent_okr_id(id, title, owner_type)
         `)
         .eq('owner_type', 'company')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as OKRObjective[];
+      
+      // Get child counts separately
+      const enrichedData = await Promise.all(
+        data.map(async (okr) => {
+          const { count } = await supabase
+            .from('okr_objectives')
+            .select('*', { count: 'exact', head: true })
+            .eq('parent_okr_id', okr.id);
+          
+          return {
+            ...okr,
+            child_okrs_count: count || 0
+          };
+        })
+      );
+      
+      return enrichedData as OKRObjective[];
     }
   });
 };
@@ -117,14 +141,31 @@ export const useDepartmentOKRs = () => {
         .from('okr_objectives')
         .select(`
           *,
-          key_results:okr_key_results(*)
+          key_results:okr_key_results(*),
+          parent_okr:parent_okr_id(id, title, owner_type)
         `)
         .eq('owner_type', 'department')
         .eq('department_id', profile.department_id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as OKRObjective[];
+      
+      // Get child counts separately
+      const enrichedData = await Promise.all(
+        data.map(async (okr) => {
+          const { count } = await supabase
+            .from('okr_objectives')
+            .select('*', { count: 'exact', head: true })
+            .eq('parent_okr_id', okr.id);
+          
+          return {
+            ...okr,
+            child_okrs_count: count || 0
+          };
+        })
+      );
+      
+      return enrichedData as OKRObjective[];
     },
     enabled: !!profile?.department_id
   });
@@ -143,16 +184,76 @@ export const useMyOKRs = () => {
         .from('okr_objectives')
         .select(`
           *,
-          key_results:okr_key_results(*)
+          key_results:okr_key_results(*),
+          parent_okr:parent_okr_id(id, title, owner_type)
         `)
         .eq('owner_type', 'individual')
         .eq('employee_id', profile.employee_id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as OKRObjective[];
+      
+      // Get child counts separately (individuals can't have child OKRs, but keeping for consistency)
+      const enrichedData = await Promise.all(
+        data.map(async (okr) => {
+          const { count } = await supabase
+            .from('okr_objectives')
+            .select('*', { count: 'exact', head: true })
+            .eq('parent_okr_id', okr.id);
+          
+          return {
+            ...okr,
+            child_okrs_count: count || 0
+          };
+        })
+      );
+      
+      return enrichedData as OKRObjective[];
     },
     enabled: !!profile?.employee_id
+  });
+};
+
+// Get Parent OKRs (for hierarchical linking)
+export const useParentOKRs = (ownerType: 'company' | 'department' | 'individual') => {
+  const { profile } = useAuth();
+  
+  return useQuery({
+    queryKey: ['parent-okrs', ownerType, profile?.department_id],
+    queryFn: async () => {
+      let query = supabase
+        .from('okr_objectives')
+        .select(`
+          id,
+          title,
+          description,
+          owner_type,
+          progress,
+          status
+        `)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      // Logic for hierarchical linking:
+      // - Department OKRs can link to Company OKRs
+      // - Individual OKRs can link to Department OKRs (same department)
+      if (ownerType === 'department') {
+        query = query.eq('owner_type', 'company');
+      } else if (ownerType === 'individual') {
+        query = query
+          .eq('owner_type', 'department')
+          .eq('department_id', profile?.department_id);
+      } else {
+        // Company OKRs cannot have parent
+        return [];
+      }
+
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      return data as OKRObjective[];
+    },
+    enabled: !!profile && ownerType !== 'company'
   });
 };
 
@@ -167,6 +268,7 @@ export const useCreateOKR = () => {
       owner_type: 'company' | 'department' | 'individual';
       department_id?: string;
       employee_id?: string;
+      parent_okr_id?: string;
       key_results: Array<{
         title: string;
         description?: string;
@@ -209,6 +311,7 @@ export const useCreateOKR = () => {
           owner_id: owner_id,
           department_id: data.department_id || null,
           employee_id: data.employee_id || null,
+          parent_okr_id: data.parent_okr_id || null,
           start_date: currentCycle?.start_date || new Date().toISOString().split('T')[0],
           end_date: currentCycle?.end_date || new Date().toISOString().split('T')[0],
           created_by: user?.id || '',

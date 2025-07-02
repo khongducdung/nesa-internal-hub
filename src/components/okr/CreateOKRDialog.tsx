@@ -6,8 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, X } from 'lucide-react';
-import { useCreateOKR } from '@/hooks/useOKRSimple';
+import { Plus, X, Link } from 'lucide-react';
+import { useCreateOKR, useParentOKRs } from '@/hooks/useOKRSimple';
 import { useDepartments } from '@/hooks/useDepartments';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAuth } from '@/hooks/useAuth';
@@ -40,7 +40,10 @@ export function CreateOKRDialog({ open, onOpenChange, defaultOwnerType = 'indivi
     owner_type: defaultOwnerType,
     department_id: '',
     employee_id: '',
+    parent_okr_id: '',
   });
+
+  const { data: parentOKRs = [] } = useParentOKRs(formData.owner_type);
 
   const [keyResults, setKeyResults] = useState<KeyResultFormData[]>([
     {
@@ -91,6 +94,7 @@ export function CreateOKRDialog({ open, onOpenChange, defaultOwnerType = 'indivi
         title: formData.title,
         description: formData.description,
         owner_type: formData.owner_type,
+        parent_okr_id: formData.parent_okr_id || null,
         key_results: keyResults.filter(kr => kr.title && kr.unit && kr.target_value > 0),
       };
 
@@ -115,6 +119,7 @@ export function CreateOKRDialog({ open, onOpenChange, defaultOwnerType = 'indivi
         owner_type: defaultOwnerType,
         department_id: '',
         employee_id: '',
+        parent_okr_id: '',
       });
       setKeyResults([{
         title: '',
@@ -143,92 +148,131 @@ export function CreateOKRDialog({ open, onOpenChange, defaultOwnerType = 'indivi
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Tiêu đề OKR *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Ví dụ: Tăng doanh thu 30%"
-                required
-              />
-            </div>
+          {/* Basic Info Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Thông tin cơ bản</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Tiêu đề OKR *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="Ví dụ: Tăng doanh thu 30%"
+                    required
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="owner_type">Loại OKR *</Label>
-              <Select
-                value={formData.owner_type}
-                onValueChange={(value: 'company' | 'department' | 'individual') => 
-                  setFormData({ ...formData, owner_type: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {isAdmin && <SelectItem value="company">OKR Công ty</SelectItem>}
-                  <SelectItem value="department">OKR Phòng ban</SelectItem>
-                  <SelectItem value="individual">OKR Cá nhân</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+                <div className="space-y-2">
+                  <Label htmlFor="owner_type">Loại OKR *</Label>
+                  <Select
+                    value={formData.owner_type}
+                    onValueChange={(value: 'company' | 'department' | 'individual') => 
+                      setFormData({ ...formData, owner_type: value, parent_okr_id: '' })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {isAdmin && <SelectItem value="company">OKR Công ty</SelectItem>}
+                      <SelectItem value="department">OKR Phòng ban</SelectItem>
+                      <SelectItem value="individual">OKR Cá nhân</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Mô tả</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Mô tả chi tiết về mục tiêu này"
-              rows={3}
-            />
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Mô tả</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Mô tả chi tiết về mục tiêu này"
+                  rows={3}
+                />
+              </div>
 
-          {/* Owner-specific fields */}
-          {formData.owner_type === 'department' && (
-            <div className="space-y-2">
-              <Label htmlFor="department">Phòng ban</Label>
-              <Select
-                value={formData.department_id}
-                onValueChange={(value) => setFormData({ ...formData, department_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn phòng ban" />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+              {/* Hierarchical Linking */}
+              {parentOKRs.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <Link className="h-4 w-4" />
+                    Liên kết với OKR cấp trên
+                  </Label>
+                  <Select
+                    value={formData.parent_okr_id}
+                    onValueChange={(value) => setFormData({ ...formData, parent_okr_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={
+                        formData.owner_type === 'department' 
+                          ? "Chọn OKR Công ty để liên kết" 
+                          : "Chọn OKR Phòng ban để liên kết"
+                      } />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Không liên kết</SelectItem>
+                      {parentOKRs.map((okr) => (
+                        <SelectItem key={okr.id} value={okr.id}>
+                          {okr.title} ({okr.progress}%)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-          {formData.owner_type === 'individual' && isAdmin && (
-            <div className="space-y-2">
-              <Label htmlFor="employee">Nhân viên</Label>
-              <Select
-                value={formData.employee_id}
-                onValueChange={(value) => setFormData({ ...formData, employee_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn nhân viên" />
-                </SelectTrigger>
-                <SelectContent>
-                  {employees.map((emp) => (
-                    <SelectItem key={emp.id} value={emp.id}>
-                      {emp.full_name} ({emp.employee_code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+              {/* Owner-specific fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {formData.owner_type === 'department' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="department">Phòng ban</Label>
+                    <Select
+                      value={formData.department_id}
+                      onValueChange={(value) => setFormData({ ...formData, department_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chọn phòng ban" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {departments.map((dept) => (
+                          <SelectItem key={dept.id} value={dept.id}>
+                            {dept.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {formData.owner_type === 'individual' && isAdmin && (
+                  <div className="space-y-2">
+                    <Label htmlFor="employee">Nhân viên</Label>
+                    <Select
+                      value={formData.employee_id}
+                      onValueChange={(value) => setFormData({ ...formData, employee_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chọn nhân viên" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {employees.map((emp) => (
+                          <SelectItem key={emp.id} value={emp.id}>
+                            {emp.full_name} ({emp.employee_code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Key Results */}
           <div className="space-y-4">

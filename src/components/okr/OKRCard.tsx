@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Users, User, Target } from 'lucide-react';
+import { Building2, Users, User, Target, Link, ArrowDown, ArrowUp } from 'lucide-react';
 import { OKRObjective } from '@/hooks/useOKRSimple';
 
 interface OKRCardProps {
@@ -92,6 +92,24 @@ export function OKRCard({ okr, onEdit }: OKRCardProps) {
           </div>
           <Progress value={okr.progress} className="h-2" />
         </div>
+
+        {/* Hierarchical Relationships */}
+        {(okr.parent_okr || (okr.child_okrs_count && okr.child_okrs_count > 0)) && (
+          <div className="space-y-2 border-t pt-3">
+            {okr.parent_okr && (
+              <div className="flex items-center gap-2 text-xs text-blue-600">
+                <ArrowUp className="h-3 w-3" />
+                <span>Liên kết: {okr.parent_okr.title}</span>
+              </div>
+            )}
+            {okr.child_okrs_count && okr.child_okrs_count > 0 && (
+              <div className="flex items-center gap-2 text-xs text-green-600">
+                <ArrowDown className="h-3 w-3" />
+                <span>{okr.child_okrs_count} OKR con</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {okr.key_results && okr.key_results.length > 0 && (
           <div className="space-y-2">
