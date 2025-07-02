@@ -5,9 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Building2, Users, Target } from 'lucide-react';
 import { useKPIFrameworks } from '@/hooks/useKPI';
 import { FRAMEWORK_TYPES } from '@/types/kpi';
+import { KPIFrameworkFormDialog } from './KPIFrameworkFormDialog';
 
 export function KPIFrameworkManagement() {
   const { data: frameworks = [] } = useKPIFrameworks();
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -16,7 +18,7 @@ export function KPIFrameworkManagement() {
           <h2 className="text-2xl font-bold">Quản lý khung KPI</h2>
           <p className="text-muted-foreground">Thiết lập khung KPI theo cấp độ tổ chức</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowCreateDialog(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Tạo khung KPI
         </Button>
@@ -62,6 +64,11 @@ export function KPIFrameworkManagement() {
           </Card>
         ))}
       </div>
+
+      <KPIFrameworkFormDialog 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog} 
+      />
     </div>
   );
 }
