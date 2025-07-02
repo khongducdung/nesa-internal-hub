@@ -102,6 +102,9 @@ export const useOKRObjectives = (filters?: {
   return useQuery({
     queryKey: ['okr-objectives', filters],
     queryFn: async () => {
+      console.log('🔍 Fetching OKR objectives with filters:', filters);
+      console.log('👤 Current user profile:', profile);
+      
       let query = supabase
         .from('okr_objectives')
         .select(`
@@ -140,10 +143,15 @@ export const useOKRObjectives = (filters?: {
 
       const { data, error } = await query;
       
-      if (error) throw error;
+      console.log('📊 Query result:', { data, error });
+      
+      if (error) {
+        console.error('❌ Database error:', error);
+        throw error;
+      }
       
       // Calculate progress for each OKR based on key results
-      return data.map(okr => {
+      const enrichedData = data.map(okr => {
         const keyResults = okr.key_results || [];
         const totalProgress = keyResults.length > 0 
           ? keyResults.reduce((sum, kr) => sum + (kr.progress * kr.weight / 100), 0)
@@ -154,7 +162,10 @@ export const useOKRObjectives = (filters?: {
           progress: Math.round(totalProgress),
           key_results: keyResults
         };
-      }) as OKRObjective[];
+      });
+      
+      console.log('✅ Enriched data:', enrichedData);
+      return enrichedData as OKRObjective[];
     }
   });
 };
