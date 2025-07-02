@@ -11,6 +11,9 @@ import { useOKRData } from '@/hooks/useOKRData';
 import { useAuth } from '@/hooks/useAuth';
 import { useDepartments } from '@/hooks/useDepartments';
 import { useEmployees } from '@/hooks/useEmployees';
+import { KeyResultForm, KeyResult } from './KeyResultForm';
+import { OKRCycleForm } from './OKRCycleForm';
+import { Plus } from 'lucide-react';
 
 interface OKREditDialogProps {
   open: boolean;
@@ -28,7 +31,7 @@ export function OKREditDialog({
   defaultDepartmentId 
 }: OKREditDialogProps) {
   const { toast } = useToast();
-  const { createOKR, updateOKR, currentCycle } = useOKRData();
+  const { createOKR, updateOKR, currentCycle, cycles } = useOKRData();
   const { profile, isAdmin } = useAuth();
   const { data: departments = [] } = useDepartments();
   const { data: employees = [] } = useEmployees();
@@ -43,7 +46,11 @@ export function OKREditDialog({
     employee_id: '',
     status: 'draft',
     parent_okr_id: '',
+    cycle_id: currentCycle?.id || '',
   });
+
+  const [keyResults, setKeyResults] = useState<KeyResult[]>([]);
+  const [showCycleForm, setShowCycleForm] = useState(false);
 
   useEffect(() => {
     if (okr) {
@@ -55,7 +62,22 @@ export function OKREditDialog({
         employee_id: okr.employee_id || '',
         status: okr.status || 'draft',
         parent_okr_id: okr.parent_okr_id || '',
+        cycle_id: okr.cycle_id || currentCycle?.id || '',
       });
+      
+      // Load existing key results
+      if (okr.key_results) {
+        setKeyResults(okr.key_results.map((kr: any) => ({
+          id: kr.id,
+          title: kr.title,
+          description: kr.description || '',
+          target_value: kr.target_value,
+          unit: kr.unit,
+          weight: kr.weight,
+          due_date: kr.due_date || '',
+          linked_okr_id: kr.linked_okr_id || '',
+        })));
+      }
     } else {
       setFormData({
         title: '',
@@ -65,9 +87,11 @@ export function OKREditDialog({
         employee_id: '',
         status: 'draft',
         parent_okr_id: '',
+        cycle_id: currentCycle?.id || '',
       });
+      setKeyResults([]);
     }
-  }, [okr, defaultOwnerType, defaultDepartmentId]);
+  }, [okr, defaultOwnerType, defaultDepartmentId, currentCycle]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,10 +105,31 @@ export function OKREditDialog({
       return;
     }
 
-    if (!currentCycle) {
+    if (keyResults.length === 0) {
+      toast({
+        title: "Lỗi", 
+        description: "OKR phải có ít nhất 1 Key Result",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate key results
+    for (const kr of keyResults) {
+      if (!kr.title.trim() || !kr.unit.trim() || kr.target_value <= 0) {
+        toast({
+          title: "Lỗi",
+          description: "Vui lòng điền đầy đủ thông tin cho tất cả Key Results",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    if (!formData.cycle_id) {
       toast({
         title: "Lỗi",
-        description: "Không tìm thấy chu kỳ OKR hiện tại",
+        description: "Vui lòng chọn chu kỳ OKR",
         variant: "destructive",
       });
       return;
@@ -93,17 +138,18 @@ export function OKREditDialog({
     try {
       const okrData = {
         ...formData,
-        // Xác định owner_id dựa trên owner_type
+        // Determine owner_id based on owner_type
         owner_id: formData.owner_type === 'company' 
           ? 'company'
           : formData.owner_type === 'department'
           ? formData.department_id
           : formData.employee_id || profile?.employee_id,
-        // Chỉ set department_id nếu là department OKR
+        // Only set department_id if it's a department OKR
         department_id: formData.owner_type === 'department' ? formData.department_id : undefined,
-        // Chỉ set employee_id nếu là individual OKR
+        // Only set employee_id if it's an individual OKR
         employee_id: formData.owner_type === 'individual' ? (formData.employee_id || profile?.employee_id) : undefined,
         status: formData.status as 'draft' | 'active' | 'completed' | 'cancelled',
+        key_results: keyResults,
       };
 
       if (okr) {
@@ -131,7 +177,7 @@ export function OKREditDialog({
     }
   };
 
-  // Xác định các options owner_type dựa trên quyền
+  // Determine owner type options based on permissions
   const getOwnerTypeOptions = () => {
     const options = [
       { value: 'individual', label: 'Cá nhân' }
@@ -149,131 +195,182 @@ export function OKREditDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>
-            {okr ? 'Chỉnh sửa OKR' : 'Tạo OKR mới'}
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {okr ? 'Chỉnh sửa OKR' : 'Tạo OKR mới'}
+            </DialogTitle>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="title">Tiêu đề OKR *</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="Nhập tiêu đề OKR"
-              required
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="title">Tiêu đề OKR (Objective) *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Ví dụ: Tăng trưởng doanh thu bền vững"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Mô tả</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Mô tả chi tiết về mục tiêu này"
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="owner_type">Loại OKR *</Label>
+                <Select
+                  value={formData.owner_type}
+                  onValueChange={(value) => setFormData({ ...formData, owner_type: value as any })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn loại OKR" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getOwnerTypeOptions().map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="cycle">Chu kỳ OKR *</Label>
+                <div className="flex gap-2">
+                  <Select
+                    value={formData.cycle_id}
+                    onValueChange={(value) => setFormData({ ...formData, cycle_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Chọn chu kỳ" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cycles.map((cycle) => (
+                        <SelectItem key={cycle.id} value={cycle.id}>
+                          {cycle.name} ({cycle.year})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {isAdmin && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowCycleForm(true)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="status">Trạng thái</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn trạng thái" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Nháp</SelectItem>
+                    <SelectItem value="active">Đang thực hiện</SelectItem>
+                    <SelectItem value="completed">Hoàn thành</SelectItem>
+                    <SelectItem value="cancelled">Đã hủy</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Department selection for department OKRs */}
+            {formData.owner_type === 'department' && (
+              <div className="space-y-2">
+                <Label htmlFor="department">Phòng ban *</Label>
+                <Select
+                  value={formData.department_id}
+                  onValueChange={(value) => setFormData({ ...formData, department_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn phòng ban" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Employee selection for individual OKRs (only for admin/manager) */}
+            {formData.owner_type === 'individual' && (isAdmin || isManager) && (
+              <div className="space-y-2">
+                <Label htmlFor="employee">Nhân viên (để trống nếu là OKR của bạn)</Label>
+                <Select
+                  value={formData.employee_id || 'self'}
+                  onValueChange={(value) => setFormData({ ...formData, employee_id: value === 'self' ? '' : value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Chọn nhân viên" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="self">Của tôi</SelectItem>
+                    {employees.map((emp) => (
+                      <SelectItem key={emp.id} value={emp.id}>
+                        {emp.full_name} ({emp.employee_code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Key Results Form */}
+            <KeyResultForm 
+              keyResults={keyResults}
+              onKeyResultsChange={setKeyResults}
+              ownerType={formData.owner_type}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Mô tả</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Mô tả chi tiết về OKR này"
-              rows={3}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="owner_type">Loại OKR *</Label>
-              <Select
-                value={formData.owner_type}
-                onValueChange={(value) => setFormData({ ...formData, owner_type: value as any })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn loại OKR" />
-                </SelectTrigger>
-                <SelectContent>
-                  {getOwnerTypeOptions().map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex justify-end gap-3">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Hủy
+              </Button>
+              <Button type="submit">
+                {okr ? 'Cập nhật' : 'Tạo OKR'}
+              </Button>
             </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-            <div className="space-y-2">
-              <Label htmlFor="status">Trạng thái</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn trạng thái" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Nháp</SelectItem>
-                  <SelectItem value="active">Đang thực hiện</SelectItem>
-                  <SelectItem value="completed">Hoàn thành</SelectItem>
-                  <SelectItem value="cancelled">Đã hủy</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Department selection for department OKRs */}
-          {formData.owner_type === 'department' && (
-            <div className="space-y-2">
-              <Label htmlFor="department">Phòng ban *</Label>
-              <Select
-                value={formData.department_id}
-                onValueChange={(value) => setFormData({ ...formData, department_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn phòng ban" />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Employee selection for individual OKRs (only for admin/manager) */}
-          {formData.owner_type === 'individual' && (isAdmin || isManager) && (
-            <div className="space-y-2">
-              <Label htmlFor="employee">Nhân viên (để trống nếu là OKR của bạn)</Label>
-              <Select
-                value={formData.employee_id || 'self'}
-                onValueChange={(value) => setFormData({ ...formData, employee_id: value === 'self' ? '' : value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn nhân viên" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="self">Của tôi</SelectItem>
-                  {employees.map((emp) => (
-                    <SelectItem key={emp.id} value={emp.id}>
-                      {emp.full_name} ({emp.employee_code})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Hủy
-            </Button>
-            <Button type="submit">
-              {okr ? 'Cập nhật' : 'Tạo OKR'}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <OKRCycleForm 
+        open={showCycleForm}
+        onOpenChange={setShowCycleForm}
+        onCycleCreated={() => {
+          // Refresh cycles data
+          window.location.reload();
+        }}
+      />
+    </>
   );
 }

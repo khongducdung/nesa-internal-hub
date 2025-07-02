@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -30,6 +31,7 @@ export interface KeyResult {
   id: string;
   okr_id: string;
   title: string;
+  description?: string;
   target_value: number;
   current_value: number;
   unit: string;
@@ -38,6 +40,7 @@ export interface KeyResult {
   status: 'not_started' | 'on_track' | 'at_risk' | 'completed';
   due_date?: string;
   notes?: string;
+  linked_okr_id?: string;
   created_at: string;
   updated_at: string;
 }

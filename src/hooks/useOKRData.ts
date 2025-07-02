@@ -10,10 +10,12 @@ import {
   useUpdateOKR,
   useDeleteOKR,
   useUpdateKeyResult,
+  useCreateKeyResult,
   type OKRObjective,
   type KeyResult,
   type OKRCycle
 } from '@/hooks/useOKR';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface OKRAlignment {
   parent_id: string;
@@ -39,6 +41,7 @@ export function useOKRData() {
   const updateOKRMutation = useUpdateOKR();
   const deleteOKRMutation = useDeleteOKR();
   const updateKeyResultMutation = useUpdateKeyResult();
+  const createKeyResultMutation = useCreateKeyResult();
   
   const loading = cyclesLoading || currentCycleLoading || companyLoading || departmentLoading || myOKRsLoading;
 
@@ -49,42 +52,106 @@ export function useOKRData() {
     console.log('Alignments refreshed');
   };
 
-  const createOKR = async (okrData: Partial<OKRObjective>) => {
+  const createOKR = async (okrData: Partial<OKRObjective> & { key_results?: any[] }) => {
     console.log('Creating OKR with data:', okrData);
+    
+    // Extract key results from okrData
+    const { key_results, ...okrCreateData } = okrData;
     
     // Prepare the data for database insertion
     const insertData = {
-      title: okrData.title || '',
-      description: okrData.description || '',
-      cycle_id: currentCycle?.id || '',
+      title: okrCreateData.title || '',
+      description: okrCreateData.description || '',
+      cycle_id: okrCreateData.cycle_id || currentCycle?.id || '',
       year: currentCycle?.year || 2024,
       quarter: currentCycle?.quarter || 'Q1',
       progress: 0,
-      status: okrData.status || 'draft',
-      owner_id: okrData.owner_id || profile?.employee_id || '',
-      owner_type: okrData.owner_type || 'individual',
-      department_id: okrData.owner_type === 'department' ? (okrData.department_id || profile?.department_id) : undefined,
-      employee_id: okrData.owner_type === 'individual' ? profile?.employee_id : undefined,
-      parent_okr_id: okrData.parent_okr_id,
+      status: okrCreateData.status || 'draft',
+      owner_id: okrCreateData.owner_id || profile?.employee_id || '',
+      owner_type: okrCreateData.owner_type || 'individual',
+      department_id: okrCreateData.owner_type === 'department' ? (okrCreateData.department_id || profile?.department_id) : undefined,
+      employee_id: okrCreateData.owner_type === 'individual' ? (okrCreateData.employee_id || profile?.employee_id) : undefined,
+      parent_okr_id: okrCreateData.parent_okr_id,
       created_by: profile?.id || '',
       start_date: currentCycle?.start_date || new Date().toISOString().split('T')[0],
       end_date: currentCycle?.end_date || new Date().toISOString().split('T')[0],
     };
 
     try {
-      const result = await createOKRMutation.mutateAsync(insertData);
-      return result;
+      // Create the OKR first
+      const okrResult = await createOKRMutation.mutateAsync(insertData);
+      
+      // Then create the key results if any
+      if (key_results && key_results.length > 0) {
+        for (const kr of key_results) {
+          const krData = {
+            okr_id: okrResult.id,
+            title: kr.title,
+            description: kr.description || '',
+            target_value: kr.target_value,
+            current_value: 0,
+            unit: kr.unit,
+            weight: kr.weight || 100,
+            progress: 0,
+            status: 'not_started' as const,
+            due_date: kr.due_date || undefined,
+            linked_okr_id: kr.linked_okr_id || undefined,
+          };
+          
+          await createKeyResultMutation.mutateAsync(krData);
+        }
+      }
+      
+      return okrResult;
     } catch (error) {
       console.error('Error creating OKR:', error);
       throw error;
     }
   };
 
-  const updateOKR = async (id: string, updates: Partial<OKRObjective>) => {
+  const updateOKR = async (id: string, updates: Partial<OKRObjective> & { key_results?: any[] }) => {
     console.log('Updating OKR:', id, 'with:', updates);
     
+    // Extract key results from updates
+    const { key_results, ...okrUpdates } = updates;
+    
     try {
-      const result = await updateOKRMutation.mutateAsync({ id, ...updates });
+      // Update the OKR
+      const result = await updateOKRMutation.mutateAsync({ id, ...okrUpdates });
+      
+      // Handle key results updates if provided
+      if (key_results) {
+        // For simplicity, we'll delete existing key results and recreate them
+        // In a production app, you might want more sophisticated update logic
+        
+        // Delete existing key results
+        const { error: deleteError } = await supabase
+          .from('okr_key_results')
+          .delete()
+          .eq('okr_id', id);
+          
+        if (deleteError) throw deleteError;
+        
+        // Create new key results
+        for (const kr of key_results) {
+          const krData = {
+            okr_id: id,
+            title: kr.title,
+            description: kr.description || '',
+            target_value: kr.target_value,
+            current_value: kr.current_value || 0,
+            unit: kr.unit,
+            weight: kr.weight || 100,
+            progress: kr.progress || 0,
+            status: kr.status || 'not_started' as const,
+            due_date: kr.due_date || undefined,
+            linked_okr_id: kr.linked_okr_id || undefined,
+          };
+          
+          await createKeyResultMutation.mutateAsync(krData);
+        }
+      }
+      
       return result;
     } catch (error) {
       console.error('Error updating OKR:', error);
