@@ -98,12 +98,57 @@ export const useKPIs = (employeeId?: string) => {
   const { profile } = useAuth();
   
   return useQuery({
-    queryKey: ['kpis', employeeId || profile?.employee_id],
+    queryKey: ['kpis', employeeId || profile?.employee_id || 'all'],
     queryFn: async () => {
-      if (!profile?.employee_id && !employeeId) return [];
-
-      const targetEmployeeId = employeeId || profile.employee_id;
+      // Nếu có employeeId cụ thể, filter theo employee đó
+      if (employeeId) {
+        const { data, error } = await supabase
+          .from('kpis')
+          .select(`
+            *,
+            kpi_categories(id, name, color),
+            kpi_frameworks(id, name, framework_type),
+            employees!kpis_employee_id_fkey(id, full_name, employee_code),
+            responsible_person:employees!kpis_responsible_person_id_fkey(id, full_name),
+            kpi_measurements(
+              id, measured_value, measurement_date, measurement_period, notes
+            ),
+            kpi_targets(
+              id, target_period, target_value, minimum_acceptable, excellent_threshold
+            )
+          `)
+          .eq('employee_id', employeeId)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        return enrichKPIData(data);
+      }
       
+      // Nếu có profile.employee_id, filter theo user hiện tại
+      if (profile?.employee_id) {
+        const { data, error } = await supabase
+          .from('kpis')
+          .select(`
+            *,
+            kpi_categories(id, name, color),
+            kpi_frameworks(id, name, framework_type),
+            employees!kpis_employee_id_fkey(id, full_name, employee_code),
+            responsible_person:employees!kpis_responsible_person_id_fkey(id, full_name),
+            kpi_measurements(
+              id, measured_value, measurement_date, measurement_period, notes
+            ),
+            kpi_targets(
+              id, target_period, target_value, minimum_acceptable, excellent_threshold
+            )
+          `)
+          .eq('employee_id', profile.employee_id)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        return enrichKPIData(data);
+      }
+      
+      // Fallback: Lấy tất cả KPIs để demo (khi chưa authentication)
       const { data, error } = await supabase
         .from('kpis')
         .select(`
@@ -119,29 +164,29 @@ export const useKPIs = (employeeId?: string) => {
             id, target_period, target_value, minimum_acceptable, excellent_threshold
           )
         `)
-        .eq('employee_id', targetEmployeeId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(10); // Giới hạn 10 KPIs cho demo
       
       if (error) throw error;
-      
-      // Enrich data with latest measurement and current target
-      const enrichedData = data.map(kpi => {
-        const latestMeasurement = kpi.kpi_measurements?.[0] || null;
-        const currentPeriod = new Date().toISOString().slice(0, 7); // YYYY-MM format
-        const currentTarget = kpi.kpi_targets?.find(t => t.target_period.includes(currentPeriod)) || null;
-        
-        return {
-          ...kpi,
-          latest_measurement: latestMeasurement,
-          current_target: currentTarget
-        };
-      });
-      
-      return enrichedData as any[];
-    },
-    enabled: !!(profile?.employee_id || employeeId)
+      return enrichKPIData(data);
+    }
   });
 };
+
+// Helper function to enrich KPI data
+function enrichKPIData(data: any[]) {
+  return data.map(kpi => {
+    const latestMeasurement = kpi.kpi_measurements?.[0] || null;
+    const currentPeriod = new Date().toISOString().slice(0, 7); // YYYY-MM format
+    const currentTarget = kpi.kpi_targets?.find(t => t.target_period.includes(currentPeriod)) || null;
+    
+    return {
+      ...kpi,
+      latest_measurement: latestMeasurement,
+      current_target: currentTarget
+    };
+  });
+}
 
 export const useAllKPIs = () => {
   return useQuery({
