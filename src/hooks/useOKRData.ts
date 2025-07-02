@@ -40,7 +40,7 @@ export function useOKRData() {
   const deleteOKRMutation = useDeleteOKR();
   const updateKeyResultMutation = useUpdateKeyResult();
   
-  const loading = false; // Remove excessive loading dependencies that cause infinite loading
+  const loading = cyclesLoading || currentCycleLoading || companyLoading || departmentLoading || myOKRsLoading;
 
   const getAllOKRs = () => [...companyOKRs, ...departmentOKRs, ...myOKRs];
 

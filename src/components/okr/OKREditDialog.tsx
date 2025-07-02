@@ -41,7 +41,7 @@ export function OKREditDialog({
     owner_type: defaultOwnerType,
     department_id: defaultDepartmentId || '',
     employee_id: '',
-    status: 'draft' as 'draft' | 'active' | 'completed' | 'cancelled',
+    status: 'draft',
     parent_okr_id: '',
   });
 
@@ -204,7 +204,7 @@ export function OKREditDialog({
               <Label htmlFor="status">Trạng thái</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value as 'draft' | 'active' | 'completed' | 'cancelled' })}
+                onValueChange={(value) => setFormData({ ...formData, status: value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn trạng thái" />
@@ -246,7 +246,7 @@ export function OKREditDialog({
             <div className="space-y-2">
               <Label htmlFor="employee">Nhân viên (để trống nếu là OKR của bạn)</Label>
               <Select
-                value={formData.employee_id}
+                value={formData.employee_id || 'self'}
                 onValueChange={(value) => setFormData({ ...formData, employee_id: value === 'self' ? '' : value })}
               >
                 <SelectTrigger>

@@ -21,7 +21,7 @@ export function DepartmentOKRView() {
   const [selectedOKR, setSelectedOKR] = useState(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   // Tìm phòng ban của user hiện tại
   const userDepartment = departments.find(dept => dept.id === profile?.department_id);
@@ -31,7 +31,7 @@ export function DepartmentOKRView() {
   const filteredOKRs = departmentOKRs.filter(okr => {
     const matchesSearch = okr.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          okr.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = !statusFilter || okr.status === statusFilter;
+    const matchesStatus = statusFilter === 'all' || okr.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -109,7 +109,7 @@ export function DepartmentOKRView() {
                 <SelectValue placeholder="Lọc theo trạng thái" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tất cả trạng thái</SelectItem>
+                <SelectItem value="all">Tất cả trạng thái</SelectItem>
                 <SelectItem value="active">Đang thực hiện</SelectItem>
                 <SelectItem value="completed">Hoàn thành</SelectItem>
                 <SelectItem value="draft">Nháp</SelectItem>
@@ -118,7 +118,7 @@ export function DepartmentOKRView() {
             </Select>
             <Button variant="outline" onClick={() => {
               setSearchTerm('');
-              setStatusFilter('');
+              setStatusFilter('all');
             }}>
               Xóa bộ lọc
             </Button>
