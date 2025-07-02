@@ -421,7 +421,7 @@ export const useCreateKPIReview = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (data: Omit<KPIReview, 'id' | 'created_at' | 'updated_at' | 'reviewed_at'>) => {
+    mutationFn: async (data: Omit<KPIReview, 'id' | 'created_at' | 'updated_at' | 'reviewed_at' | 'approved_at' | 'approved_by'>) => {
       const { data: result, error } = await supabase
         .from('kpi_reviews')
         .insert(data)
