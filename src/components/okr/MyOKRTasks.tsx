@@ -203,7 +203,7 @@ export function MyOKRTasks() {
                     <div className="flex items-center space-x-4 text-sm text-gray-600">
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-4 w-4" />
-                        <span>{okr.cycle}</span>
+                        <span>{typeof okr.cycle === 'object' ? okr.cycle.name : okr.cycle}</span>
                       </div>
                       {okr.parent_okr_id && (
                         <div className="flex items-center space-x-1">

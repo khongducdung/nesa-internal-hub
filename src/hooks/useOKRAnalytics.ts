@@ -69,8 +69,8 @@ export function useOKRAnalytics() {
     // Filter by period
     if (period !== 'current') {
       filteredOKRs = filteredOKRs.filter(okr => {
-        if (period === 'q1-2024') return okr.cycle === 'Q1 2024';
-        if (period === 'q2-2024') return okr.cycle === 'Q2 2024';
+        if (period === 'q1-2024') return (typeof okr.cycle === 'object' ? okr.cycle.name : okr.cycle) === 'Q1 2024';
+        if (period === 'q2-2024') return (typeof okr.cycle === 'object' ? okr.cycle.name : okr.cycle) === 'Q2 2024';
         if (period === 'yearly') return okr.year === 2024;
         return true;
       });

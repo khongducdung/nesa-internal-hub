@@ -125,13 +125,16 @@ export function OKREditDialog({ okr, isOpen, onClose, onSave }: OKREditDialogPro
       .filter(kr => kr.title && kr.target_value)
       .map(kr => ({
         id: kr.id || `kr_${Date.now()}_${Math.random()}`,
+        okr_id: okr?.id || '',
         title: kr.title,
         target_value: parseFloat(kr.target_value) || 0,
         current_value: parseFloat(kr.current_value) || 0,
         unit: kr.unit || '',
         weight: kr.weight || 100,
         progress: kr.progress,
-        status: kr.status
+        status: kr.status,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }));
 
     const totalProgress = keyResults.reduce((sum, kr) => sum + (kr.progress * kr.weight / 100), 0);

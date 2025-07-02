@@ -58,13 +58,16 @@ export function CompanyOKRView() {
       .filter(kr => kr.title && kr.target_value)
       .map((kr, index) => ({
         id: `kr_${Date.now()}_${index}`,
+        okr_id: '',
         title: kr.title,
         target_value: parseFloat(kr.target_value) || 0,
         current_value: 0,
         unit: kr.unit || '',
         weight: kr.weight || 100,
         progress: 0,
-        status: 'not_started' as const
+        status: 'not_started' as const,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }));
 
     await createOKR({
@@ -291,7 +294,7 @@ export function CompanyOKRView() {
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      <span>{okr.cycle}</span>
+                      <span>{typeof okr.cycle === 'object' ? okr.cycle.name : okr.cycle}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Target className="h-4 w-4" />
