@@ -7,7 +7,6 @@ import { UserManagementCard } from '@/components/settings/UserManagementCard';
 import { AuditLogsCard } from '@/components/settings/AuditLogsCard';
 
 export default function Settings() {
-
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -15,24 +14,33 @@ export default function Settings() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Cài đặt hệ thống</h1>
-            <p className="text-muted-foreground mt-1">Quản lý cấu hình và người dùng hệ thống</p>
+            <p className="text-muted-foreground mt-1">Quản lý cấu hình và người dùng hệ thống - app.nesagroups.com</p>
           </div>
         </div>
 
         {/* System Overview */}
         <SystemStatsCard />
 
-        {/* System Settings */}
-        <SystemSettingsCard />
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* System Settings */}
+            <SystemSettingsCard />
+            
+            {/* System Information */}
+            <SystemInfoCard />
+          </div>
 
-        {/* User Management */}
-        <UserManagementCard />
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* User Management */}
+            <UserManagementCard />
 
-        {/* Audit Logs */}
-        <AuditLogsCard />
-
-        {/* System Information */}
-        <SystemInfoCard />
+            {/* Audit Logs */}
+            <AuditLogsCard />
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );
