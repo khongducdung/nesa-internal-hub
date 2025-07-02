@@ -20,17 +20,29 @@ export default function ResetPassword() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we have the required tokens
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
+    // Check if we have the required parameters from Supabase auth
+    const token = searchParams.get('token');
+    const type = searchParams.get('type');
     
-    if (!accessToken || !refreshToken) {
+    if (!token || type !== 'recovery') {
       toast({
         title: "Lỗi",
         description: "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.",
         variant: "destructive"
       });
       navigate('/');
+      return;
+    }
+
+    // Set the session from the URL parameters
+    const accessToken = searchParams.get('access_token');
+    const refreshToken = searchParams.get('refresh_token');
+    
+    if (accessToken && refreshToken) {
+      supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      });
     }
   }, [searchParams, navigate, toast]);
 
