@@ -8,23 +8,25 @@ import { AuditLogsCard } from '@/components/settings/AuditLogsCard';
 export default function Settings() {
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto p-6 space-y-8">
+      <div className="container mx-auto p-6 max-w-7xl">
         {/* Header */}
-        <div className="border-b border-border pb-6">
+        <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Cài đặt hệ thống</h1>
-          <p className="text-muted-foreground mt-2">Quản lý cấu hình và người dùng hệ thống - app.nesagroups.com</p>
+          <p className="text-muted-foreground mt-2">
+            Quản lý cấu hình, người dùng và hoạt động hệ thống - app.nesagroups.com
+          </p>
         </div>
 
-        {/* Two Column Layout - Optimized for wide content */}
-        <div className="grid grid-cols-1 2xl:grid-cols-2 gap-8">
-          {/* Left Column - Full width on smaller screens */}
-          <div className="space-y-8 min-w-0">
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          {/* Left Column - System Configuration */}
+          <div className="space-y-8">
             <SystemSettingsCard />
             <SystemInfoCard />
           </div>
 
-          {/* Right Column - Full width on smaller screens */}
-          <div className="space-y-8 min-w-0">
+          {/* Right Column - User Management & Audit */}
+          <div className="space-y-8">
             <UserManagementCard />
             <AuditLogsCard />
           </div>
