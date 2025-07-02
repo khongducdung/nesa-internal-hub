@@ -182,7 +182,9 @@ export const useCreateOKR = () => {
         .eq('is_current', true)
         .single();
 
-      // Determine owner_id based on owner_type
+      // Determine owner_id and get auth user info
+      const { data: { user } } = await supabase.auth.getUser();
+      
       let owner_id = '';
       if (data.owner_type === 'company') {
         owner_id = 'company';
@@ -209,7 +211,7 @@ export const useCreateOKR = () => {
           employee_id: data.employee_id || null,
           start_date: currentCycle?.start_date || new Date().toISOString().split('T')[0],
           end_date: currentCycle?.end_date || new Date().toISOString().split('T')[0],
-          created_by: '', // Will be set by auth
+          created_by: user?.id || '',
         })
         .select()
         .single();
