@@ -17,10 +17,7 @@ export interface SystemSetting {
 export interface SystemStats {
   total_users: number;
   total_admins: number;
-  total_employees: number;
-  active_okrs: number;
-  pending_leave_requests: number;
-  today_attendance: number;
+  active_sessions: number;
   security_alerts: number;
 }
 
