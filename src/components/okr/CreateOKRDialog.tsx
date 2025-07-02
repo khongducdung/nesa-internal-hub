@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, X, Link } from 'lucide-react';
+import { Plus, X, Link, ArrowUp } from 'lucide-react';
 import { useCreateOKR, useParentOKRs } from '@/hooks/useOKRSimple';
 import { useDepartments } from '@/hooks/useDepartments';
 import { useEmployees } from '@/hooks/useEmployees';
@@ -154,11 +154,44 @@ export function CreateOKRDialog({ open, onOpenChange, defaultOwnerType = 'indivi
     setFormData({ ...formData, parent_okr_id: '' });
   };
 
+  const getOwnerTypeLabel = () => {
+    switch (formData.owner_type) {
+      case 'company':
+        return 'OKR Công ty';
+      case 'department':
+        return 'OKR Phòng ban';
+      case 'individual':
+        return 'OKR Cá nhân';
+    }
+  };
+
+  const getParentOKRLabel = () => {
+    switch (formData.owner_type) {
+      case 'department':
+        return 'Liên kết với OKR Công ty';
+      case 'individual':
+        return 'Liên kết với OKR Phòng ban';
+      default:
+        return '';
+    }
+  };
+
+  const getParentOKRDescription = () => {
+    switch (formData.owner_type) {
+      case 'department':
+        return 'OKR Phòng ban sẽ đóng góp vào việc thực hiện OKR Công ty';
+      case 'individual':
+        return 'OKR Cá nhân sẽ đóng góp vào việc thực hiện OKR Phòng ban';
+      default:
+        return '';
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Tạo OKR mới</DialogTitle>
+          <DialogTitle>Tạo {getOwnerTypeLabel()}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -214,11 +247,17 @@ export function CreateOKRDialog({ open, onOpenChange, defaultOwnerType = 'indivi
 
               {/* Hierarchical Linking - ALWAYS SHOW for dept and individual */}
               {(formData.owner_type === 'department' || formData.owner_type === 'individual') && (
-                <div className="space-y-2 border-t pt-4">
-                  <Label className="flex items-center gap-2 text-base font-semibold">
-                    <Link className="h-4 w-4" />
-                    Liên kết với OKR cấp trên
-                  </Label>
+                <div className="space-y-3 border-t pt-4">
+                  <div className="flex items-center gap-2">
+                    <ArrowUp className="h-4 w-4 text-blue-600" />
+                    <Label className="text-base font-semibold text-blue-700">
+                      {getParentOKRLabel()}
+                    </Label>
+                  </div>
+                  
+                  <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md">
+                    {getParentOKRDescription()}
+                  </p>
                   
                   {parentOKRsLoading ? (
                     <div className="text-sm text-gray-500">Đang tải danh sách OKR...</div>
@@ -238,16 +277,19 @@ export function CreateOKRDialog({ open, onOpenChange, defaultOwnerType = 'indivi
                         <SelectItem value="">Không liên kết</SelectItem>
                         {parentOKRs.map((okr) => (
                           <SelectItem key={okr.id} value={okr.id}>
-                            {okr.title} ({okr.progress}%)
+                            <div className="flex flex-col">
+                              <span className="font-medium">{okr.title}</span>
+                              <span className="text-xs text-gray-500">Tiến độ: {okr.progress}%</span>
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   ) : (
-                    <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded">
+                    <div className="text-sm text-amber-700 bg-amber-50 p-3 rounded border border-amber-200">
                       {formData.owner_type === 'department' 
-                        ? "Chưa có OKR Công ty nào để liên kết. Vui lòng tạo OKR Công ty trước."
-                        : "Chưa có OKR Phòng ban nào để liên kết. Vui lòng tạo OKR Phòng ban trước."
+                        ? "⚠️ Chưa có OKR Công ty nào để liên kết. Vui lòng tạo OKR Công ty trước."
+                        : "⚠️ Chưa có OKR Phòng ban nào để liên kết. Vui lòng tạo OKR Phòng ban trước."
                       }
                     </div>
                   )}

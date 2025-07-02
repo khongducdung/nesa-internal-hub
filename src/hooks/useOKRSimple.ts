@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -351,7 +352,7 @@ export const useCreateOKR = () => {
         description: data.description,
         cycle_id: currentCycle?.id || '',
         year: currentCycle?.year || new Date().getFullYear(),
-        quarter: currentCycle?.quarter || 'Q1',
+        quarter: currentCycle?.quarter || 'Q4',
         progress: 0,
         status: 'active',
         owner_type: data.owner_type,

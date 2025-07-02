@@ -66,77 +66,102 @@ export function OKRCard({ okr, onEdit }: OKRCardProps) {
     }
   };
 
+  const getProgressColor = () => {
+    if (okr.progress >= 80) return 'bg-green-500';
+    if (okr.progress >= 60) return 'bg-blue-500';
+    if (okr.progress >= 40) return 'bg-yellow-500';
+    return 'bg-red-500';
+  };
+
   return (
-    <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onEdit?.(okr)}>
+    <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4 border-l-blue-500" onClick={() => onEdit?.(okr)}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {getOwnerIcon()}
-            <Badge variant="outline" className={getStatusColor()}>
+            <Badge variant="outline" className="text-xs">
               {getOwnerLabel()}
             </Badge>
           </div>
-          <Badge className={getStatusColor()}>
+          <Badge className={`text-xs ${getStatusColor()}`}>
             {getStatusLabel()}
           </Badge>
         </div>
-        <CardTitle className="text-lg">{okr.title}</CardTitle>
+        <CardTitle className="text-lg font-semibold line-clamp-2 leading-tight">{okr.title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-gray-600 line-clamp-2">{okr.description}</p>
         
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-1">
-              <Target className="h-4 w-4" />
+            <span className="flex items-center gap-1 font-medium">
+              <Target className="h-4 w-4 text-blue-600" />
               Tiến độ
             </span>
-            <span className="font-medium">{okr.progress}%</span>
+            <span className="font-bold text-lg">{okr.progress}%</span>
           </div>
-          <Progress value={okr.progress} className="h-2" />
+          <div className="w-full bg-gray-200 rounded-full h-3">
+            <div 
+              className={`h-3 rounded-full transition-all duration-300 ${getProgressColor()}`}
+              style={{ width: `${okr.progress}%` }}
+            />
+          </div>
         </div>
 
         {/* Hierarchical Relationships - ALWAYS SHOW if exists */}
         {(okr.parent_okr || (okr.child_okrs_count && okr.child_okrs_count > 0)) && (
           <div className="space-y-2 border-t pt-3">
-            <div className="text-xs font-medium text-gray-700 mb-2 flex items-center gap-1">
-              <Link className="h-3 w-3" />
+            <div className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+              <Link className="h-3 w-3 text-blue-600" />
               Liên kết OKR
             </div>
             
             {okr.parent_okr && (
-              <div className="flex items-center gap-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                <ArrowUp className="h-3 w-3" />
-                <span>Từ: {okr.parent_okr.title}</span>
+              <div className="flex items-start gap-2 text-xs text-blue-700 bg-blue-50 px-3 py-2 rounded-md border border-blue-200">
+                <ArrowUp className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <div className="font-medium">Liên kết từ cấp trên:</div>
+                  <div className="line-clamp-1">{okr.parent_okr.title}</div>
+                </div>
               </div>
             )}
             
             {okr.child_okrs_count && okr.child_okrs_count > 0 && (
-              <div className="flex items-center gap-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+              <div className="flex items-center gap-2 text-xs text-green-700 bg-green-50 px-3 py-2 rounded-md border border-green-200">
                 <ArrowDown className="h-3 w-3" />
-                <span>{okr.child_okrs_count} OKR con</span>
+                <span className="font-medium">{okr.child_okrs_count} OKR cấp dưới đang thực hiện</span>
               </div>
             )}
           </div>
         )}
 
         {okr.key_results && okr.key_results.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Key Results ({okr.key_results.length})</h4>
+          <div className="space-y-2 border-t pt-3">
+            <h4 className="text-sm font-semibold flex items-center gap-1">
+              <Target className="h-4 w-4 text-purple-600" />
+              Key Results ({okr.key_results.length})
+            </h4>
             {okr.key_results.slice(0, 2).map((kr) => (
-              <div key={kr.id} className="flex items-center justify-between text-xs">
-                <span className="line-clamp-1">{kr.title}</span>
-                <span className="font-medium">{kr.progress}%</span>
+              <div key={kr.id} className="flex items-center justify-between text-xs bg-gray-50 px-2 py-1 rounded">
+                <span className="line-clamp-1 flex-1">{kr.title}</span>
+                <div className="flex items-center gap-1 ml-2">
+                  <span className="font-medium">{kr.progress}%</span>
+                  <div className={`w-2 h-2 rounded-full ${
+                    kr.status === 'completed' ? 'bg-green-500' :
+                    kr.status === 'on_track' ? 'bg-blue-500' :
+                    kr.status === 'at_risk' ? 'bg-yellow-500' : 'bg-gray-400'
+                  }`} />
+                </div>
               </div>
             ))}
             {okr.key_results.length > 2 && (
-              <p className="text-xs text-gray-500">+{okr.key_results.length - 2} KR khác</p>
+              <p className="text-xs text-gray-500 font-medium">+{okr.key_results.length - 2} KR khác</p>
             )}
           </div>
         )}
 
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <span>{okr.year} • {okr.quarter}</span>
+        <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t">
+          <span className="font-medium">{okr.year} • {okr.quarter}</span>
           <span>{new Date(okr.created_at).toLocaleDateString('vi-VN')}</span>
         </div>
       </CardContent>
