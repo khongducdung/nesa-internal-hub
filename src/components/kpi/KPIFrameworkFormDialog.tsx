@@ -32,10 +32,9 @@ export function KPIFrameworkFormDialog({ open, onOpenChange }: KPIFrameworkFormD
   });
 
   const TARGET_LEVELS = [
-    { value: 'company', label: 'Cấp công ty' },
-    { value: 'department', label: 'Cấp phòng ban' },
-    { value: 'team', label: 'Cấp nhóm' },
-    { value: 'individual', label: 'Cấp cá nhân' },
+    { value: 'strategic', label: 'Chiến lược' },
+    { value: 'operational', label: 'Vận hành' },
+    { value: 'tactical', label: 'Chiến thuật' },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
