@@ -31,11 +31,18 @@ export function KPIFrameworkManagement() {
       const matchesSearch = framework.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            framework.description?.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesFrameworkType = !selectedFrameworkType || framework.framework_type === selectedFrameworkType;
-      const matchesTargetLevel = !selectedTargetLevel || framework.target_level === selectedTargetLevel;
+      const matchesFrameworkType = !selectedFrameworkType || 
+                                  selectedFrameworkType === 'all' || 
+                                  framework.framework_type === selectedFrameworkType;
+      
+      const matchesTargetLevel = !selectedTargetLevel || 
+                                selectedTargetLevel === 'all-levels' || 
+                                framework.target_level === selectedTargetLevel;
+      
       const matchesDepartment = !selectedDepartment || 
-                               framework.department_id === selectedDepartment ||
-                               (!framework.department_id && selectedDepartment === 'all');
+                               selectedDepartment === 'all-departments' ||
+                               (selectedDepartment === 'no-department' && !framework.department_id) ||
+                               framework.department_id === selectedDepartment;
 
       return matchesSearch && matchesFrameworkType && matchesTargetLevel && matchesDepartment;
     });
@@ -81,7 +88,7 @@ export function KPIFrameworkManagement() {
                 <SelectValue placeholder="Loại khung" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tất cả loại</SelectItem>
+                <SelectItem value="all">Tất cả loại</SelectItem>
                 {FRAMEWORK_TYPES.map((type) => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}
@@ -96,7 +103,7 @@ export function KPIFrameworkManagement() {
                 <SelectValue placeholder="Cấp độ mục tiêu" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tất cả cấp độ</SelectItem>
+                <SelectItem value="all-levels">Tất cả cấp độ</SelectItem>
                 {TARGET_LEVELS.map((level) => (
                   <SelectItem key={level.value} value={level.value}>
                     {level.label}
@@ -111,8 +118,8 @@ export function KPIFrameworkManagement() {
                 <SelectValue placeholder="Phòng ban" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tất cả phòng ban</SelectItem>
-                <SelectItem value="all">Không thuộc phòng ban</SelectItem>
+                <SelectItem value="all-departments">Tất cả phòng ban</SelectItem>
+                <SelectItem value="no-department">Không thuộc phòng ban</SelectItem>
                 {departments.map((dept) => (
                   <SelectItem key={dept.id} value={dept.id}>
                     {dept.name}
