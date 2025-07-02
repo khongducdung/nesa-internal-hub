@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -91,7 +92,7 @@ export function CompanyOKRView() {
 
   const handleUpdateProgress = async (okrId: string, keyResultId: string, newValue: number) => {
     const okr = companyOKRs.find(o => o.id === okrId);
-    const keyResult = okr?.key_results.find(kr => kr.id === keyResultId);
+    const keyResult = okr?.key_results?.find(kr => kr.id === keyResultId);
     
     if (keyResult) {
       const progress = Math.min(100, Math.round((newValue / keyResult.target_value) * 100));
@@ -118,16 +119,6 @@ export function CompanyOKRView() {
   const handleEditOKR = (okr: OKRObjective) => {
     setSelectedOKR(okr);
     setEditDialogOpen(true);
-  };
-
-  const handleSaveEdit = async (okrData: Partial<OKRObjective>) => {
-    if (selectedOKR) {
-      await updateOKR(selectedOKR.id, okrData);
-      toast({
-        title: "Cập nhật thành công",
-        description: "OKR đã được cập nhật",
-      });
-    }
   };
 
   const handleDeleteOKR = async (okrId: string) => {
@@ -298,7 +289,7 @@ export function CompanyOKRView() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Target className="h-4 w-4" />
-                      <span>{okr.key_results.length} Key Results</span>
+                      <span>{okr.key_results?.length || 0} Key Results</span>
                     </div>
                     {okr.aligned_okrs && okr.aligned_okrs.length > 0 && (
                       <div className="flex items-center gap-1">
@@ -355,7 +346,7 @@ export function CompanyOKRView() {
                   <Target className="h-4 w-4 text-blue-600" />
                   Key Results:
                 </h4>
-                {okr.key_results.map((kr) => (
+                {okr.key_results?.map((kr) => (
                   <div key={kr.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex-1">
                       <p className="font-medium text-gray-800 mb-1">{kr.title}</p>
@@ -430,15 +421,14 @@ export function CompanyOKRView() {
       {/* Dialogs */}
       <OKRViewDialog 
         okr={selectedOKR} 
-        isOpen={viewDialogOpen} 
-        onClose={() => setViewDialogOpen(false)} 
+        open={viewDialogOpen} 
+        onOpenChange={setViewDialogOpen}
       />
       
       <OKREditDialog 
         okr={selectedOKR} 
-        isOpen={editDialogOpen} 
-        onClose={() => setEditDialogOpen(false)}
-        onSave={handleSaveEdit}
+        open={editDialogOpen} 
+        onOpenChange={setEditDialogOpen}
       />
     </div>
   );

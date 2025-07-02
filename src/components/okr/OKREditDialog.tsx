@@ -41,7 +41,7 @@ export function OKREditDialog({
     owner_type: defaultOwnerType,
     department_id: defaultDepartmentId || '',
     employee_id: '',
-    status: 'draft',
+    status: 'draft' as 'draft' | 'active' | 'completed' | 'cancelled',
     parent_okr_id: '',
   });
 
@@ -103,6 +103,7 @@ export function OKREditDialog({
         department_id: formData.owner_type === 'department' ? formData.department_id : undefined,
         // Chỉ set employee_id nếu là individual OKR
         employee_id: formData.owner_type === 'individual' ? (formData.employee_id || profile?.employee_id) : undefined,
+        status: formData.status as 'draft' | 'active' | 'completed' | 'cancelled',
       };
 
       if (okr) {
@@ -203,7 +204,7 @@ export function OKREditDialog({
               <Label htmlFor="status">Trạng thái</Label>
               <Select
                 value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value })}
+                onValueChange={(value) => setFormData({ ...formData, status: value as 'draft' | 'active' | 'completed' | 'cancelled' })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn trạng thái" />

@@ -20,11 +20,11 @@ import { OKRObjective, useOKRData } from '@/hooks/useOKRData';
 
 interface OKRViewDialogProps {
   okr: OKRObjective | null;
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function OKRViewDialog({ okr, isOpen, onClose }: OKRViewDialogProps) {
+export function OKRViewDialog({ okr, open, onOpenChange }: OKRViewDialogProps) {
   const { getParentOKR } = useOKRData();
 
   if (!okr) return null;
@@ -56,7 +56,7 @@ export function OKRViewDialog({ okr, isOpen, onClose }: OKRViewDialogProps) {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
@@ -92,7 +92,7 @@ export function OKRViewDialog({ okr, isOpen, onClose }: OKRViewDialogProps) {
                   </div>
                   <div className="flex items-center gap-1">
                     <Target className="h-4 w-4" />
-                    <span>{okr.key_results.length} Key Results</span>
+                    <span>{okr.key_results?.length || 0} Key Results</span>
                   </div>
                 </div>
               </div>
@@ -104,10 +104,10 @@ export function OKRViewDialog({ okr, isOpen, onClose }: OKRViewDialogProps) {
             <CardContent className="p-4">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-green-600" />
-                Key Results ({okr.key_results.length})
+                Key Results ({okr.key_results?.length || 0})
               </h3>
               <div className="space-y-3">
-                {okr.key_results.map((kr, index) => (
+                {okr.key_results?.map((kr, index) => (
                   <div key={kr.id} className="p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">

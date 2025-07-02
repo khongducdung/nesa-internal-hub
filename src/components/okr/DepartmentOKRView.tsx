@@ -222,7 +222,7 @@ export function DepartmentOKRView() {
                     <div className="flex items-center gap-4 text-sm text-gray-500">
                       <span>Chu kỳ: {okr.cycle?.name || `${okr.quarter} ${okr.year}`}</span>
                       <span>Key Results: {okr.key_results?.length || 0}</span>
-                      <span>Phòng ban: {okr.department?.name || userDepartment?.name}</span>
+                      <span>Phòng ban: {userDepartment?.name}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">

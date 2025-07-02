@@ -257,7 +257,7 @@ export function MyOKRTasks() {
                   <TrendingUp className="h-4 w-4 text-green-600" />
                   Key Results:
                 </h4>
-                {okr.key_results.map((kr) => (
+                {okr.key_results?.map((kr) => (
                   <div key={kr.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex-1">
                       <p className="font-medium text-gray-800 mb-1">{kr.title}</p>
@@ -356,23 +356,21 @@ export function MyOKRTasks() {
       {/* Dialogs */}
       <OKRViewDialog 
         okr={selectedOKR} 
-        isOpen={viewDialogOpen} 
-        onClose={() => setViewDialogOpen(false)} 
+        open={viewDialogOpen} 
+        onOpenChange={setViewDialogOpen}
       />
       
       <OKREditDialog 
         okr={selectedOKR} 
-        isOpen={editDialogOpen} 
-        onClose={() => setEditDialogOpen(false)}
-        onSave={handleSaveEdit}
+        open={editDialogOpen} 
+        onOpenChange={setEditDialogOpen}
       />
       
       {/* Create OKR Dialog using OKREditDialog */}
       <OKREditDialog 
         okr={null} 
-        isOpen={createOKROpen} 
-        onClose={() => setCreateOKROpen(false)}
-        onSave={handleCreateOKR}
+        open={createOKROpen} 
+        onOpenChange={setCreateOKROpen}
       />
     </div>
   );
