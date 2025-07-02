@@ -149,7 +149,7 @@ export function OKREditDialog({
         // Only set employee_id if it's an individual OKR
         employee_id: formData.owner_type === 'individual' ? (formData.employee_id || profile?.employee_id) : undefined,
         status: formData.status as 'draft' | 'active' | 'completed' | 'cancelled',
-        key_results: keyResults,
+        key_results: keyResults as any[],
       };
 
       if (okr) {
