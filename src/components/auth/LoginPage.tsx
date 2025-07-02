@@ -58,6 +58,9 @@ export function LoginPage() {
 
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
       redirectTo: `${window.location.origin}/reset-password`,
+      data: {
+        expireIn: 1800 // 30 phút = 1800 giây
+      }
     });
 
     if (error) {
@@ -84,7 +87,7 @@ export function LoginPage() {
         if (backdropElement) {
           document.body.removeChild(backdropElement);
         }
-      }, 5000);
+      }, 20000);
       setShowResetForm(false);
       setResetEmail('');
     }
