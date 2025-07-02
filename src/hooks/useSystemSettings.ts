@@ -126,17 +126,29 @@ export const useAuditLogs = (limit = 50) => {
   return useQuery({
     queryKey: ['audit-logs', limit],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get audit logs
+      const { data: auditLogs, error } = await supabase
         .from('audit_logs')
-        .select(`
-          *,
-          profiles!audit_logs_user_id_fkey(full_name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(limit);
 
       if (error) throw error;
-      return data;
+
+      // Then get profiles for users who have audit logs
+      const userIds = auditLogs?.filter(log => log.user_id).map(log => log.user_id) || [];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+
+      // Combine the data
+      const logsWithProfiles = auditLogs?.map(log => ({
+        ...log,
+        profiles: profiles?.find(profile => profile.id === log.user_id) || null
+      }));
+
+      return logsWithProfiles;
     }
   });
 };
