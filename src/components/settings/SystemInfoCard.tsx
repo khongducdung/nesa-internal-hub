@@ -12,49 +12,49 @@ export function SystemInfoCard() {
   ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <Card className="shadow-md border-0">
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold text-gray-900 flex items-center">
-            <Database className="h-5 w-5 mr-2" />
+    <div className="space-y-6">
+      <Card className="border border-border/50 shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <Database className="h-5 w-5" />
             Thông tin hệ thống
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {systemInfo.map((info, index) => (
-              <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-b-0">
-                <span className="text-sm text-gray-600">{info.label}</span>
-                <span className="font-medium text-gray-900">{info.value}</span>
+              <div key={index} className="flex items-center justify-between py-2.5 border-b border-border/30 last:border-b-0">
+                <span className="text-sm text-muted-foreground">{info.label}</span>
+                <span className="font-medium text-foreground text-sm">{info.value}</span>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      <Card className="shadow-md border-0">
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold text-gray-900 flex items-center">
-            <Key className="h-5 w-5 mr-2" />
+      <Card className="border border-border/50 shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <Key className="h-5 w-5" />
             Cài đặt API
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <h4 className="font-medium text-gray-900 mb-2">API Endpoint</h4>
-              <p className="text-sm text-gray-600 font-mono">https://api.nesa.com/v1</p>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <h4 className="font-medium text-gray-900 mb-2">Webhook URL</h4>
-              <p className="text-sm text-gray-600 font-mono">https://nesa.com/webhook</p>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">API Rate Limiting</span>
+        <CardContent className="space-y-4">
+          <div className="p-3 bg-muted/50 rounded-lg border border-border/20">
+            <h4 className="font-medium text-foreground mb-2 text-sm">API Endpoint</h4>
+            <p className="text-xs text-muted-foreground font-mono break-all">https://app.nesagroups.com/api/v1</p>
+          </div>
+          <div className="p-3 bg-muted/50 rounded-lg border border-border/20">
+            <h4 className="font-medium text-foreground mb-2 text-sm">Webhook URL</h4>
+            <p className="text-xs text-muted-foreground font-mono break-all">https://app.nesagroups.com/webhook</p>
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between py-2">
+              <span className="text-sm text-muted-foreground">API Rate Limiting</span>
               <Switch checked={true} />
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">API Logging</span>
+            <div className="flex items-center justify-between py-2">
+              <span className="text-sm text-muted-foreground">API Logging</span>
               <Switch checked={false} />
             </div>
           </div>
