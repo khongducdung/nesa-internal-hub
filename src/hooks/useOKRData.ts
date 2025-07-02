@@ -63,7 +63,7 @@ export function useOKRData() {
       status: okrData.status || 'draft',
       owner_id: okrData.owner_id || profile?.employee_id || '',
       owner_type: okrData.owner_type || 'individual',
-      department_id: okrData.department_id || profile?.department_id,
+      department_id: okrData.owner_type === 'department' ? (okrData.department_id || profile?.department_id) : undefined,
       employee_id: okrData.owner_type === 'individual' ? profile?.employee_id : undefined,
       parent_okr_id: okrData.parent_okr_id,
       created_by: profile?.id || '',
@@ -123,6 +123,20 @@ export function useOKRData() {
     return getOKRById(okr.parent_okr_id);
   };
 
+  const getDepartmentOKRs = (departmentId?: string): OKRObjective[] => {
+    const deptId = departmentId || profile?.department_id;
+    if (!deptId) return [];
+    return departmentOKRs.filter(okr => okr.department_id === deptId);
+  };
+
+  const getCompanyOKRs = (): OKRObjective[] => {
+    return companyOKRs;
+  };
+
+  const getMyOKRs = (): OKRObjective[] => {
+    return myOKRs;
+  };
+
   return {
     companyOKRs,
     myOKRs,
@@ -138,6 +152,9 @@ export function useOKRData() {
     getAlignedOKRs,
     getParentOKR,
     getAllOKRs,
+    getDepartmentOKRs,
+    getCompanyOKRs,
+    getMyOKRs,
     refreshAlignments
   };
 }
