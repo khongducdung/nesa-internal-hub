@@ -20,30 +20,38 @@ export default function ResetPassword() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if we have the required parameters from Supabase auth
-    const token = searchParams.get('token');
-    const type = searchParams.get('type');
-    
-    if (!token || type !== 'recovery') {
-      toast({
-        title: "Lỗi",
-        description: "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.",
-        variant: "destructive"
-      });
-      navigate('/');
-      return;
-    }
+    const handlePasswordRecovery = async () => {
+      const token = searchParams.get('token');
+      const type = searchParams.get('type');
+      
+      if (!token || type !== 'recovery') {
+        toast({
+          title: "Lỗi",
+          description: "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.",
+          variant: "destructive"
+        });
+        navigate('/');
+        return;
+      }
 
-    // Set the session from the URL parameters
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
-    
-    if (accessToken && refreshToken) {
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
+      // Verify the OTP token from the email link
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: token,
+        type: 'recovery',
       });
-    }
+
+      if (error) {
+        console.error('Password recovery verification error:', error);
+        toast({
+          title: "Lỗi",
+          description: "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.",
+          variant: "destructive"
+        });
+        navigate('/');
+      }
+    };
+
+    handlePasswordRecovery();
   }, [searchParams, navigate, toast]);
 
   const handleResetPassword = async (e: React.FormEvent) => {
