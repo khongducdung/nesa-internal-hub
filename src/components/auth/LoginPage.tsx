@@ -67,10 +67,24 @@ export function LoginPage() {
         variant: "destructive"
       });
     } else {
+      // Tạo backdrop blur chỉ cho thông báo lấy lại mật khẩu
+      const backdrop = document.createElement('div');
+      backdrop.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-[99]';
+      backdrop.id = 'password-reset-backdrop';
+      document.body.appendChild(backdrop);
+      
       toast({
         title: "NESA Groups - cấp lại mật khẩu",
         description: "Ê...! Cái não cá vàng, sau lần này nhớ đổi mật khẩu giống như mật khẩu ngân hàng đó em nhé. Hay là mật khẩu ngân hàng cũng quên nốt hả cái đồ tồi này. Thôi kệ em, em kiểm tra email đi.",
       });
+      
+      // Xóa backdrop sau 5 giây
+      setTimeout(() => {
+        const backdropElement = document.getElementById('password-reset-backdrop');
+        if (backdropElement) {
+          document.body.removeChild(backdropElement);
+        }
+      }, 5000);
       setShowResetForm(false);
       setResetEmail('');
     }
