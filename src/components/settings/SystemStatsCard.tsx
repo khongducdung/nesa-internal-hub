@@ -25,25 +25,25 @@ export function SystemStatsCard() {
   const statsConfig = [
     { 
       title: 'Tổng người dùng', 
-      value: stats?.totalUsers?.toString() || '0', 
+      value: stats?.total_users?.toString() || '0', 
       icon: Users, 
       color: 'from-blue-500 to-blue-600' 
     },
     { 
       title: 'Admin', 
-      value: stats?.totalAdmins?.toString() || '0', 
+      value: stats?.total_admins?.toString() || '0', 
       icon: Shield, 
       color: 'from-green-500 to-green-600' 
     },
     { 
       title: 'Phiên hoạt động', 
-      value: stats?.activeSessions?.toString() || '0', 
+      value: stats?.active_sessions?.toString() || '0', 
       icon: Globe, 
       color: 'from-purple-500 to-purple-600' 
     },
     { 
       title: 'Cảnh báo bảo mật', 
-      value: stats?.securityAlerts?.toString() || '0', 
+      value: stats?.security_alerts?.toString() || '0', 
       icon: Lock, 
       color: 'from-orange-500 to-orange-600' 
     }

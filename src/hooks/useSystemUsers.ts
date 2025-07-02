@@ -71,42 +71,28 @@ export const useCreateSystemUser = () => {
       full_name: string;
       role: string;
     }) => {
-      // Tạo user thông thường trước
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name },
-          emailRedirectTo: `${window.location.origin}/`
-        }
+      // Sử dụng database function để tạo admin user
+      const { data, error } = await supabase.rpc('create_admin_user', {
+        p_email: email,
+        p_password: password,
+        p_full_name: full_name,
+        p_role: role as 'admin' | 'super_admin'
       });
 
-      if (signUpError) throw signUpError;
-
-      if (authData.user) {
-        // Assign role
-        const { error: roleError } = await supabase
-          .from('user_system_roles')
-          .insert({
-            user_id: authData.user.id,
-            role: role as any
-          });
-
-        if (roleError) throw roleError;
-      }
-
-      return authData;
+      if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['system-users'] });
+      queryClient.invalidateQueries({ queryKey: ['system-stats'] });
       toast({
         title: 'Thành công',
-        description: 'Tạo tài khoản người dùng thành công'
+        description: `Tạo tài khoản ${data?.role || 'admin'} "${data?.full_name || 'user'}" thành công`
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Lỗi',
+        title: 'Lỗi tạo tài khoản',
         description: error.message || 'Có lỗi xảy ra khi tạo tài khoản',
         variant: 'destructive'
       });

@@ -90,7 +90,7 @@ export function SystemSettingsCard() {
                         <h4 className="font-medium text-gray-900 mb-1">{setting.description}</h4>
                         <p className="text-sm text-gray-600">Key: {setting.key}</p>
                       </div>
-                      {setting.type === 'boolean' && (
+                      {setting.data_type === 'boolean' && (
                         <Switch 
                           checked={setting.value}
                           onCheckedChange={(checked) => handleSettingChange(setting.key, checked)}
