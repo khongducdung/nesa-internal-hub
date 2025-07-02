@@ -11,7 +11,7 @@ import { useOKRData } from '@/hooks/useOKRData';
 import { useAuth } from '@/hooks/useAuth';
 import { useDepartments } from '@/hooks/useDepartments';
 import { useEmployees } from '@/hooks/useEmployees';
-import { KeyResultForm, KeyResult } from './KeyResultForm';
+import { KeyResultForm, KeyResultFormData } from './KeyResultForm';
 import { OKRCycleForm } from './OKRCycleForm';
 import { Plus } from 'lucide-react';
 
@@ -49,7 +49,7 @@ export function OKREditDialog({
     cycle_id: currentCycle?.id || '',
   });
 
-  const [keyResults, setKeyResults] = useState<KeyResult[]>([]);
+  const [keyResults, setKeyResults] = useState<KeyResultFormData[]>([]);
   const [showCycleForm, setShowCycleForm] = useState(false);
 
   useEffect(() => {

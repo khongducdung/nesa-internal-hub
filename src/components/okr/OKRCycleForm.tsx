@@ -25,7 +25,7 @@ export function OKRCycleForm({ open, onOpenChange, onCycleCreated }: OKRCycleFor
     start_date: '',
     end_date: '',
     description: '',
-    status: 'planning'
+    status: 'planning' as 'planning' | 'active' | 'review' | 'closed'
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -207,7 +207,7 @@ export function OKRCycleForm({ open, onOpenChange, onCycleCreated }: OKRCycleFor
             <Label htmlFor="status">Trạng thái</Label>
             <Select
               value={formData.status}
-              onValueChange={(value) => setFormData({ ...formData, status: value })}
+              onValueChange={(value: 'planning' | 'active' | 'review' | 'closed') => setFormData({ ...formData, status: value })}
             >
               <SelectTrigger>
                 <SelectValue />

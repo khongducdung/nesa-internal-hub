@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { X, Plus } from 'lucide-react';
 import { useOKRData } from '@/hooks/useOKRData';
 
-export interface KeyResult {
+// Use a simplified interface for form data
+export interface KeyResultFormData {
   id?: string;
   title: string;
   description: string;
@@ -21,8 +22,8 @@ export interface KeyResult {
 }
 
 interface KeyResultFormProps {
-  keyResults: KeyResult[];
-  onKeyResultsChange: (keyResults: KeyResult[]) => void;
+  keyResults: KeyResultFormData[];
+  onKeyResultsChange: (keyResults: KeyResultFormData[]) => void;
   ownerType: 'company' | 'department' | 'individual';
 }
 
@@ -30,7 +31,7 @@ export function KeyResultForm({ keyResults, onKeyResultsChange, ownerType }: Key
   const { getAllOKRs } = useOKRData();
 
   const addKeyResult = () => {
-    const newKR: KeyResult = {
+    const newKR: KeyResultFormData = {
       title: '',
       description: '',
       target_value: 0,
@@ -41,7 +42,7 @@ export function KeyResultForm({ keyResults, onKeyResultsChange, ownerType }: Key
     onKeyResultsChange([...keyResults, newKR]);
   };
 
-  const updateKeyResult = (index: number, updates: Partial<KeyResult>) => {
+  const updateKeyResult = (index: number, updates: Partial<KeyResultFormData>) => {
     const updated = keyResults.map((kr, i) => 
       i === index ? { ...kr, ...updates } : kr
     );
