@@ -75,12 +75,16 @@ export const useKPIFrameworks = () => {
 
 export const useCreateKPIFramework = () => {
   const queryClient = useQueryClient();
+  const { profile } = useAuth();
   
   return useMutation({
     mutationFn: async (data: Omit<KPIFramework, 'id' | 'created_at' | 'updated_at'>) => {
       const { data: result, error } = await supabase
         .from('kpi_frameworks')
-        .insert(data)
+        .insert({
+          ...data,
+          created_by: profile?.id || data.created_by
+        })
         .select()
         .single();
       
