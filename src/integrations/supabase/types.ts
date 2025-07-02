@@ -3417,6 +3417,23 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_expired_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      create_admin_user: {
+        Args: {
+          p_email: string
+          p_password: string
+          p_full_name: string
+          p_role?: Database["public"]["Enums"]["system_role"]
+        }
+        Returns: Json
+      }
+      get_system_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       has_permission: {
         Args: { _user_id: string; _permission_name: string }
         Returns: boolean
@@ -3427,6 +3444,16 @@ export type Database = {
           _role: Database["public"]["Enums"]["system_role"]
         }
         Returns: boolean
+      }
+      log_audit_action: {
+        Args: {
+          p_action: string
+          p_table_name?: string
+          p_record_id?: string
+          p_old_values?: Json
+          p_new_values?: Json
+        }
+        Returns: string
       }
     }
     Enums: {
