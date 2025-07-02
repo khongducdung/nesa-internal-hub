@@ -67,11 +67,15 @@ export function useOKRData() {
       quarter: currentCycle?.quarter || 'Q1',
       progress: 0,
       status: okrCreateData.status || 'draft',
-      owner_id: okrCreateData.owner_id || profile?.employee_id || '',
+      owner_id: okrCreateData.owner_type === 'company' 
+        ? 'company'
+        : okrCreateData.owner_type === 'department'
+        ? (okrCreateData.department_id || profile?.department_id)
+        : (okrCreateData.employee_id || profile?.employee_id),
       owner_type: okrCreateData.owner_type || 'individual',
-      department_id: okrCreateData.owner_type === 'department' ? (okrCreateData.department_id || profile?.department_id) : undefined,
-      employee_id: okrCreateData.owner_type === 'individual' ? (okrCreateData.employee_id || profile?.employee_id) : undefined,
-      parent_okr_id: okrCreateData.parent_okr_id,
+      department_id: okrCreateData.owner_type === 'department' ? (okrCreateData.department_id || profile?.department_id) : null,
+      employee_id: okrCreateData.owner_type === 'individual' ? (okrCreateData.employee_id || profile?.employee_id) : null,
+      parent_okr_id: okrCreateData.parent_okr_id || null,
       created_by: profile?.id || '',
       start_date: currentCycle?.start_date || new Date().toISOString().split('T')[0],
       end_date: currentCycle?.end_date || new Date().toISOString().split('T')[0],
