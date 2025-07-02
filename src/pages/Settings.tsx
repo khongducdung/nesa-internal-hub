@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,37 +22,25 @@ import {
   UserCheck,
   UserX
 } from 'lucide-react';
+import { useSystemUsers, useUpdateUserStatus } from '@/hooks/useSystemUsers';
+import { UserManagementDialog } from '@/components/settings/UserManagementDialog';
 
 export default function Settings() {
-  const systemUsers = [
-    {
-      id: 1,
-      name: 'Admin System',
-      email: 'admin@nesa.com',
-      role: 'super_admin',
-      status: 'active',
-      lastLogin: '2024-01-15T10:30:00',
-      avatar: 'AS'
-    },
-    {
-      id: 2,
-      name: 'Nguyễn Văn Manager',
-      email: 'manager@nesa.com',
-      role: 'admin',
-      status: 'active',
-      lastLogin: '2024-01-14T15:45:00',
-      avatar: 'NM'
-    },
-    {
-      id: 3,
-      name: 'Trần Thị User',
-      email: 'user@nesa.com',
-      role: 'user',
-      status: 'inactive',
-      lastLogin: '2024-01-10T09:20:00',
-      avatar: 'TU'
-    }
-  ];
+  const [userDialogOpen, setUserDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const { data: systemUsers = [], isLoading } = useSystemUsers();
+  const updateUserStatus = useUpdateUserStatus();
+
+  const filteredUsers = systemUsers.filter(user =>
+    user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleToggleUserStatus = (userId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    updateUserStatus.mutate({ userId, status: newStatus as 'active' | 'inactive' });
+  };
 
   const systemSettings = [
     {
@@ -83,8 +72,9 @@ export default function Settings() {
     }
   ];
 
-  const getRoleBadge = (role: string) => {
-    switch (role) {
+  const getRoleBadge = (roles: string[]) => {
+    const primaryRole = roles[0] || 'user';
+    switch (primaryRole) {
       case 'super_admin':
         return <Badge className="bg-red-100 text-red-800">Super Admin</Badge>;
       case 'admin':
@@ -94,6 +84,10 @@ export default function Settings() {
       default:
         return <Badge className="bg-gray-100 text-gray-800">Unknown</Badge>;
     }
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   const getStatusBadge = (status: string) => {
@@ -192,9 +186,17 @@ export default function Settings() {
               <div className="flex items-center space-x-2 mt-4 sm:mt-0">
                 <div className="relative">
                   <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
-                  <Input placeholder="Tìm kiếm người dùng..." className="pl-10 w-64" />
+                  <Input 
+                    placeholder="Tìm kiếm người dùng..." 
+                    className="pl-10 w-64"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
                 </div>
-                <Button className="bg-blue-600 hover:bg-blue-700">
+                <Button 
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() => setUserDialogOpen(true)}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Thêm user
                 </Button>
@@ -203,38 +205,47 @@ export default function Settings() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {systemUsers.map((user) => (
-                <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                      <span className="text-white font-semibold text-sm">{user.avatar}</span>
+              {isLoading ? (
+                <div className="text-center py-8 text-gray-500">Đang tải...</div>
+              ) : filteredUsers.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">Không tìm thấy người dùng nào</div>
+              ) : (
+                filteredUsers.map((user) => (
+                  <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-semibold text-sm">{getInitials(user.full_name)}</span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{user.full_name}</h3>
+                        <p className="text-sm text-gray-600">{user.email}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Tạo lúc: {new Date(user.created_at).toLocaleString('vi-VN')}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{user.name}</h3>
-                      <p className="text-sm text-gray-600">{user.email}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Đăng nhập cuối: {new Date(user.lastLogin).toLocaleString('vi-VN')}
-                      </p>
+                    
+                    <div className="flex items-center space-x-4">
+                      {getRoleBadge(user.roles)}
+                      {getStatusBadge(user.status)}
+                      <div className="flex items-center space-x-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-green-600 hover:text-green-800"
+                          onClick={() => handleToggleUserStatus(user.id, user.status)}
+                          disabled={updateUserStatus.isPending}
+                        >
+                          {user.status === 'active' ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                        </Button>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center space-x-4">
-                    {getRoleBadge(user.role)}
-                    {getStatusBadge(user.status)}
-                    <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-800">
-                        <UserCheck className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800">
-                        <UserX className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -296,6 +307,11 @@ export default function Settings() {
           </Card>
         </div>
       </div>
+
+      <UserManagementDialog 
+        open={userDialogOpen}
+        onOpenChange={setUserDialogOpen}
+      />
     </DashboardLayout>
   );
 }
