@@ -83,9 +83,9 @@ export const useCurrentOKRCycle = () => {
         .from('okr_cycles')
         .select('*')
         .eq('is_current', true)
-        .single();
+        .maybeSingle();
       
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
       return data as OKRCycle | null;
     }
   });
@@ -96,6 +96,7 @@ export const useCompanyOKRs = () => {
   return useQuery({
     queryKey: ['company-okrs'],
     queryFn: async () => {
+      console.log('Fetching company OKRs...');
       const { data, error } = await supabase
         .from('okr_objectives')
         .select(`
@@ -106,7 +107,12 @@ export const useCompanyOKRs = () => {
         .eq('owner_type', 'company')
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching company OKRs:', error);
+        throw error;
+      }
+      
+      console.log('Company OKRs fetched:', data);
       
       // Get child counts separately
       const enrichedData = await Promise.all(
@@ -135,8 +141,12 @@ export const useDepartmentOKRs = () => {
   return useQuery({
     queryKey: ['department-okrs', profile?.department_id],
     queryFn: async () => {
-      if (!profile?.department_id) return [];
+      if (!profile?.department_id) {
+        console.log('No department_id, returning empty array');
+        return [];
+      }
       
+      console.log('Fetching department OKRs for department:', profile.department_id);
       const { data, error } = await supabase
         .from('okr_objectives')
         .select(`
@@ -148,7 +158,12 @@ export const useDepartmentOKRs = () => {
         .eq('department_id', profile.department_id)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching department OKRs:', error);
+        throw error;
+      }
+      
+      console.log('Department OKRs fetched:', data);
       
       // Get child counts separately
       const enrichedData = await Promise.all(
@@ -178,8 +193,12 @@ export const useMyOKRs = () => {
   return useQuery({
     queryKey: ['my-okrs', profile?.employee_id],
     queryFn: async () => {
-      if (!profile?.employee_id) return [];
+      if (!profile?.employee_id) {
+        console.log('No employee_id, returning empty array');
+        return [];
+      }
       
+      console.log('Fetching my OKRs for employee:', profile.employee_id);
       const { data, error } = await supabase
         .from('okr_objectives')
         .select(`
@@ -191,7 +210,12 @@ export const useMyOKRs = () => {
         .eq('employee_id', profile.employee_id)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching my OKRs:', error);
+        throw error;
+      }
+      
+      console.log('My OKRs fetched:', data);
       
       // Get child counts separately (individuals can't have child OKRs, but keeping for consistency)
       const enrichedData = await Promise.all(
@@ -221,6 +245,8 @@ export const useParentOKRs = (ownerType: 'company' | 'department' | 'individual'
   return useQuery({
     queryKey: ['parent-okrs', ownerType, profile?.department_id],
     queryFn: async () => {
+      console.log('Fetching parent OKRs for owner type:', ownerType, 'department:', profile?.department_id);
+      
       let query = supabase
         .from('okr_objectives')
         .select(`
@@ -240,17 +266,27 @@ export const useParentOKRs = (ownerType: 'company' | 'department' | 'individual'
       if (ownerType === 'department') {
         query = query.eq('owner_type', 'company');
       } else if (ownerType === 'individual') {
+        if (!profile?.department_id) {
+          console.log('No department for individual, returning empty');
+          return [];
+        }
         query = query
           .eq('owner_type', 'department')
-          .eq('department_id', profile?.department_id);
+          .eq('department_id', profile.department_id);
       } else {
         // Company OKRs cannot have parent
+        console.log('Company OKRs cannot have parent');
         return [];
       }
 
       const { data, error } = await query;
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching parent OKRs:', error);
+        throw error;
+      }
+      
+      console.log('Parent OKRs fetched:', data);
       return data as OKRObjective[];
     },
     enabled: !!profile && ownerType !== 'company'
@@ -260,6 +296,7 @@ export const useParentOKRs = (ownerType: 'company' | 'department' | 'individual'
 // Create OKR
 export const useCreateOKR = () => {
   const queryClient = useQueryClient();
+  const { profile } = useAuth();
   
   return useMutation({
     mutationFn: async (data: {
@@ -277,52 +314,64 @@ export const useCreateOKR = () => {
         weight: number;
       }>;
     }) => {
+      console.log('Creating OKR with data:', data);
+      
       // Get current cycle
       const { data: currentCycle } = await supabase
         .from('okr_cycles')
         .select('*')
         .eq('is_current', true)
-        .single();
+        .maybeSingle();
 
-      // Determine owner_id and get auth user info
+      // Get auth user info
       const { data: { user } } = await supabase.auth.getUser();
       
-      let owner_id = '';
-      if (data.owner_type === 'company') {
-        owner_id = 'company';
-      } else if (data.owner_type === 'department') {
-        owner_id = data.department_id || '';
-      } else {
-        owner_id = data.employee_id || '';
+      if (!user) {
+        throw new Error('User not authenticated');
       }
+
+      // Prepare OKR data for insertion
+      const okrData: any = {
+        title: data.title,
+        description: data.description,
+        cycle_id: currentCycle?.id || '',
+        year: currentCycle?.year || new Date().getFullYear(),
+        quarter: currentCycle?.quarter || 'Q1',
+        progress: 0,
+        status: 'active',
+        owner_type: data.owner_type,
+        parent_okr_id: data.parent_okr_id || null,
+        start_date: currentCycle?.start_date || new Date().toISOString().split('T')[0],
+        end_date: currentCycle?.end_date || new Date().toISOString().split('T')[0],
+        created_by: user.id,
+      };
+
+      // Set owner-specific fields
+      if (data.owner_type === 'department') {
+        okrData.department_id = data.department_id || profile?.department_id;
+      } else if (data.owner_type === 'individual') {
+        okrData.employee_id = data.employee_id || profile?.employee_id;
+      }
+
+      console.log('Final OKR data for insertion:', okrData);
 
       // Create OKR
       const { data: okr, error: okrError } = await supabase
         .from('okr_objectives')
-        .insert({
-          title: data.title,
-          description: data.description,
-          cycle_id: currentCycle?.id || '',
-          year: currentCycle?.year || new Date().getFullYear(),
-          quarter: currentCycle?.quarter || 'Q1',
-          progress: 0,
-          status: 'draft' as const,
-          owner_type: data.owner_type,
-          owner_id: owner_id,
-          department_id: data.department_id || null,
-          employee_id: data.employee_id || null,
-          parent_okr_id: data.parent_okr_id || null,
-          start_date: currentCycle?.start_date || new Date().toISOString().split('T')[0],
-          end_date: currentCycle?.end_date || new Date().toISOString().split('T')[0],
-          created_by: user?.id || '',
-        })
+        .insert(okrData)
         .select()
         .single();
 
-      if (okrError) throw okrError;
+      if (okrError) {
+        console.error('Error creating OKR:', okrError);
+        throw okrError;
+      }
+
+      console.log('OKR created successfully:', okr);
 
       // Create Key Results
       if (data.key_results.length > 0) {
+        console.log('Creating key results:', data.key_results);
         const { error: krError } = await supabase
           .from('okr_key_results')
           .insert(
@@ -339,15 +388,25 @@ export const useCreateOKR = () => {
             }))
           );
 
-        if (krError) throw krError;
+        if (krError) {
+          console.error('Error creating key results:', krError);
+          throw krError;
+        }
+        
+        console.log('Key results created successfully');
       }
 
       return okr;
     },
     onSuccess: () => {
+      console.log('OKR creation successful, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['company-okrs'] });
       queryClient.invalidateQueries({ queryKey: ['department-okrs'] });
       queryClient.invalidateQueries({ queryKey: ['my-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['parent-okrs'] });
+    },
+    onError: (error) => {
+      console.error('OKR creation failed:', error);
     }
   });
 };

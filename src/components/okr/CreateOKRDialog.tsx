@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,7 +44,7 @@ export function CreateOKRDialog({ open, onOpenChange, defaultOwnerType = 'indivi
     parent_okr_id: '',
   });
 
-  const { data: parentOKRs = [] } = useParentOKRs(formData.owner_type);
+  const { data: parentOKRs = [], isLoading: parentOKRsLoading } = useParentOKRs(formData.owner_type);
 
   const [keyResults, setKeyResults] = useState<KeyResultFormData[]>([
     {
@@ -54,6 +55,10 @@ export function CreateOKRDialog({ open, onOpenChange, defaultOwnerType = 'indivi
       weight: 100,
     }
   ]);
+
+  console.log('CreateOKRDialog - formData:', formData);
+  console.log('CreateOKRDialog - parentOKRs:', parentOKRs);
+  console.log('CreateOKRDialog - parentOKRsLoading:', parentOKRsLoading);
 
   const addKeyResult = () => {
     setKeyResults([...keyResults, {
@@ -80,6 +85,9 @@ export function CreateOKRDialog({ open, onOpenChange, defaultOwnerType = 'indivi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submitted with data:', formData);
+    console.log('Key results:', keyResults);
+    
     if (!formData.title || keyResults.some(kr => !kr.title || !kr.unit || kr.target_value <= 0)) {
       toast({
         title: "Lỗi",
@@ -94,7 +102,7 @@ export function CreateOKRDialog({ open, onOpenChange, defaultOwnerType = 'indivi
         title: formData.title,
         description: formData.description,
         owner_type: formData.owner_type,
-        parent_okr_id: formData.parent_okr_id || null,
+        parent_okr_id: formData.parent_okr_id || undefined,
         key_results: keyResults.filter(kr => kr.title && kr.unit && kr.target_value > 0),
       };
 
@@ -105,11 +113,13 @@ export function CreateOKRDialog({ open, onOpenChange, defaultOwnerType = 'indivi
         data.employee_id = formData.employee_id || profile?.employee_id;
       }
 
+      console.log('Final data to create OKR:', data);
+
       await createOKRMutation.mutateAsync(data);
 
       toast({
         title: "Thành công",
-        description: "Đã tạo OKR mới",
+        description: "Đã tạo OKR mới thành công!",
       });
 
       // Reset form
@@ -134,10 +144,14 @@ export function CreateOKRDialog({ open, onOpenChange, defaultOwnerType = 'indivi
       console.error('Error creating OKR:', error);
       toast({
         title: "Lỗi",
-        description: "Không thể tạo OKR",
+        description: "Không thể tạo OKR. Vui lòng thử lại.",
         variant: "destructive",
       });
     }
+  };
+
+  const resetParentSelection = () => {
+    setFormData({ ...formData, parent_okr_id: '' });
   };
 
   return (
@@ -170,9 +184,10 @@ export function CreateOKRDialog({ open, onOpenChange, defaultOwnerType = 'indivi
                   <Label htmlFor="owner_type">Loại OKR *</Label>
                   <Select
                     value={formData.owner_type}
-                    onValueChange={(value: 'company' | 'department' | 'individual') => 
-                      setFormData({ ...formData, owner_type: value, parent_okr_id: '' })
-                    }
+                    onValueChange={(value: 'company' | 'department' | 'individual') => {
+                      setFormData({ ...formData, owner_type: value, parent_okr_id: '' });
+                      resetParentSelection();
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -197,33 +212,45 @@ export function CreateOKRDialog({ open, onOpenChange, defaultOwnerType = 'indivi
                 />
               </div>
 
-              {/* Hierarchical Linking */}
-              {parentOKRs.length > 0 && (
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
+              {/* Hierarchical Linking - ALWAYS SHOW for dept and individual */}
+              {(formData.owner_type === 'department' || formData.owner_type === 'individual') && (
+                <div className="space-y-2 border-t pt-4">
+                  <Label className="flex items-center gap-2 text-base font-semibold">
                     <Link className="h-4 w-4" />
                     Liên kết với OKR cấp trên
                   </Label>
-                  <Select
-                    value={formData.parent_okr_id}
-                    onValueChange={(value) => setFormData({ ...formData, parent_okr_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={
-                        formData.owner_type === 'department' 
-                          ? "Chọn OKR Công ty để liên kết" 
-                          : "Chọn OKR Phòng ban để liên kết"
-                      } />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Không liên kết</SelectItem>
-                      {parentOKRs.map((okr) => (
-                        <SelectItem key={okr.id} value={okr.id}>
-                          {okr.title} ({okr.progress}%)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  
+                  {parentOKRsLoading ? (
+                    <div className="text-sm text-gray-500">Đang tải danh sách OKR...</div>
+                  ) : parentOKRs.length > 0 ? (
+                    <Select
+                      value={formData.parent_okr_id}
+                      onValueChange={(value) => setFormData({ ...formData, parent_okr_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={
+                          formData.owner_type === 'department' 
+                            ? "Chọn OKR Công ty để liên kết" 
+                            : "Chọn OKR Phòng ban để liên kết"
+                        } />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Không liên kết</SelectItem>
+                        {parentOKRs.map((okr) => (
+                          <SelectItem key={okr.id} value={okr.id}>
+                            {okr.title} ({okr.progress}%)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-sm text-gray-500 bg-gray-50 p-3 rounded">
+                      {formData.owner_type === 'department' 
+                        ? "Chưa có OKR Công ty nào để liên kết. Vui lòng tạo OKR Công ty trước."
+                        : "Chưa có OKR Phòng ban nào để liên kết. Vui lòng tạo OKR Phòng ban trước."
+                      }
+                    </div>
+                  )}
                 </div>
               )}
 
