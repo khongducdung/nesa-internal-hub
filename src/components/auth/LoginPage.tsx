@@ -69,7 +69,7 @@ export function LoginPage() {
     } else {
       toast({
         title: "NESA Groups - cấp lại mật khẩu",
-        description: "Em ơi, não cá vàng quá, sau nhớ đổi mật khẩu giống như mật khẩu tài khoản ngân hàng đó nhé. Đây là mật khẩu của em để đăng nhập vào hệ thống.",
+        description: "Ê...! Cái não cá vàng, sau lần này nhớ đổi mật khẩu giống như mật khẩu ngân hàng đó em nhé. Hay là mật khẩu ngân hàng cũng quên nốt hả cái đồ tồi này. Thôi kê em, em kiểm tra email đi.",
       });
       setShowResetForm(false);
       setResetEmail('');
