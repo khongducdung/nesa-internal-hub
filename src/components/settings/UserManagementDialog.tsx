@@ -57,14 +57,18 @@ export function UserManagementDialog({ open, onOpenChange }: UserManagementDialo
   });
 
   const onSubmit = async (values: UserFormValues) => {
-    await createUser.mutateAsync({
-      email: values.email,
-      password: values.password,
-      full_name: values.full_name,
-      role: values.role,
-    });
-    form.reset();
-    onOpenChange(false);
+    try {
+      await createUser.mutateAsync({
+        email: values.email,
+        password: values.password,
+        full_name: values.full_name,
+        role: values.role,
+      });
+      form.reset();
+      onOpenChange(false);
+    } catch (error) {
+      // Error sẽ được handle trong mutation
+    }
   };
 
   return (

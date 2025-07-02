@@ -1,13 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 export interface SystemUser {
   id: string;
   email: string;
   full_name: string;
   created_at: string;
-  last_sign_in_at: string | null;
   roles: string[];
   status: 'active' | 'inactive';
 }
@@ -16,7 +15,7 @@ export const useSystemUsers = () => {
   return useQuery({
     queryKey: ['system-users'],
     queryFn: async () => {
-      // Lấy danh sách profiles với roles
+      // Lấy danh sách profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
@@ -36,8 +35,8 @@ export const useSystemUsers = () => {
       if (rolesError) throw rolesError;
 
       // Combine data
-      const users: SystemUser[] = profiles.map(profile => {
-        const roles = userRoles
+      const users: SystemUser[] = (profiles || []).map(profile => {
+        const roles = (userRoles || [])
           .filter(role => role.user_id === profile.id)
           .map(role => role.role);
 
@@ -46,7 +45,6 @@ export const useSystemUsers = () => {
           email: profile.email || '',
           full_name: profile.full_name || '',
           created_at: profile.created_at || '',
-          last_sign_in_at: null, // Có thể lấy từ auth.users nếu cần
           roles,
           status: 'active' as const
         };
@@ -73,29 +71,31 @@ export const useCreateSystemUser = () => {
       full_name: string;
       role: string;
     }) => {
-      // Tạo user qua Auth Admin API (cần service role)
-      const { data: user, error: createError } = await supabase.auth.admin.createUser({
+      // Tạo user thông thường trước
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        email_confirm: true,
-        user_metadata: { full_name }
+        options: {
+          data: { full_name },
+          emailRedirectTo: `${window.location.origin}/`
+        }
       });
 
-      if (createError) throw createError;
+      if (signUpError) throw signUpError;
 
-      // Assign role
-      if (user.user) {
+      if (authData.user) {
+        // Assign role
         const { error: roleError } = await supabase
           .from('user_system_roles')
           .insert({
-            user_id: user.user.id,
+            user_id: authData.user.id,
             role: role as any
           });
 
         if (roleError) throw roleError;
       }
 
-      return user;
+      return authData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['system-users'] });
@@ -114,36 +114,39 @@ export const useCreateSystemUser = () => {
   });
 };
 
-export const useUpdateUserStatus = () => {
+export const useDeleteSystemUser = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      userId, 
-      status 
-    }: {
-      userId: string;
-      status: 'active' | 'inactive';
-    }) => {
-      // Cập nhật status (có thể disable user qua Auth Admin API)
-      const { error } = await supabase.auth.admin.updateUserById(userId, {
-        ban_duration: status === 'inactive' ? '876000h' : 'none' // Ban for ~100 years or unban
-      });
+    mutationFn: async (userId: string) => {
+      // Xóa roles trước
+      const { error: roleError } = await supabase
+        .from('user_system_roles')
+        .delete()
+        .eq('user_id', userId);
 
-      if (error) throw error;
+      if (roleError) throw roleError;
+
+      // Xóa profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (profileError) throw profileError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['system-users'] });
       toast({
         title: 'Thành công',
-        description: 'Cập nhật trạng thái người dùng thành công'
+        description: 'Xóa người dùng thành công'
       });
     },
     onError: (error: any) => {
       toast({
         title: 'Lỗi',
-        description: error.message || 'Có lỗi xảy ra khi cập nhật trạng thái',
+        description: error.message || 'Có lỗi xảy ra khi xóa người dùng',
         variant: 'destructive'
       });
     }
