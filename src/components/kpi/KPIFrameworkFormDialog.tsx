@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -160,13 +161,13 @@ export function KPIFrameworkFormDialog({ open, onOpenChange }: KPIFrameworkFormD
               <Label htmlFor="department">Phòng ban (tùy chọn)</Label>
               <Select
                 value={formData.department_id}
-                onValueChange={(value) => setFormData({ ...formData, department_id: value })}
+                onValueChange={(value) => setFormData({ ...formData, department_id: value === 'none' ? '' : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn phòng ban" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tất cả phòng ban</SelectItem>
+                  <SelectItem value="none">Tất cả phòng ban</SelectItem>
                   {departments.map((dept) => (
                     <SelectItem key={dept.id} value={dept.id}>
                       {dept.name}
@@ -180,13 +181,13 @@ export function KPIFrameworkFormDialog({ open, onOpenChange }: KPIFrameworkFormD
               <Label htmlFor="position">Vị trí (tùy chọn)</Label>
               <Select
                 value={formData.position_id}
-                onValueChange={(value) => setFormData({ ...formData, position_id: value })}
+                onValueChange={(value) => setFormData({ ...formData, position_id: value === 'none' ? '' : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn vị trí" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tất cả vị trí</SelectItem>
+                  <SelectItem value="none">Tất cả vị trí</SelectItem>
                   {positions.map((pos) => (
                     <SelectItem key={pos.id} value={pos.id}>
                       {pos.name}
