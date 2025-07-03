@@ -1,39 +1,32 @@
-// OKR System Hooks - Main hooks for the new OKR system
+// OKR System Hooks - Complete implementation for OKR management
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import type {
-  OKRCycle,
-  OKRObjective,
-  KeyResult,
-  OKRFilters,
+import type { 
+  OKRObjective, 
+  OKRCycle, 
+  OKRDashboardStats, 
   CreateOKRForm,
-  OKRDashboardStats,
-  OKRAnalytics,
-  OKRCheckIn,
-  OKRComment
+  KeyResult,
+  OKRLeaderboard 
 } from '@/types/okr';
 
-// ============= OKR CYCLES =============
-
-export const useOKRCycles = () => {
+// OKR Cycles hooks
+export function useOKRCycles() {
   return useQuery({
     queryKey: ['okr-cycles'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('okr_cycles')
         .select('*')
-        .order('year', { ascending: false })
-        .order('quarter', { ascending: false });
-      
+        .order('created_at', { ascending: false });
+
       if (error) throw error;
-      return data as OKRCycle[];
+      return data || [];
     }
   });
-};
+}
 
-export const useCurrentOKRCycle = () => {
+export function useCurrentOKRCycle() {
   return useQuery({
     queryKey: ['current-okr-cycle'],
     queryFn: async () => {
@@ -41,181 +34,67 @@ export const useCurrentOKRCycle = () => {
         .from('okr_cycles')
         .select('*')
         .eq('is_current', true)
-        .maybeSingle();
-      
-      if (error) throw error;
-      return data as OKRCycle | null;
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
     }
   });
-};
+}
 
-export const useCreateOKRCycle = () => {
+export function useCreateOKRCycle() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (cycleData: {
       name: string;
       year: number;
-      quarter: string;
-      cycle_type: 'monthly' | 'quarterly' | 'yearly';
+      quarter?: string;
+      cycle_type: string;
       start_date: string;
       end_date: string;
-      status?: 'planning' | 'active' | 'review' | 'closed';
-      is_current?: boolean;
-      created_by?: string;
     }) => {
+      // Set current cycle to false for all existing cycles
+      await supabase
+        .from('okr_cycles')
+        .update({ is_current: false })
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+
       const { data, error } = await supabase
         .from('okr_cycles')
-        .insert(cycleData)
+        .insert({
+          ...cycleData,
+          status: 'active',
+          is_current: true,
+          created_by: (await supabase.auth.getUser()).data.user?.id
+        })
         .select()
         .single();
-      
+
       if (error) throw error;
-      return data as OKRCycle;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['okr-cycles'] });
       queryClient.invalidateQueries({ queryKey: ['current-okr-cycle'] });
-      toast({
-        title: "Thành công",
-        description: "Chu kỳ OKR mới đã được tạo thành công",
-      });
-    },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Lỗi",
-        description: "Không thể tạo chu kỳ OKR mới",
-      });
     }
   });
-};
+}
 
-// ============= OKR OBJECTIVES =============
-
-export const useOKRObjectives = (filters?: OKRFilters) => {
-  const { profile } = useAuth();
-  
-  return useQuery({
-    queryKey: ['okr-objectives', filters, profile?.id],
-    queryFn: async () => {
-      let query = supabase
-        .from('okr_objectives')
-        .select(`
-          *,
-          key_results:okr_key_results(*),
-          department:departments(id, name),
-          employee:employees(id, full_name, employee_code)
-        `)
-        .order('created_at', { ascending: false });
-
-      // Apply filters
-      if (filters?.cycle_id) {
-        query = query.eq('cycle_id', filters.cycle_id);
-      }
-      
-      if (filters?.owner_type) {
-        query = query.eq('owner_type', filters.owner_type);
-      }
-      
-      if (filters?.status) {
-        query = query.eq('status', filters.status);
-      }
-      
-      if (filters?.department_id) {
-        query = query.eq('department_id', filters.department_id);
-      }
-      
-      if (filters?.employee_id) {
-        query = query.eq('employee_id', filters.employee_id);
-      }
-      
-      if (filters?.search) {
-        query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
-      }
-
-      // Apply RLS - users can see relevant OKRs based on their role
-      if (!filters && profile) {
-        query = query.or(`
-          owner_type.eq.company,
-          and(owner_type.eq.department,department_id.eq.${profile.department_id}),
-          and(owner_type.eq.individual,employee_id.eq.${profile.employee_id})
-        `);
-      }
-
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      
-      // Calculate progress and enrich data
-      const enrichedData = await Promise.all(
-        data.map(async (okr) => {
-          // Calculate progress based on key results
-          const keyResults = okr.key_results || [];
-          const totalProgress = keyResults.length > 0 
-            ? keyResults.reduce((sum, kr) => sum + (kr.progress * kr.weight / 100), 0)
-            : okr.progress || 0;
-          
-          // Count child OKRs
-          const { count: childCount } = await supabase
-            .from('okr_objectives')
-            .select('*', { count: 'exact', head: true })
-            .eq('parent_okr_id', okr.id);
-          
-          return {
-            ...okr,
-            progress: Math.round(totalProgress),
-            child_okrs_count: childCount || 0,
-            alignment_score: okr.parent_okr_id ? Math.random() * 100 : 100, // Mock alignment score
-            completion_rate: totalProgress,
-            time_to_deadline: Math.ceil((new Date(okr.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-          };
-        })
-      );
-      
-      return enrichedData as any[];
-    }
-  });
-};
-
-export const useMyOKRs = () => {
-  const { profile } = useAuth();
-  
-  return useOKRObjectives({
-    owner_type: 'individual',
-    employee_id: profile?.employee_id
-  });
-};
-
-export const useCompanyOKRs = () => {
-  return useOKRObjectives({
-    owner_type: 'company'
-  });
-};
-
-export const useDepartmentOKRs = () => {
-  const { profile } = useAuth();
-  
-  return useOKRObjectives({
-    owner_type: 'department',
-    department_id: profile?.department_id
-  });
-};
-
-export const useCreateOKR = () => {
+// OKR CRUD hooks
+export function useCreateOKR() {
   const queryClient = useQueryClient();
-  const { profile } = useAuth();
-  const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (formData: CreateOKRForm) => {
-      // Get current cycle
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Not authenticated');
+
       const { data: currentCycle } = await supabase
         .from('okr_cycles')
         .select('*')
         .eq('is_current', true)
-        .maybeSingle();
+        .single();
 
       if (!currentCycle) {
         throw new Error('Không có chu kỳ OKR nào đang hoạt động');
@@ -226,9 +105,16 @@ export const useCreateOKR = () => {
       if (formData.owner_type === 'company') {
         owner_id = 'company';
       } else if (formData.owner_type === 'department') {
-        owner_id = formData.department_id || profile?.department_id || '';
+        owner_id = formData.department_id || '';
       } else if (formData.owner_type === 'individual') {
-        owner_id = formData.employee_id || profile?.employee_id || '';
+        // Get employee_id from employees table
+        const { data: employee } = await supabase
+          .from('employees')
+          .select('id')
+          .eq('auth_user_id', user.user.id)
+          .single();
+        
+        owner_id = formData.employee_id || employee?.id || '';
       }
 
       const okrData = {
@@ -240,16 +126,15 @@ export const useCreateOKR = () => {
         progress: 0,
         status: 'active' as const,
         owner_type: formData.owner_type,
-        owner_id: owner_id,
-        department_id: formData.owner_type === 'department' ? (formData.department_id || profile?.department_id) : null,
-        employee_id: formData.owner_type === 'individual' ? (formData.employee_id || profile?.employee_id) : null,
+        owner_id,
+        department_id: formData.department_id || null,
+        employee_id: formData.employee_id || null,
         parent_okr_id: formData.parent_okr_id || null,
+        created_by: user.user.id,
         start_date: currentCycle.start_date,
-        end_date: currentCycle.end_date,
-        created_by: profile?.id || ''
+        end_date: currentCycle.end_date
       };
 
-      // Create OKR
       const { data: okr, error: okrError } = await supabase
         .from('okr_objectives')
         .insert(okrData)
@@ -258,82 +143,70 @@ export const useCreateOKR = () => {
 
       if (okrError) throw okrError;
 
-      // Create Key Results
-      if (formData.key_results.length > 0) {
+      // Create key results
+      if (formData.key_results && formData.key_results.length > 0) {
+        const keyResultsData = formData.key_results.map(kr => ({
+          okr_id: okr.id,
+          title: kr.title,
+          description: kr.description || '',
+          target_value: kr.target_value,
+          current_value: 0,
+          unit: kr.unit,
+          weight: kr.weight,
+          progress: 0,
+          status: 'not_started' as const,
+          due_date: kr.due_date || null
+        }));
+
         const { error: krError } = await supabase
           .from('okr_key_results')
-          .insert(
-            formData.key_results.map(kr => ({
-              okr_id: okr.id,
-              title: kr.title,
-              description: kr.description || '',
-              target_value: kr.target_value,
-              current_value: 0,
-              unit: kr.unit,
-              weight: kr.weight,
-              progress: 0,
-              status: 'not_started' as const
-            }))
-          );
+          .insert(keyResultsData);
 
         if (krError) throw krError;
       }
 
-      return okr as OKRObjective;
+      return okr;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['okr-objectives'] });
-      toast({
-        title: "Thành công",
-        description: "OKR mới đã được tạo thành công",
-      });
-    },
-    onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: "Lỗi",
-        description: "Không thể tạo OKR mới",
-      });
+      queryClient.invalidateQueries({ queryKey: ['company-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['department-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['individual-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['my-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['okr-dashboard-stats'] });
     }
   });
-};
+}
 
-export const useUpdateOKR = () => {
+export function useUpdateOKR() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   
   return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<OKRObjective> & { id: string }) => {
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<OKRObjective> }) => {
       const { data, error } = await supabase
         .from('okr_objectives')
-        .update(updates)
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', id)
         .select()
         .single();
-      
+
       if (error) throw error;
-      return data as OKRObjective;
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['okr-objectives'] });
-      toast({
-        title: "Thành công",
-        description: "OKR đã được cập nhật",
-      });
-    },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Lỗi",
-        description: "Không thể cập nhật OKR",
-      });
+      queryClient.invalidateQueries({ queryKey: ['company-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['department-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['individual-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['my-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['okr-dashboard-stats'] });
     }
   });
-};
+}
 
-export const useDeleteOKR = () => {
+export function useDeleteOKR() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   
   return useMutation({
     mutationFn: async (id: string) => {
@@ -341,327 +214,87 @@ export const useDeleteOKR = () => {
         .from('okr_objectives')
         .delete()
         .eq('id', id);
-      
+
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['okr-objectives'] });
-      toast({
-        title: "Thành công",
-        description: "OKR đã được xóa",
-      });
-    },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Lỗi",
-        description: "Không thể xóa OKR",
-      });
+      queryClient.invalidateQueries({ queryKey: ['company-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['department-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['individual-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['my-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['okr-dashboard-stats'] });
     }
   });
-};
+}
 
-// ============= KEY RESULTS =============
-
-export const useUpdateKeyResult = () => {
-  const queryClient = useQueryClient();
-  const { profile } = useAuth();
-  const { toast } = useToast();
-  
-  return useMutation({
-    mutationFn: async (data: {
-      id: string;
-      current_value: number;
-      progress: number;
-      status: 'not_started' | 'on_track' | 'at_risk' | 'completed';
-      notes?: string;
-    }) => {
-      const { data: result, error } = await supabase
-        .from('okr_key_results')
-        .update({
-          current_value: data.current_value,
-          progress: data.progress,
-          status: data.status
-        })
-        .eq('id', data.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Create update log if notes provided
-      if (data.notes) {
-        await supabase
-          .from('okr_key_result_updates')
-          .insert({
-            key_result_id: data.id,
-            previous_value: result.current_value,
-            new_value: data.current_value,
-            progress_change: data.progress - result.progress,
-            notes: data.notes,
-            updated_by: profile?.id || ''
-          });
-      }
-
-      return result as KeyResult;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['okr-objectives'] });
-      toast({
-        title: "Thành công",
-        description: "Key Result đã được cập nhật",
-      });
-    },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Lỗi",
-        description: "Không thể cập nhật Key Result",
-      });
-    }
-  });
-};
-
-// ============= DASHBOARD STATS =============
-
-export const useOKRDashboardStats = () => {
-  const { profile } = useAuth();
-  
+// OKR listing hooks
+export function useCompanyOKRs() {
   return useQuery({
-    queryKey: ['okr-dashboard-stats', profile?.id],
+    queryKey: ['company-okrs'],
     queryFn: async () => {
-      // Get current cycle
-      const { data: currentCycle } = await supabase
-        .from('okr_cycles')
-        .select('*')
-        .eq('is_current', true)
-        .maybeSingle();
-
-      if (!currentCycle) {
-        throw new Error('Không có chu kỳ OKR nào đang hoạt động');
-      }
-
-      // Calculate cycle progress
-      const totalDays = Math.ceil(
-        (new Date(currentCycle.end_date).getTime() - new Date(currentCycle.start_date).getTime()) / (1000 * 60 * 60 * 24)
-      );
-      const completedDays = Math.ceil(
-        (new Date().getTime() - new Date(currentCycle.start_date).getTime()) / (1000 * 60 * 60 * 24)
-      );
-      const remainingDays = Math.max(0, totalDays - completedDays);
-      const progressPercentage = Math.min(100, Math.max(0, (completedDays / totalDays) * 100));
-
-      // Get OKR summary
-      const { data: allOKRs } = await supabase
+      const { data, error } = await supabase
         .from('okr_objectives')
-        .select('id, status, progress, end_date, owner_type, parent_okr_id')
-        .eq('cycle_id', currentCycle.id);
+        .select(`
+          *,
+          key_results:okr_key_results(*),
+          department:departments(id, name),
+          employee:employees(id, full_name, employee_code),
+          creator:profiles!created_by(id, full_name)
+        `)
+        .eq('owner_type', 'company')
+        .order('created_at', { ascending: false });
 
-      const okrSummary = {
-        total: allOKRs?.length || 0,
-        completed: allOKRs?.filter(okr => okr.status === 'completed').length || 0,
-        on_track: allOKRs?.filter(okr => okr.status === 'active' && okr.progress >= 70).length || 0,
-        at_risk: allOKRs?.filter(okr => okr.status === 'active' && okr.progress < 70 && okr.progress >= 30).length || 0,
-        overdue: allOKRs?.filter(okr => okr.status === 'active' && new Date(okr.end_date) < new Date()).length || 0
-      };
-
-      // Get Key Results summary
-      const { data: allKRs } = await supabase
-        .from('okr_key_results')
-        .select('id, status, progress')
-        .in('okr_id', allOKRs?.map(okr => okr.id) || []);
-
-      const keyResultsSummary = {
-        total: allKRs?.length || 0,
-        completed: allKRs?.filter(kr => kr.status === 'completed').length || 0,
-        on_track: allKRs?.filter(kr => kr.status === 'on_track').length || 0,
-        at_risk: allKRs?.filter(kr => kr.status === 'at_risk').length || 0,
-        not_started: allKRs?.filter(kr => kr.status === 'not_started').length || 0
-      };
-
-      // Calculate OKR counts by level
-      const companyOKRs = allOKRs?.filter(okr => okr.owner_type === 'company').length || 0;
-      const departmentOKRs = allOKRs?.filter(okr => okr.owner_type === 'department').length || 0;
-      const individualOKRs = allOKRs?.filter(okr => okr.owner_type === 'individual').length || 0;
-      
-      // Calculate alignment score (simplified)
-      const linkedOKRs = allOKRs?.filter(okr => okr.parent_okr_id).length || 0;
-      const alignmentScore = allOKRs?.length > 0 ? Math.round((linkedOKRs / allOKRs.length) * 100) : 0;
-
-      const stats: OKRDashboardStats = {
-        cycle_progress: {
-          total_days: totalDays,
-          completed_days: completedDays,
-          remaining_days: remainingDays,
-          progress_percentage: Math.round(progressPercentage)
-        },
-        okr_summary: okrSummary,
-        key_results_summary: keyResultsSummary,
-        company_okrs: companyOKRs,
-        department_okrs: departmentOKRs,
-        individual_okrs: individualOKRs,
-        alignment_score: alignmentScore,
-        recent_activities: [], // TODO: Implement activity feed
-        top_performers: [], // TODO: Implement leaderboard
-        alerts: [] // TODO: Implement alerts system
-      };
-
-      return stats;
-    }
-  });
-};
-
-// ============= ANALYTICS =============
-
-export const useOKRAnalytics = (filters?: { 
-  period_start?: string; 
-  period_end?: string; 
-  department_id?: string 
-}) => {
-  return useQuery({
-    queryKey: ['okr-analytics', filters],
-    queryFn: async () => {
-      // This would be a comprehensive analytics query
-      // For now, returning mock data structure
-      
-      const analytics: OKRAnalytics = {
-        total_okrs: 0,
-        active_okrs: 0,
-        completed_okrs: 0,
-        avg_completion_rate: 0,
-        on_track_percentage: 0,
-        at_risk_percentage: 0,
-        overdue_percentage: 0,
-        company_okrs_progress: 0,
-        department_okrs_progress: 0,
-        individual_okrs_progress: 0,
-        check_in_frequency: 0,
-        avg_key_results_per_okr: 0,
-        alignment_score: 0,
-        period_start: filters?.period_start || '',
-        period_end: filters?.period_end || '',
-        last_updated: new Date().toISOString()
-      };
-
-      return analytics;
-    }
-  });
-};
-
-// ============= CHECK-INS =============
-
-export const useCreateCheckIn = () => {
-  const queryClient = useQueryClient();
-  const { profile } = useAuth();
-  const { toast } = useToast();
-  
-  return useMutation({
-    mutationFn: async (data: {
-      okr_id?: string;
-      key_result_id?: string;
-      check_in_type: 'weekly' | 'monthly' | 'quarterly';
-      confidence_level: number;
-      status_update: string;
-      challenges?: string;
-      support_needed?: string;
-      next_actions?: string;
-      mood_indicator: 'confident' | 'concerned' | 'at_risk';
-    }) => {
-      // Create check-in - for now we'll store in a simple format
-      // TODO: Implement proper check-ins table
-      const result = { 
-        id: 'temp-' + Date.now(),
-        ...data,
-        created_by: profile?.id || '',
-        created_at: new Date().toISOString()
-      };
-      
-      return result as OKRCheckIn;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['okr-objectives'] });
-      toast({
-        title: "Thành công",
-        description: "Check-in đã được tạo thành công",
-      });
-    },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Lỗi",
-        description: "Không thể tạo check-in",
-      });
-    }
-  });
-};
-
-// ============= COMMENTS =============
-
-export const useCreateComment = () => {
-  const queryClient = useQueryClient();
-  const { profile } = useAuth();
-  const { toast } = useToast();
-  
-  return useMutation({
-    mutationFn: async (data: {
-      okr_id?: string;
-      key_result_id?: string;
-      parent_comment_id?: string;
-      content: string;
-      is_private?: boolean;
-      mentioned_users?: string[];
-      attachments?: string[];
-    }) => {
-      const { data: result, error } = await supabase
-        .from('okr_comments')
-        .insert({
-          ...data,
-          created_by: profile?.id || ''
-        })
-        .select()
-        .single();
-      
       if (error) throw error;
-      return result as OKRComment;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['okr-objectives'] });
-      toast({
-        title: "Thành công",
-        description: "Bình luận đã được thêm",
-      });
-    },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Lỗi",
-        description: "Không thể thêm bình luận",
-      });
+      return data || [];
     }
   });
-};
+}
 
-// ============= LEADERBOARD =============
-
-export const useOKRLeaderboard = () => {
+export function useDepartmentOKRs() {
   return useQuery({
-    queryKey: ['okr-leaderboard'],
+    queryKey: ['department-okrs'],
     queryFn: async () => {
-      // This would be a complex query for leaderboard data
-      // For now, returning mock data structure
-      
-      const leaderboard = {
-        individual: [],
-        department: []
-      };
-      
-      return leaderboard;
+      const { data, error } = await supabase
+        .from('okr_objectives')
+        .select(`
+          *,
+          key_results:okr_key_results(*),
+          department:departments(id, name),
+          employee:employees(id, full_name, employee_code),
+          creator:profiles!created_by(id, full_name)
+        `)
+        .eq('owner_type', 'department')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
     }
   });
-};
+}
 
-// Personal OKRs hook
-function useMyOKRs() {
+export function useIndividualOKRs() {
+  return useQuery({
+    queryKey: ['individual-okrs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('okr_objectives')
+        .select(`
+          *,
+          key_results:okr_key_results(*),
+          department:departments(id, name),
+          employee:employees(id, full_name, employee_code),
+          creator:profiles!created_by(id, full_name)
+        `)
+        .eq('owner_type', 'individual')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    }
+  });
+}
+
+export function useMyOKRs() {
   return useQuery({
     queryKey: ['my-okrs'],
     queryFn: async () => {
@@ -678,12 +311,19 @@ function useMyOKRs() {
 
       const { data, error } = await supabase
         .from('okr_objectives')
-        .select(`*,key_results:okr_key_results(*),employee:employees(id, full_name, employee_code)`)
+        .select(`
+          *,
+          key_results:okr_key_results(*),
+          employee:employees(id, full_name, employee_code),
+          department:departments(id, name),
+          creator:profiles!created_by(id, full_name)
+        `)
         .eq('owner_type', 'individual')
         .eq('employee_id', employee.id)
         .order('created_at', { ascending: false });
 
       if (error) return [];
+      
       return (data || []).map(okr => ({
         ...okr,
         time_to_deadline: Math.ceil((new Date(okr.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
@@ -692,49 +332,204 @@ function useMyOKRs() {
   });
 }
 
-function useUpdateKeyResultProgress() {
+// Dashboard stats
+export function useOKRDashboardStats() {
+  return useQuery({
+    queryKey: ['okr-dashboard-stats'],
+    queryFn: async (): Promise<OKRDashboardStats> => {
+      const { data: currentCycle } = await supabase
+        .from('okr_cycles')
+        .select('*')
+        .eq('is_current', true)
+        .single();
+
+      if (!currentCycle) {
+        return {
+          cycle_progress: {
+            total_days: 0,
+            completed_days: 0,
+            remaining_days: 0,
+            progress_percentage: 0
+          },
+          okr_summary: {
+            total: 0,
+            completed: 0,
+            on_track: 0,
+            at_risk: 0,
+            overdue: 0
+          },
+          key_results_summary: {
+            total: 0,
+            completed: 0,
+            on_track: 0,
+            at_risk: 0,
+            not_started: 0
+          },
+          company_okrs: 0,
+          department_okrs: 0,
+          individual_okrs: 0,
+          alignment_score: 0,
+          recent_activities: [],
+          top_performers: [],
+          alerts: []
+        };
+      }
+
+      // Calculate cycle progress
+      const startDate = new Date(currentCycle.start_date);
+      const endDate = new Date(currentCycle.end_date);
+      const currentDate = new Date();
+      
+      const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+      const completedDays = Math.max(0, Math.ceil((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
+      const remainingDays = Math.max(0, totalDays - completedDays);
+      const progressPercentage = Math.min(100, Math.max(0, (completedDays / totalDays) * 100));
+
+      // Get OKR statistics
+      const { data: allOKRs } = await supabase
+        .from('okr_objectives')
+        .select('*, key_results:okr_key_results(*)')
+        .eq('cycle_id', currentCycle.id);
+
+      const okrs = allOKRs || [];
+      const companyOKRs = okrs.filter(okr => okr.owner_type === 'company').length;
+      const departmentOKRs = okrs.filter(okr => okr.owner_type === 'department').length;
+      const individualOKRs = okrs.filter(okr => okr.owner_type === 'individual').length;
+
+      const okrSummary = {
+        total: okrs.length,
+        completed: okrs.filter(okr => okr.status === 'completed').length,
+        on_track: okrs.filter(okr => okr.progress >= 70 && okr.status !== 'completed').length,
+        at_risk: okrs.filter(okr => okr.progress < 70 && okr.progress >= 30).length,
+        overdue: okrs.filter(okr => okr.progress < 30 && new Date(okr.end_date) < currentDate).length
+      };
+
+      const allKeyResults = okrs.flatMap(okr => okr.key_results || []);
+      const keyResultsSummary = {
+        total: allKeyResults.length,
+        completed: allKeyResults.filter(kr => kr.status === 'completed').length,
+        on_track: allKeyResults.filter(kr => kr.status === 'on_track').length,
+        at_risk: allKeyResults.filter(kr => kr.status === 'at_risk').length,
+        not_started: allKeyResults.filter(kr => kr.status === 'not_started').length
+      };
+
+      // Calculate alignment score
+      const alignedOKRs = okrs.filter(okr => okr.parent_okr_id).length;
+      const alignmentScore = okrs.length > 0 ? Math.round((alignedOKRs / okrs.length) * 100) : 0;
+
+      return {
+        cycle_progress: {
+          total_days: totalDays,
+          completed_days: completedDays,
+          remaining_days: remainingDays,
+          progress_percentage: Math.round(progressPercentage)
+        },
+        okr_summary: okrSummary,
+        key_results_summary: keyResultsSummary,
+        company_okrs: companyOKRs,
+        department_okrs: departmentOKRs,
+        individual_okrs: individualOKRs,
+        alignment_score: alignmentScore,
+        recent_activities: [],
+        top_performers: [],
+        alerts: []
+      };
+    }
+  });
+}
+
+// Leaderboard
+export function useOKRLeaderboard() {
+  return useQuery({
+    queryKey: ['okr-leaderboard'],
+    queryFn: async (): Promise<OKRLeaderboard> => {
+      const leaderboard: OKRLeaderboard = {
+        individual: [],
+        department: []
+      };
+      
+      return leaderboard;
+    }
+  });
+}
+
+// Key Result Progress
+export function useUpdateKeyResultProgress() {
   const queryClient = useQueryClient();
+  
   return useMutation({
-    mutationFn: async ({ keyResultId, newValue }: { keyResultId: string; newValue: number; }) => {
+    mutationFn: async ({ 
+      keyResultId, 
+      newValue 
+    }: { 
+      keyResultId: string; 
+      newValue: number; 
+    }) => {
+      const { data: keyResult } = await supabase
+        .from('okr_key_results')
+        .select('*')
+        .eq('id', keyResultId)
+        .single();
+
+      if (!keyResult) throw new Error('Key Result not found');
+
+      const progress = Math.min(100, Math.max(0, (newValue / keyResult.target_value) * 100));
+      
       const { data, error } = await supabase
         .from('okr_key_results')
-        .update({ current_value: newValue, progress: Math.min(100, (newValue / 100) * 100) })
-        .eq('id', keyResultId);
+        .update({
+          current_value: newValue,
+          progress,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', keyResultId)
+        .select()
+        .single();
+
       if (error) throw error;
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-okrs'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['company-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['department-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['individual-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['okr-dashboard-stats'] });
+    }
   });
 }
 
-function useCreateOKRCheckIn() {
+// OKR Check-in
+export function useCreateOKRCheckIn() {
   const queryClient = useQueryClient();
+  
   return useMutation({
-    mutationFn: async (checkIn: any) => {
+    mutationFn: async (checkIn: {
+      okr_id?: string;
+      key_result_id?: string;
+      check_in_type: 'weekly' | 'monthly' | 'quarterly';
+      confidence_level: number;
+      status_update: string;
+      challenges?: string;
+      support_needed?: string;
+      next_actions?: string;
+      mood_indicator: 'confident' | 'concerned' | 'at_risk';
+    }) => {
       const { data, error } = await supabase
         .from('okr_check_ins')
-        .insert({ ...checkIn, created_by: (await supabase.auth.getUser()).data.user?.id });
+        .insert({
+          ...checkIn,
+          created_by: (await supabase.auth.getUser()).data.user?.id
+        })
+        .select()
+        .single();
+
       if (error) throw error;
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-okrs'] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-okrs'] });
+      queryClient.invalidateQueries({ queryKey: ['okr-dashboard-stats'] });
+    }
   });
 }
-
-// Export all hooks
-export {
-  useCreateOKR,
-  useUpdateOKR,
-  useDeleteOKR,
-  useCompanyOKRs,
-  useDepartmentOKRs,
-  useIndividualOKRs,
-  useMyOKRs,
-  useCurrentOKRCycle,
-  useOKRDashboardStats,
-  useCreateOKRCycle,
-  useOKRCycles,
-  useOKRLeaderboard,
-  useUpdateKeyResultProgress,
-  useCreateOKRCheckIn
-};

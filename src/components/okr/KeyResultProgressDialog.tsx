@@ -37,8 +37,7 @@ export function KeyResultProgressDialog({ open, onOpenChange, keyResult }: KeyRe
 
     updateProgress.mutate({
       keyResultId: keyResult.id,
-      newValue,
-      notes: notes.trim() || undefined
+      newValue
     }, {
       onSuccess: () => {
         toast({
