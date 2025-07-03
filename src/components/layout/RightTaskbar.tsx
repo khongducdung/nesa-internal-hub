@@ -1,17 +1,26 @@
 import React, { useState } from 'react';
-import { Settings, Bell, MessageCircle, Calendar, Search, Plus } from 'lucide-react';
+import { Settings, Bell, MessageCircle, Calendar, Search, Plus, Lightbulb } from 'lucide-react';
+import { IdeaWidget } from '@/components/widgets/IdeaWidget';
 
 export function RightTaskbar() {
   const [isVisible, setIsVisible] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [activeWidget, setActiveWidget] = useState<string | null>(null);
 
   const utilities = [
-    { icon: Plus, label: 'Thêm tiện ích', color: 'text-blue-600' },
-    { icon: Settings, label: 'Cài đặt', color: 'text-slate-600' },
-    { icon: Bell, label: 'Thông báo', color: 'text-amber-600' },
-    { icon: MessageCircle, label: 'Tin nhắn', color: 'text-green-600' },
-    { icon: Calendar, label: 'Lịch', color: 'text-purple-600' },
-    { icon: Search, label: 'Tìm kiếm', color: 'text-orange-600' },
+    { 
+      id: 'idea',
+      icon: Lightbulb, 
+      label: 'iDea - Ý tưởng', 
+      color: 'text-yellow-500',
+      widget: IdeaWidget
+    },
+    { id: 'add', icon: Plus, label: 'Thêm tiện ích', color: 'text-blue-600' },
+    { id: 'settings', icon: Settings, label: 'Cài đặt', color: 'text-slate-600' },
+    { id: 'notifications', icon: Bell, label: 'Thông báo', color: 'text-amber-600' },
+    { id: 'messages', icon: MessageCircle, label: 'Tin nhắn', color: 'text-green-600' },
+    { id: 'calendar', icon: Calendar, label: 'Lịch', color: 'text-purple-600' },
+    { id: 'search', icon: Search, label: 'Tìm kiếm', color: 'text-orange-600' },
   ];
 
   const handleMouseEnter = () => {
@@ -24,6 +33,14 @@ export function RightTaskbar() {
     setIsHovering(false);
   };
 
+  const handleUtilityClick = (utilityId: string) => {
+    if (activeWidget === utilityId) {
+      setActiveWidget(null);
+    } else {
+      setActiveWidget(utilityId);
+    }
+  };
+
   return (
     <div className="fixed right-0 top-0 h-full z-[9999] pointer-events-none">
       {/* Hover trigger area - wider and more visible */}
@@ -31,6 +48,17 @@ export function RightTaskbar() {
         className="absolute right-0 top-0 w-8 h-full bg-transparent pointer-events-auto cursor-pointer"
         onMouseEnter={handleMouseEnter}
       />
+
+      {/* Active Widget */}
+      {activeWidget && (() => {
+        const utility = utilities.find(u => u.id === activeWidget);
+        const WidgetComponent = utility?.widget;
+        return WidgetComponent ? (
+          <div className="absolute right-20 top-1/2 -translate-y-1/2 pointer-events-auto">
+            <WidgetComponent />
+          </div>
+        ) : null;
+      })()}
 
       {/* Taskbar */}
       <div
@@ -53,7 +81,9 @@ export function RightTaskbar() {
               key={index}
               className={`
                 w-10 h-10 rounded-xl
-                bg-white/80 hover:bg-white
+                ${activeWidget === utility.id 
+                  ? 'bg-primary text-primary-foreground shadow-lg scale-110' 
+                  : 'bg-white/80 hover:bg-white'}
                 border border-gray-200/50 hover:border-gray-300
                 flex items-center justify-center
                 transition-all duration-200
@@ -61,9 +91,11 @@ export function RightTaskbar() {
                 group relative
               `}
               title={utility.label}
-              onClick={() => console.log(`Clicked: ${utility.label}`)}
+              onClick={() => utility.id ? handleUtilityClick(utility.id) : console.log(`Clicked: ${utility.label}`)}
             >
-              <utility.icon className={`w-5 h-5 ${utility.color} group-hover:scale-110 transition-transform`} />
+              <utility.icon className={`w-5 h-5 ${
+                activeWidget === utility.id ? 'text-primary-foreground' : utility.color
+              } group-hover:scale-110 transition-transform`} />
               
               {/* Tooltip */}
               <div className="absolute right-full mr-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">

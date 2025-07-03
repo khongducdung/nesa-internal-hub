@@ -1117,6 +1117,56 @@ export type Database = {
         }
         Relationships: []
       }
+      ideas: {
+        Row: {
+          content: string
+          created_at: string | null
+          created_by: string | null
+          employee_id: string | null
+          id: string
+          is_shared: boolean | null
+          priority: string | null
+          status: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_id?: string | null
+          id?: string
+          is_shared?: boolean | null
+          priority?: string | null
+          status?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_id?: string | null
+          id?: string
+          is_shared?: boolean | null
+          priority?: string | null
+          status?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ideas_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kpi_action_plans: {
         Row: {
           action_type: string | null
