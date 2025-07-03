@@ -1,16 +1,12 @@
 
 import React, { useState } from 'react';
-import { Settings, Bell, MessageCircle, Calendar, Search, Plus, Lightbulb } from 'lucide-react';
+import { Settings, MessageCircle, Calendar, Plus, Lightbulb } from 'lucide-react';
 import { IdeaWidget } from '@/components/widgets/IdeaWidget';
-import { NotificationWidget } from '@/components/widgets/NotificationWidget';
-import { useNotificationCount } from '@/hooks/useNotifications';
 
 export function RightTaskbar() {
   const [isVisible, setIsVisible] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [activeWidget, setActiveWidget] = useState<string | null>(null);
-  
-  const { data: notificationCount = 0 } = useNotificationCount();
 
   const utilities = [
     { 
@@ -20,19 +16,10 @@ export function RightTaskbar() {
       color: 'text-yellow-500',
       widget: IdeaWidget
     },
-    { 
-      id: 'notifications', 
-      icon: Bell, 
-      label: 'Thông báo', 
-      color: 'text-amber-600',
-      widget: NotificationWidget,
-      badge: notificationCount > 0 ? notificationCount : undefined
-    },
     { id: 'add', icon: Plus, label: 'Thêm tiện ích', color: 'text-blue-600' },
     { id: 'settings', icon: Settings, label: 'Cài đặt', color: 'text-slate-600' },
     { id: 'messages', icon: MessageCircle, label: 'Tin nhắn', color: 'text-green-600' },
     { id: 'calendar', icon: Calendar, label: 'Lịch', color: 'text-purple-600' },
-    { id: 'search', icon: Search, label: 'Tìm kiếm', color: 'text-orange-600' },
   ];
 
   const handleMouseEnter = () => {
@@ -122,13 +109,6 @@ export function RightTaskbar() {
                 activeWidget === utility.id ? 'text-primary-foreground' : utility.color
               } group-hover:scale-110 transition-transform`} />
               
-              {/* Badge for notifications */}
-              {utility.badge && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
-                  {utility.badge > 99 ? '99+' : utility.badge}
-                </div>
-              )}
-              
               {/* Tooltip */}
               <div className="absolute right-full mr-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                 {utility.label}
@@ -156,6 +136,7 @@ export function RightTaskbar() {
           ${isHovering ? 'opacity-100 w-3' : 'opacity-70 hover:opacity-100 hover:w-3'}
         `}
         onMouseEnter={handleMouseEnter}
+        style={{ paddingTop: '8px', paddingBottom: '8px' }}
       />
     </div>
   );
