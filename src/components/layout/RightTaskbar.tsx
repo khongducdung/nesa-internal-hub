@@ -49,12 +49,20 @@ export function RightTaskbar() {
         onMouseEnter={handleMouseEnter}
       />
 
+      {/* Overlay */}
+      {activeWidget && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+          onClick={() => setActiveWidget(null)}
+        />
+      )}
+
       {/* Active Widget */}
       {activeWidget && (() => {
         const utility = utilities.find(u => u.id === activeWidget);
         const WidgetComponent = utility?.widget;
         return WidgetComponent ? (
-          <div className="absolute right-20 top-1/2 -translate-y-1/2 pointer-events-auto">
+          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-auto">
             <WidgetComponent />
           </div>
         ) : null;

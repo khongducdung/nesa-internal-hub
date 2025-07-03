@@ -89,12 +89,24 @@ export function IdeaWidget() {
 
     if (editingIdea) {
       await updateIdea.mutateAsync({ id: editingIdea.id, data: ideaData });
+      setIsCreateOpen(false);
     } else {
       await createIdea.mutateAsync(ideaData);
+      // Don't close dialog after creating new idea
     }
 
-    resetForm();
-    setIsCreateOpen(false);
+    if (editingIdea) {
+      resetForm();
+    } else {
+      // Reset form but keep dialog open for new ideas
+      setFormData({
+        title: '',
+        content: '',
+        tags: '',
+        is_shared: false,
+        priority: 'medium'
+      });
+    }
   };
 
   const handleEdit = (idea: Idea) => {
@@ -181,31 +193,20 @@ export function IdeaWidget() {
                    </div>
                 </div>
                 
-                <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                  {idea.content}
-                </p>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className={`text-xs px-1.5 py-0.5 ${priorityColors[idea.priority]}`}>
-                      {priorityLabels[idea.priority]}
+                <div className="flex items-center justify-between mb-2">
+                  <Badge variant="outline" className={`text-xs px-1.5 py-0.5 ${priorityColors[idea.priority]}`}>
+                    {priorityLabels[idea.priority]}
+                  </Badge>
+                  {idea.is_shared && (
+                    <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700">
+                      <Share2 className="h-2.5 w-2.5 mr-1" />
+                      Chia sẻ
                     </Badge>
-                    {idea.is_shared && (
-                      <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700">
-                        <Share2 className="h-2.5 w-2.5 mr-1" />
-                        Chia sẻ
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    {new Date(idea.created_at).toLocaleDateString('vi-VN')}
-                  </div>
+                  )}
                 </div>
                 
                 {idea.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
+                  <div className="flex flex-wrap gap-1">
                     {idea.tags.slice(0, 3).map((tag, index) => (
                       <span
                         key={index}
@@ -229,7 +230,7 @@ export function IdeaWidget() {
   };
 
   return (
-    <div className="w-80 h-[600px] bg-background border border-border/50 rounded-2xl shadow-xl backdrop-blur-xl overflow-hidden">
+    <div className="w-96 h-[600px] bg-background border border-border/50 rounded-2xl shadow-xl backdrop-blur-xl overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-border/50 bg-gradient-to-r from-primary/5 to-purple-500/5">
         <div className="flex items-center justify-between mb-3">
@@ -246,16 +247,7 @@ export function IdeaWidget() {
                 <Plus className="h-4 w-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto"
-              style={{
-                position: 'fixed',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '90vw',
-                maxWidth: '900px'
-              }}
-            >
+            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-[95vw]">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Lightbulb className="h-5 w-5 text-yellow-500" />
@@ -336,16 +328,7 @@ export function IdeaWidget() {
 
            {/* View Idea Dialog */}
            <Dialog open={!!viewingIdea} onOpenChange={() => setViewingIdea(null)}>
-             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto"
-               style={{
-                 position: 'fixed',
-                 top: '50%',
-                 left: '50%',
-                 transform: 'translate(-50%, -50%)',
-                 width: '90vw',
-                 maxWidth: '900px'
-               }}
-             >
+             <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-[95vw]">
                <DialogHeader>
                  <DialogTitle className="flex items-center gap-2">
                    <Lightbulb className="h-5 w-5 text-yellow-500" />
@@ -415,7 +398,7 @@ export function IdeaWidget() {
            </Dialog>
          </div>
         
-        {/* Search and Filter */}
+        {/* Search only */}
         <div className="space-y-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
@@ -426,21 +409,6 @@ export function IdeaWidget() {
               className="pl-8 h-8 text-sm"
             />
           </div>
-          
-          <Select value={filterPriority} onValueChange={setFilterPriority}>
-            <SelectTrigger className="h-8 text-sm">
-              <div className="flex items-center gap-1">
-                <Filter className="h-3 w-3" />
-                <SelectValue />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tất cả mức độ</SelectItem>
-              <SelectItem value="high">Cao</SelectItem>
-              <SelectItem value="medium">Trung bình</SelectItem>
-              <SelectItem value="low">Thấp</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
