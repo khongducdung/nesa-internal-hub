@@ -21,7 +21,7 @@ import type { OKRObjective } from '@/types/okr';
 
 export function CompanyOKRView() {
   const { data: companyOKRs = [], isLoading } = useCompanyOKRs();
-  const [selectedOKR, setSelectedOKR] = useState<any | null>(null);
+  const [selectedOKR, setSelectedOKR] = useState<OKRObjective | null>(null);
 
   if (isLoading) {
     return (

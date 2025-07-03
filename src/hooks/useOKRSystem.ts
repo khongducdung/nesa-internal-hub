@@ -365,6 +365,7 @@ export const useDeleteOKR = () => {
 
 export const useUpdateKeyResult = () => {
   const queryClient = useQueryClient();
+  const { profile } = useAuth();
   const { toast } = useToast();
   
   return useMutation({
@@ -398,7 +399,7 @@ export const useUpdateKeyResult = () => {
             new_value: data.current_value,
             progress_change: data.progress - result.progress,
             notes: data.notes,
-            updated_by: 'user-id' // TODO: Get from auth
+            updated_by: profile?.id || ''
           });
       }
 
