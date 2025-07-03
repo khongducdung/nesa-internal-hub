@@ -28,10 +28,12 @@ import { IndividualOKRView } from './IndividualOKRView';
 import { OKRAnalytics } from './OKRAnalytics';
 import { OKRLeaderboard } from './OKRLeaderboard';
 import { CreateOKRDialog } from './CreateOKRDialog';
+import { CreateOKRCycleDialog } from './CreateOKRCycleDialog';
 
 export function OKRDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showCreateCycleDialog, setShowCreateCycleDialog] = useState(false);
   
   const { data: currentCycle, isLoading: cycleLoading } = useCurrentOKRCycle();
   const { data: dashboardStats, isLoading: statsLoading } = useOKRDashboardStats();
@@ -54,7 +56,7 @@ export function OKRDashboard() {
         <p className="text-gray-600 mb-4">
           Hãy tạo chu kỳ OKR mới để bắt đầu thiết lập mục tiêu
         </p>
-        <Button>
+        <Button onClick={() => setShowCreateCycleDialog(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Tạo chu kỳ OKR mới
         </Button>
@@ -288,6 +290,11 @@ export function OKRDashboard() {
       <CreateOKRDialog 
         open={showCreateDialog} 
         onOpenChange={setShowCreateDialog}
+      />
+      
+      <CreateOKRCycleDialog 
+        open={showCreateCycleDialog} 
+        onOpenChange={setShowCreateCycleDialog}
       />
     </div>
   );

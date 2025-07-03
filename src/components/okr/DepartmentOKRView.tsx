@@ -4,15 +4,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Target, TrendingUp, AlertCircle, CheckCircle, Eye, Calendar } from 'lucide-react';
+import { Users, Plus, Target, TrendingUp, AlertCircle, CheckCircle, Eye, Calendar, Edit, Trash2 } from 'lucide-react';
 
 import { useDepartmentOKRs } from '@/hooks/useOKRSystem';
 import { OKRDetailView } from './OKRDetailView';
+import { CreateOKRDialog } from './CreateOKRDialog';
+import { EditOKRDialog } from './EditOKRDialog';
+import { DeleteOKRDialog } from './DeleteOKRDialog';
 import type { OKRObjective } from '@/types/okr';
 
 export function DepartmentOKRView() {
   const { data: departmentOKRs = [], isLoading } = useDepartmentOKRs();
   const [selectedOKR, setSelectedOKR] = useState<OKRObjective | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingOKR, setEditingOKR] = useState<OKRObjective | null>(null);
+  const [deletingOKR, setDeletingOKR] = useState<OKRObjective | null>(null);
 
   if (isLoading) {
     return (
@@ -52,7 +58,7 @@ export function DepartmentOKRView() {
             Quản lý các mục tiêu cấp phòng ban ({departmentOKRs.length} OKR)
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setShowCreateDialog(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Tạo OKR Phòng ban
         </Button>
@@ -130,7 +136,7 @@ export function DepartmentOKRView() {
             <p className="text-muted-foreground mb-4">
               Tạo OKR đầu tiên cho phòng ban của bạn để liên kết với mục tiêu công ty
             </p>
-            <Button>
+            <Button onClick={() => setShowCreateDialog(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Tạo OKR đầu tiên
             </Button>
@@ -166,10 +172,18 @@ export function DepartmentOKRView() {
                     <CardTitle className="mb-2">{okr.title}</CardTitle>
                     <CardDescription>{okr.description}</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setSelectedOKR(okr)}>
-                    <Eye className="h-4 w-4 mr-2" />
-                    Xem chi tiết
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setSelectedOKR(okr)}>
+                      <Eye className="h-4 w-4 mr-2" />
+                      Chi tiết
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setEditingOKR(okr)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-red-600" onClick={() => setDeletingOKR(okr)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -222,6 +236,24 @@ export function DepartmentOKRView() {
           ))}
         </div>
       )}
+
+      {/* Dialogs */}
+      <CreateOKRDialog 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog}
+      />
+      
+      <EditOKRDialog 
+        open={!!editingOKR} 
+        onOpenChange={(open) => !open && setEditingOKR(null)}
+        okr={editingOKR}
+      />
+      
+      <DeleteOKRDialog 
+        open={!!deletingOKR} 
+        onOpenChange={(open) => !open && setDeletingOKR(null)}
+        okr={deletingOKR}
+      />
     </div>
   );
 }

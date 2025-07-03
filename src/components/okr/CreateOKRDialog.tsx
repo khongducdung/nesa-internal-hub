@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2, Target } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useCreateOKR } from '@/hooks/useOKRSystem';
+import { useToast } from '@/hooks/use-toast';
 
 interface CreateOKRDialogProps {
   open: boolean;
@@ -25,6 +27,9 @@ interface KeyResultForm {
 
 export function CreateOKRDialog({ open, onOpenChange }: CreateOKRDialogProps) {
   const { profile } = useAuth();
+  const { toast } = useToast();
+  const createOKR = useCreateOKR();
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -53,9 +58,62 @@ export function CreateOKRDialog({ open, onOpenChange }: CreateOKRDialogProps) {
   };
 
   const handleSubmit = () => {
-    // TODO: Implement OKR creation
-    console.log('Creating OKR:', { formData, keyResults });
-    onOpenChange(false);
+    if (!formData.title.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Vui lòng nhập tiêu đề OKR"
+      });
+      return;
+    }
+
+    if (keyResults.some(kr => !kr.title.trim() || kr.target_value <= 0 || !kr.unit.trim())) {
+      toast({
+        variant: "destructive", 
+        title: "Lỗi",
+        description: "Vui lòng điền đầy đủ thông tin Key Results"
+      });
+      return;
+    }
+
+    if (totalWeight !== 100) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi", 
+        description: "Tổng trọng số Key Results phải bằng 100%"
+      });
+      return;
+    }
+
+    createOKR.mutate({
+      title: formData.title,
+      description: formData.description,
+      owner_type: formData.owner_type,
+      department_id: formData.department_id || undefined,
+      employee_id: formData.employee_id || undefined,
+      parent_okr_id: formData.parent_okr_id || undefined,
+      key_results: keyResults.map(kr => ({
+        title: kr.title,
+        description: kr.description,
+        target_value: kr.target_value,
+        unit: kr.unit,
+        weight: kr.weight
+      }))
+    }, {
+      onSuccess: () => {
+        onOpenChange(false);
+        // Reset form
+        setFormData({
+          title: '',
+          description: '',
+          owner_type: 'individual',
+          department_id: '',
+          employee_id: '',
+          parent_okr_id: ''
+        });
+        setKeyResults([{ title: '', description: '', target_value: 0, unit: '', weight: 100 }]);
+      }
+    });
   };
 
   const totalWeight = keyResults.reduce((sum, kr) => sum + kr.weight, 0);
@@ -228,8 +286,11 @@ export function CreateOKRDialog({ open, onOpenChange }: CreateOKRDialogProps) {
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Hủy
             </Button>
-            <Button onClick={handleSubmit} disabled={totalWeight !== 100}>
-              Tạo OKR
+            <Button 
+              onClick={handleSubmit} 
+              disabled={totalWeight !== 100 || createOKR.isPending}
+            >
+              {createOKR.isPending ? 'Đang tạo...' : 'Tạo OKR'}
             </Button>
           </div>
         </div>

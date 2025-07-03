@@ -17,11 +17,18 @@ import {
 } from 'lucide-react';
 
 import { useCompanyOKRs } from '@/hooks/useOKRSystem';
+import { CreateOKRDialog } from './CreateOKRDialog';
+import { EditOKRDialog } from './EditOKRDialog';
+import { DeleteOKRDialog } from './DeleteOKRDialog';
+import { OKRDetailView } from './OKRDetailView';
 import type { OKRObjective } from '@/types/okr';
 
 export function CompanyOKRView() {
   const { data: companyOKRs = [], isLoading } = useCompanyOKRs();
   const [selectedOKR, setSelectedOKR] = useState<OKRObjective | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingOKR, setEditingOKR] = useState<OKRObjective | null>(null);
+  const [deletingOKR, setDeletingOKR] = useState<OKRObjective | null>(null);
 
   if (isLoading) {
     return (
@@ -29,6 +36,10 @@ export function CompanyOKRView() {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  if (selectedOKR) {
+    return <OKRDetailView okr={selectedOKR} onClose={() => setSelectedOKR(null)} />;
   }
 
   const getStatusBadge = (status: string, progress: number) => {
@@ -63,7 +74,7 @@ export function CompanyOKRView() {
             Quản lý và theo dõi các mục tiêu cấp công ty
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setShowCreateDialog(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Tạo OKR Công ty
         </Button>
@@ -125,7 +136,7 @@ export function CompanyOKRView() {
             <p className="text-gray-600 mb-4">
               Tạo OKR đầu tiên để thiết lập mục tiêu cấp công ty
             </p>
-            <Button>
+            <Button onClick={() => setShowCreateDialog(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Tạo OKR đầu tiên
             </Button>
@@ -142,13 +153,13 @@ export function CompanyOKRView() {
                     {getStatusBadge(okr.status, okr.progress)}
                   </div>
                   <div className="flex items-center gap-2 ml-4">
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedOKR(okr)}>
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={() => setEditingOKR(okr)}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-red-600">
+                    <Button variant="ghost" size="sm" className="text-red-600" onClick={() => setDeletingOKR(okr)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -237,6 +248,24 @@ export function CompanyOKRView() {
           ))}
         </div>
       )}
+
+      {/* Dialogs */}
+      <CreateOKRDialog 
+        open={showCreateDialog} 
+        onOpenChange={setShowCreateDialog}
+      />
+      
+      <EditOKRDialog 
+        open={!!editingOKR} 
+        onOpenChange={(open) => !open && setEditingOKR(null)}
+        okr={editingOKR}
+      />
+      
+      <DeleteOKRDialog 
+        open={!!deletingOKR} 
+        onOpenChange={(open) => !open && setDeletingOKR(null)}
+        okr={deletingOKR}
+      />
     </div>
   );
 }
