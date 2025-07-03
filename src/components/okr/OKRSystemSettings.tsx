@@ -7,6 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import {
   Select,
   SelectContent,
@@ -568,14 +569,149 @@ export function OKRSystemSettings() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5" />
-                Cài đặt thông báo
+                Cài đặt thông báo OKR
               </CardTitle>
               <CardDescription>
                 Quản lý các loại thông báo trong hệ thống OKR
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">Tính năng này sẽ được phát triển trong phiên bản tiếp theo.</p>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="font-medium">Thông báo deadline</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Nhắc nhở trước deadline 7 ngày</Label>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Nhắc nhở trước deadline 3 ngày</Label>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Thông báo quá deadline</Label>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Gửi email nhắc nhở</Label>
+                    <Switch />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h3 className="font-medium">Thông báo tiến độ</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Cập nhật Key Result</Label>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>OKR hoàn thành</Label>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Tiến độ chậm (dưới 30%)</Label>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Nhắc nhở check-in hàng tuần</Label>
+                    <Switch defaultChecked />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h3 className="font-medium">Thông báo hợp tác</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Được mention trong comment</Label>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Được thêm vào OKR</Label>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>OKR được liên kết</Label>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Yêu cầu phê duyệt</Label>
+                    <Switch defaultChecked />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h3 className="font-medium">Thông báo thành tựu</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Mở khóa thành tựu mới</Label>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Nhận OKR Coins</Label>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Tăng hạng trong bảng xếp hạng</Label>
+                    <Switch defaultChecked />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Label>Chu kỳ OKR kết thúc</Label>
+                    <Switch defaultChecked />
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <h3 className="font-medium">Cài đặt email</h3>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="flex items-center space-x-4">
+                    <Label className="w-48">Tần suất gửi tóm tắt</Label>
+                    <Select defaultValue="weekly">
+                      <SelectTrigger className="w-48">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">Hàng ngày</SelectItem>
+                        <SelectItem value="weekly">Hàng tuần</SelectItem>
+                        <SelectItem value="monthly">Hàng tháng</SelectItem>
+                        <SelectItem value="never">Không gửi</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <Label className="w-48">Thời gian gửi</Label>
+                    <Select defaultValue="09:00">
+                      <SelectTrigger className="w-48">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="07:00">07:00</SelectItem>
+                        <SelectItem value="08:00">08:00</SelectItem>
+                        <SelectItem value="09:00">09:00</SelectItem>
+                        <SelectItem value="10:00">10:00</SelectItem>
+                        <SelectItem value="17:00">17:00</SelectItem>
+                        <SelectItem value="18:00">18:00</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <Button className="w-full">
+                <Save className="h-4 w-4 mr-2" />
+                Lưu cài đặt thông báo
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
