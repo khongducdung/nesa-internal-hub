@@ -226,8 +226,8 @@ export function DepartmentOKRView() {
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <span>Bắt đầu: {new Date(okr.start_date).toLocaleDateString('vi-VN')}</span>
                     <span>Kết thúc: {new Date(okr.end_date).toLocaleDateString('vi-VN')}</span>
-                    <span className={okr.time_to_deadline && okr.time_to_deadline < 30 ? 'text-orange-600 font-medium' : ''}>
-                      Còn {okr.time_to_deadline || 0} ngày
+                    <span className={Math.ceil((new Date(okr.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) < 30 ? 'text-orange-600 font-medium' : ''}>
+                      Còn {Math.ceil((new Date(okr.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} ngày
                     </span>
                   </div>
                 </div>

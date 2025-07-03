@@ -53,6 +53,8 @@ export function useCreateOKRCycle() {
       cycle_type: string;
       start_date: string;
       end_date: string;
+      status?: string;
+      is_current?: boolean;
     }) => {
       // Set current cycle to false for all existing cycles
       await supabase
@@ -63,9 +65,14 @@ export function useCreateOKRCycle() {
       const { data, error } = await supabase
         .from('okr_cycles')
         .insert({
-          ...cycleData,
-          status: 'active',
-          is_current: true,
+          name: cycleData.name,
+          year: cycleData.year,
+          quarter: cycleData.quarter,
+          cycle_type: cycleData.cycle_type,
+          start_date: cycleData.start_date,
+          end_date: cycleData.end_date,
+          status: (cycleData.status as any) || 'active',
+          is_current: cycleData.is_current ?? true,
           created_by: (await supabase.auth.getUser()).data.user?.id
         })
         .select()
@@ -181,11 +188,14 @@ export function useUpdateOKR() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: Partial<OKRObjective> }) => {
+    mutationFn: async (params: { id: string; title?: string; description?: string; status?: any; updates?: Partial<OKRObjective> }) => {
+      const { id, updates, ...directUpdates } = params;
+      const updateData = updates ? updates : directUpdates;
+      
       const { data, error } = await supabase
         .from('okr_objectives')
         .update({
-          ...updates,
+          ...updateData,
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
@@ -238,8 +248,7 @@ export function useCompanyOKRs() {
           *,
           key_results:okr_key_results(*),
           department:departments(id, name),
-          employee:employees(id, full_name, employee_code),
-          creator:profiles!created_by(id, full_name)
+          employee:employees(id, full_name, employee_code)
         `)
         .eq('owner_type', 'company')
         .order('created_at', { ascending: false });
@@ -260,8 +269,7 @@ export function useDepartmentOKRs() {
           *,
           key_results:okr_key_results(*),
           department:departments(id, name),
-          employee:employees(id, full_name, employee_code),
-          creator:profiles!created_by(id, full_name)
+          employee:employees(id, full_name, employee_code)
         `)
         .eq('owner_type', 'department')
         .order('created_at', { ascending: false });
@@ -282,8 +290,7 @@ export function useIndividualOKRs() {
           *,
           key_results:okr_key_results(*),
           department:departments(id, name),
-          employee:employees(id, full_name, employee_code),
-          creator:profiles!created_by(id, full_name)
+          employee:employees(id, full_name, employee_code)
         `)
         .eq('owner_type', 'individual')
         .order('created_at', { ascending: false });
@@ -315,8 +322,7 @@ export function useMyOKRs() {
           *,
           key_results:okr_key_results(*),
           employee:employees(id, full_name, employee_code),
-          department:departments(id, name),
-          creator:profiles!created_by(id, full_name)
+          department:departments(id, name)
         `)
         .eq('owner_type', 'individual')
         .eq('employee_id', employee.id)
@@ -515,7 +521,7 @@ export function useCreateOKRCheckIn() {
       next_actions?: string;
       mood_indicator: 'confident' | 'concerned' | 'at_risk';
     }) => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('okr_check_ins')
         .insert({
           ...checkIn,

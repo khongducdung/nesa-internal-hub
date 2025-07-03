@@ -186,7 +186,7 @@ export function CompanyOKRView() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4" />
-                      <span>{okr.child_okrs_count || 0} OKR liên kết</span>
+                      <span>{(okr as any).child_okrs_count || 0} OKR liên kết</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <TrendingUp className="h-4 w-4" />
@@ -227,11 +227,11 @@ export function CompanyOKRView() {
                   )}
 
                   {/* Aligned OKRs Preview */}
-                  {okr.child_okrs_count && okr.child_okrs_count > 0 && (
+                  {((okr as any).child_okrs_count || 0) > 0 && (
                     <div className="border-t pt-4">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-900">
-                          OKRs liên kết ({okr.child_okrs_count})
+                          OKRs liên kết ({(okr as any).child_okrs_count || 0})
                         </span>
                         <Button variant="ghost" size="sm" className="text-blue-600">
                           Xem tất cả
