@@ -18,7 +18,8 @@ import {
   Clock,
   Plus,
   BarChart3,
-  Activity
+  Activity,
+  Settings
 } from 'lucide-react';
 
 import { useCurrentOKRCycle, useOKRDashboardStats } from '@/hooks/useOKRSystem';
@@ -29,6 +30,7 @@ import { OKRAnalytics } from './OKRAnalytics';
 import { OKRLeaderboard } from './OKRLeaderboard';
 import { CreateOKRDialog } from './CreateOKRDialog';
 import { CreateOKRCycleDialog } from './CreateOKRCycleDialog';
+import { OKRSystemSettings } from './OKRSystemSettings';
 
 export function OKRDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -226,7 +228,7 @@ export function OKRDashboard() {
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Tổng quan
@@ -251,17 +253,152 @@ export function OKRDashboard() {
             <Trophy className="h-4 w-4" />
             Bảng xếp hạng
           </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Cài đặt
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="text-center py-12">
-            <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Dashboard tổng quan
-            </h3>
-            <p className="text-gray-600">
-              Xem tổng quan về tất cả OKR trong hệ thống
-            </p>
+          {/* Enhanced Overview Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            {/* Company Level OKRs */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">OKR Công ty</CardTitle>
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">
+                  {dashboardStats?.company_okrs || 0}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Mục tiêu cấp công ty
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Department Level OKRs */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">OKR Phòng ban</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {dashboardStats?.department_okrs || 0}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Mục tiêu cấp phòng ban
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Individual Level OKRs */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">OKR Cá nhân</CardTitle>
+                <User className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-purple-600">
+                  {dashboardStats?.individual_okrs || 0}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Mục tiêu cá nhân
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Total Alignment Score */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Điểm liên kết</CardTitle>
+                <Activity className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-orange-600">
+                  {dashboardStats?.alignment_score || 0}%
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Mức độ liên kết OKR
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* OKR Alignment Flow */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Luồng liên kết OKR</CardTitle>
+              <CardDescription>
+                Mức độ liên kết từ cấp Công ty → Phòng ban → Cá nhân
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between py-4">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <Building2 className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <p className="text-sm font-medium">Công ty</p>
+                  <p className="text-xs text-muted-foreground">Tầm nhìn chiến lược</p>
+                </div>
+                
+                <div className="flex-1 h-px bg-gradient-to-r from-blue-200 to-green-200 mx-4"></div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <Users className="h-8 w-8 text-green-600" />
+                  </div>
+                  <p className="text-sm font-medium">Phòng ban</p>
+                  <p className="text-xs text-muted-foreground">Kế hoạch thực thi</p>
+                </div>
+                
+                <div className="flex-1 h-px bg-gradient-to-r from-green-200 to-purple-200 mx-4"></div>
+                
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <User className="h-8 w-8 text-purple-600" />
+                  </div>
+                  <p className="text-sm font-medium">Cá nhân</p>
+                  <p className="text-xs text-muted-foreground">Hành động cụ thể</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('company')}>
+              <CardContent className="flex items-center p-6">
+                <Building2 className="h-8 w-8 text-blue-600 mr-4" />
+                <div>
+                  <h3 className="font-semibold">Quản lý OKR Công ty</h3>
+                  <p className="text-sm text-muted-foreground">Xem và quản lý mục tiêu cấp công ty</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('department')}>
+              <CardContent className="flex items-center p-6">
+                <Users className="h-8 w-8 text-green-600 mr-4" />
+                <div>
+                  <h3 className="font-semibold">Quản lý OKR Phòng ban</h3>
+                  <p className="text-sm text-muted-foreground">Xem và quản lý mục tiêu phòng ban</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveTab('individual')}>
+              <CardContent className="flex items-center p-6">
+                <User className="h-8 w-8 text-purple-600 mr-4" />
+                <div>
+                  <h3 className="font-semibold">Quản lý OKR Cá nhân</h3>
+                  <p className="text-sm text-muted-foreground">Xem và quản lý mục tiêu cá nhân</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
 
@@ -283,6 +420,10 @@ export function OKRDashboard() {
 
         <TabsContent value="leaderboard">
           <OKRLeaderboard />
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <OKRSystemSettings />
         </TabsContent>
       </Tabs>
 

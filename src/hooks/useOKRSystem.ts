@@ -454,7 +454,7 @@ export const useOKRDashboardStats = () => {
       // Get OKR summary
       const { data: allOKRs } = await supabase
         .from('okr_objectives')
-        .select('id, status, progress, end_date')
+        .select('id, status, progress, end_date, owner_type, parent_okr_id')
         .eq('cycle_id', currentCycle.id);
 
       const okrSummary = {
@@ -479,6 +479,15 @@ export const useOKRDashboardStats = () => {
         not_started: allKRs?.filter(kr => kr.status === 'not_started').length || 0
       };
 
+      // Calculate OKR counts by level
+      const companyOKRs = allOKRs?.filter(okr => okr.owner_type === 'company').length || 0;
+      const departmentOKRs = allOKRs?.filter(okr => okr.owner_type === 'department').length || 0;
+      const individualOKRs = allOKRs?.filter(okr => okr.owner_type === 'individual').length || 0;
+      
+      // Calculate alignment score (simplified)
+      const linkedOKRs = allOKRs?.filter(okr => okr.parent_okr_id).length || 0;
+      const alignmentScore = allOKRs?.length > 0 ? Math.round((linkedOKRs / allOKRs.length) * 100) : 0;
+
       const stats: OKRDashboardStats = {
         cycle_progress: {
           total_days: totalDays,
@@ -488,6 +497,10 @@ export const useOKRDashboardStats = () => {
         },
         okr_summary: okrSummary,
         key_results_summary: keyResultsSummary,
+        company_okrs: companyOKRs,
+        department_okrs: departmentOKRs,
+        individual_okrs: individualOKRs,
+        alignment_score: alignmentScore,
         recent_activities: [], // TODO: Implement activity feed
         top_performers: [], // TODO: Implement leaderboard
         alerts: [] // TODO: Implement alerts system
@@ -531,6 +544,118 @@ export const useOKRAnalytics = (filters?: {
       };
 
       return analytics;
+    }
+  });
+};
+
+// ============= CHECK-INS =============
+
+export const useCreateCheckIn = () => {
+  const queryClient = useQueryClient();
+  const { profile } = useAuth();
+  const { toast } = useToast();
+  
+  return useMutation({
+    mutationFn: async (data: {
+      okr_id?: string;
+      key_result_id?: string;
+      check_in_type: 'weekly' | 'monthly' | 'quarterly';
+      confidence_level: number;
+      status_update: string;
+      challenges?: string;
+      support_needed?: string;
+      next_actions?: string;
+      mood_indicator: 'confident' | 'concerned' | 'at_risk';
+    }) => {
+      // Create check-in - for now we'll store in a simple format
+      // TODO: Implement proper check-ins table
+      const result = { 
+        id: 'temp-' + Date.now(),
+        ...data,
+        created_by: profile?.id || '',
+        created_at: new Date().toISOString()
+      };
+      
+      return result as OKRCheckIn;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['okr-objectives'] });
+      toast({
+        title: "Thành công",
+        description: "Check-in đã được tạo thành công",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể tạo check-in",
+      });
+    }
+  });
+};
+
+// ============= COMMENTS =============
+
+export const useCreateComment = () => {
+  const queryClient = useQueryClient();
+  const { profile } = useAuth();
+  const { toast } = useToast();
+  
+  return useMutation({
+    mutationFn: async (data: {
+      okr_id?: string;
+      key_result_id?: string;
+      parent_comment_id?: string;
+      content: string;
+      is_private?: boolean;
+      mentioned_users?: string[];
+      attachments?: string[];
+    }) => {
+      const { data: result, error } = await supabase
+        .from('okr_comments')
+        .insert({
+          ...data,
+          created_by: profile?.id || ''
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result as OKRComment;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['okr-objectives'] });
+      toast({
+        title: "Thành công",
+        description: "Bình luận đã được thêm",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể thêm bình luận",
+      });
+    }
+  });
+};
+
+// ============= LEADERBOARD =============
+
+export const useOKRLeaderboard = () => {
+  return useQuery({
+    queryKey: ['okr-leaderboard'],
+    queryFn: async () => {
+      // This would be a complex query for leaderboard data
+      // For now, returning mock data structure
+      
+      const leaderboard = {
+        individual: [],
+        department: []
+      };
+      
+      return leaderboard;
     }
   });
 };

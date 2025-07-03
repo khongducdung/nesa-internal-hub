@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2, Target } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useCreateOKR } from '@/hooks/useOKRSystem';
+import { useCreateOKR, useCompanyOKRs, useDepartmentOKRs } from '@/hooks/useOKRSystem';
 import { useToast } from '@/hooks/use-toast';
 
 interface CreateOKRDialogProps {
@@ -29,6 +29,8 @@ export function CreateOKRDialog({ open, onOpenChange }: CreateOKRDialogProps) {
   const { profile } = useAuth();
   const { toast } = useToast();
   const createOKR = useCreateOKR();
+  const { data: companyOKRs = [] } = useCompanyOKRs();
+  const { data: departmentOKRs = [] } = useDepartmentOKRs();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -179,6 +181,47 @@ export function CreateOKRDialog({ open, onOpenChange }: CreateOKRDialogProps) {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Parent OKR Selection */}
+              {formData.owner_type !== 'company' && (
+                <div>
+                  <Label htmlFor="parent_okr">Liên kết với OKR (không bắt buộc)</Label>
+                  <Select 
+                    value={formData.parent_okr_id} 
+                    onValueChange={(value) => 
+                      setFormData(prev => ({ ...prev, parent_okr_id: value }))
+                    }
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Chọn OKR cha để liên kết" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {formData.owner_type === 'department' && companyOKRs.map((okr) => (
+                        <SelectItem key={okr.id} value={okr.id}>
+                          [Công ty] {okr.title}
+                        </SelectItem>
+                      ))}
+                      {formData.owner_type === 'individual' && (
+                        <>
+                          {companyOKRs.map((okr) => (
+                            <SelectItem key={okr.id} value={okr.id}>
+                              [Công ty] {okr.title}
+                            </SelectItem>
+                          ))}
+                          {departmentOKRs.map((okr) => (
+                            <SelectItem key={okr.id} value={okr.id}>
+                              [Phòng ban] {okr.title}
+                            </SelectItem>
+                          ))}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Liên kết OKR này với mục tiêu cấp cao hơn để tạo tính liên kết
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

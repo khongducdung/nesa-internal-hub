@@ -256,6 +256,12 @@ export interface OKRDashboardStats {
     at_risk: number;
     not_started: number;
   };
+
+  // Level-specific OKR counts
+  company_okrs: number;
+  department_okrs: number;
+  individual_okrs: number;
+  alignment_score: number;
   
   recent_activities: OKRActivity[];
   top_performers: Array<{
