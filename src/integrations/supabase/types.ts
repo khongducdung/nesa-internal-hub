@@ -1126,6 +1126,8 @@ export type Database = {
           id: string
           is_shared: boolean | null
           priority: string | null
+          shared_with_departments: string[] | null
+          shared_with_users: string[] | null
           status: string | null
           tags: string[] | null
           title: string
@@ -1139,6 +1141,8 @@ export type Database = {
           id?: string
           is_shared?: boolean | null
           priority?: string | null
+          shared_with_departments?: string[] | null
+          shared_with_users?: string[] | null
           status?: string | null
           tags?: string[] | null
           title: string
@@ -1152,6 +1156,8 @@ export type Database = {
           id?: string
           is_shared?: boolean | null
           priority?: string | null
+          shared_with_departments?: string[] | null
+          shared_with_users?: string[] | null
           status?: string | null
           tags?: string[] | null
           title?: string
@@ -1786,6 +1792,96 @@ export type Database = {
           name?: string
           requires_approval?: boolean | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      notification_settings: {
+        Row: {
+          categories: Json | null
+          created_at: string | null
+          email_enabled: boolean | null
+          id: string
+          push_enabled: boolean | null
+          sound_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          categories?: Json | null
+          created_at?: string | null
+          email_enabled?: boolean | null
+          id?: string
+          push_enabled?: boolean | null
+          sound_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          categories?: Json | null
+          created_at?: string | null
+          email_enabled?: boolean | null
+          id?: string
+          push_enabled?: boolean | null
+          sound_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          action_label: string | null
+          action_url: string | null
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_deleted: boolean | null
+          is_read: boolean | null
+          message: string
+          reference_id: string | null
+          reference_type: string | null
+          title: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          action_label?: string | null
+          action_url?: string | null
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          is_read?: boolean | null
+          message: string
+          reference_id?: string | null
+          reference_type?: string | null
+          title: string
+          type?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          action_label?: string | null
+          action_url?: string | null
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          is_read?: boolean | null
+          message?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -4283,9 +4379,29 @@ export type Database = {
         }
         Returns: Json
       }
+      create_notification: {
+        Args: {
+          p_user_id: string
+          p_title: string
+          p_message: string
+          p_type?: string
+          p_category?: string
+          p_reference_id?: string
+          p_reference_type?: string
+          p_action_url?: string
+          p_action_label?: string
+          p_created_by?: string
+          p_expires_at?: string
+        }
+        Returns: string
+      }
       get_system_stats: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      get_unread_notification_count: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       has_permission: {
         Args: { _user_id: string; _permission_name: string }
@@ -4307,6 +4423,14 @@ export type Database = {
           p_new_values?: Json
         }
         Returns: string
+      }
+      mark_all_notifications_read: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      mark_notification_read: {
+        Args: { notification_id: string }
+        Returns: boolean
       }
     }
     Enums: {

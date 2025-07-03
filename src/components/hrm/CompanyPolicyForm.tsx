@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { TargetSelector } from '@/components/processes/TargetSelector';
-import { useCreateProcessNotifications, useGetTargetUsers } from '@/hooks/useNotifications';
+import { useCreateNotification } from '@/hooks/useNotifications';
 import { CompanyPolicy } from '@/hooks/useCompanyPolicies';
 import { cn } from '@/lib/utils';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
@@ -66,7 +66,7 @@ function CustomNotificationDialog({
                 : 'Bạn có muốn gửi thông báo cho nhân sự về quy định mới này không?'
               }
             </p>
-            <p className="text-sm font-medium">Đối tượng: {targetCount} người</p>
+            <p className="text-sm font-medium">Đối tượng: Toàn bộ nhân viên</p>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -118,8 +118,7 @@ export function CompanyPolicyForm({ open, onOpenChange, onSubmit, initialData }:
   const [effectiveDateOpen, setEffectiveDateOpen] = useState(false);
   const [expiryDateOpen, setExpiryDateOpen] = useState(false);
 
-  const createNotifications = useCreateProcessNotifications();
-  const { data: targetUsers } = useGetTargetUsers(formData.target_type, formData.target_ids);
+  const createNotifications = useCreateNotification();
 
   useEffect(() => {
     if (initialData) {
@@ -167,13 +166,21 @@ export function CompanyPolicyForm({ open, onOpenChange, onSubmit, initialData }:
 
     onSubmit(submitData);
 
-    if (sendNotification && formData.status === 'active' && targetUsers?.length) {
-      await createNotifications.mutateAsync({
-        processTemplateId: 'policy-' + Date.now(),
-        processName: formData.title,
-        targetUsers,
-        notificationType: initialData ? 'process_updated' : 'new_process'
-      });
+    if (sendNotification && formData.status === 'active') {
+      // For now, create a simple notification - we can extend this later for specific targeting
+      const user = await import('@/integrations/supabase/client').then(m => m.supabase.auth.getUser());
+      if (user.data.user) {
+        await createNotifications.mutateAsync({
+          user_id: user.data.user.id,
+          title: initialData ? 'Quy định đã được cập nhật' : 'Quy định mới',
+          message: `Quy định "${formData.title}" đã được ${initialData ? 'cập nhật' : 'tạo mới'}`,
+          type: 'info',
+          category: 'hrm',
+          reference_id: 'policy-' + Date.now(),
+          reference_type: 'company_policies',
+          created_by: user.data.user.id
+        });
+      }
     }
 
     setShowNotificationDialog(false);
@@ -346,7 +353,7 @@ export function CompanyPolicyForm({ open, onOpenChange, onSubmit, initialData }:
         open={showNotificationDialog}
         onOpenChange={setShowNotificationDialog}
         onConfirm={handleNotificationConfirm}
-        targetCount={targetUsers?.length || 0}
+        targetCount={0}
         itemName="quy định"
         isUpdate={!!initialData}
       />

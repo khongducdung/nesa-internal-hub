@@ -21,6 +21,7 @@ import {
   Eye
 } from 'lucide-react';
 import { useMyIdeas, useSharedIdeas, useCreateIdea, useUpdateIdea, useDeleteIdea, type Idea, type CreateIdeaData } from '@/hooks/useIdeas';
+import { useCreateNotification } from '@/hooks/useNotifications';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogOverlay } from '@/components/ui/dialog';
 
 interface IdeaFormData {
@@ -62,6 +63,7 @@ export function IdeaWidget() {
   const createIdea = useCreateIdea();
   const updateIdea = useUpdateIdea();
   const deleteIdea = useDeleteIdea();
+  const createNotification = useCreateNotification();
 
   const resetForm = () => {
     setFormData({
@@ -89,7 +91,26 @@ export function IdeaWidget() {
       await updateIdea.mutateAsync({ id: editingIdea.id, data: ideaData });
       setIsCreateOpen(false);
     } else {
-      await createIdea.mutateAsync(ideaData);
+      const newIdea = await createIdea.mutateAsync(ideaData);
+      
+      // Create notification if idea is shared
+      if (ideaData.is_shared) {
+        // For now, we'll create a general notification - later we can extend to specific users/departments
+        const user = await import('@/integrations/supabase/client').then(m => m.supabase.auth.getUser());
+        if (user.data.user) {
+          createNotification.mutate({
+            user_id: user.data.user.id,
+            title: 'Ý tưởng mới được chia sẻ',
+            message: `Ý tưởng "${ideaData.title}" đã được chia sẻ công khai`,
+            type: 'info',
+            category: 'ideas',
+            reference_id: newIdea.id,
+            reference_type: 'ideas',
+            created_by: user.data.user.id
+          });
+        }
+      }
+      
       // Reset form but keep dialog open for new ideas
       setFormData({
         title: '',

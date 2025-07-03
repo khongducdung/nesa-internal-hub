@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { useCreateProcessNotifications, useGetTargetUsers } from '@/hooks/useNotifications';
+import { useCreateNotification } from '@/hooks/useNotifications';
 
 interface NotificationDialogProps {
   open: boolean;
@@ -30,18 +30,24 @@ export function NotificationDialog({
   onCancel
 }: NotificationDialogProps) {
   const [sendNotification, setSendNotification] = useState(true);
-  const { data: targetUsers } = useGetTargetUsers(targetType, targetIds);
-  const createNotifications = useCreateProcessNotifications();
+  const createNotifications = useCreateNotification();
 
   const handleConfirm = async () => {
-    if (sendNotification && targetUsers && targetUsers.length > 0) {
+    if (sendNotification) {
       try {
-        await createNotifications.mutateAsync({
-          processTemplateId,
-          processName,
-          targetUsers,
-          notificationType
-        });
+        const user = await import('@/integrations/supabase/client').then(m => m.supabase.auth.getUser());
+        if (user.data.user) {
+          await createNotifications.mutateAsync({
+            user_id: user.data.user.id,
+            title: notificationType === 'new_process' ? 'Tài liệu mới' : 'Tài liệu đã cập nhật',
+            message: `Tài liệu "${processName}" đã được ${notificationType === 'new_process' ? 'tạo mới' : 'cập nhật'}`,
+            type: 'info',
+            category: 'processes',
+            reference_id: processTemplateId,
+            reference_type: 'process_templates',
+            created_by: user.data.user.id
+          });
+        }
       } catch (error) {
         console.error('Error sending notifications:', error);
       }
@@ -61,20 +67,17 @@ export function NotificationDialog({
   };
 
   const getTargetDescription = () => {
-    if (!targetUsers) return 'Đang tải...';
-    
-    const count = targetUsers.length;
     switch (targetType) {
       case 'general':
-        return `Tất cả nhân viên (${count} người)`;
+        return 'Tất cả nhân viên';
       case 'department':
-        return `Nhân viên theo phòng ban (${count} người)`;
+        return 'Nhân viên theo phòng ban';
       case 'position':
-        return `Nhân viên theo vị trí (${count} người)`;
+        return 'Nhân viên theo vị trí';
       case 'employee':
-        return `Nhân viên được chỉ định (${count} người)`;
+        return 'Nhân viên được chỉ định';
       default:
-        return `${count} người`;
+        return 'Toàn bộ nhân viên';
     }
   };
 
