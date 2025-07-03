@@ -31,7 +31,7 @@ import {
   Plus,
   Trash2
 } from 'lucide-react';
-import { useSaveRewardSettings, useSaveAlignmentSettings, useSaveAchievements } from '@/hooks/useOKRSystem';
+import { useSaveRewardSettings, useSaveAlignmentSettings, useSaveAchievements, useSaveNotificationSettings } from '@/hooks/useOKRSystem';
 import { useToast } from '@/hooks/use-toast';
 
 export function OKRSystemSettings() {
@@ -39,6 +39,7 @@ export function OKRSystemSettings() {
   const saveRewardSettings = useSaveRewardSettings();
   const saveAlignmentSettings = useSaveAlignmentSettings();
   const saveAchievements = useSaveAchievements();
+  const saveNotificationSettings = useSaveNotificationSettings();
   
   const [rewardSettings, setRewardSettings] = useState({
     enable_gamification: true,
@@ -88,6 +89,36 @@ export function OKRSystemSettings() {
       type: 'achievement'
     }
   ]);
+
+  const [notificationSettings, setNotificationSettings] = useState({
+    // Deadline notifications
+    deadline_7_days: true,
+    deadline_3_days: true,
+    deadline_overdue: true,
+    deadline_email: false,
+    
+    // Progress notifications
+    key_result_update: true,
+    okr_completion: true,
+    slow_progress: true,
+    weekly_checkin_reminder: true,
+    
+    // Collaboration notifications
+    mention_in_comment: true,
+    added_to_okr: true,
+    okr_linked: true,
+    approval_request: true,
+    
+    // Achievement notifications
+    new_achievement: true,
+    okr_coins_received: true,
+    leaderboard_rank_up: true,
+    cycle_ended: true,
+    
+    // Email settings
+    summary_frequency: 'weekly',
+    summary_time: '09:00'
+  });
 
   const handleSaveRewards = async () => {
     try {
@@ -145,6 +176,22 @@ export function OKRSystemSettings() {
       toast({
         title: "Lỗi",
         description: "Không thể lưu thành tựu",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSaveNotifications = async () => {
+    try {
+      await saveNotificationSettings.mutateAsync(notificationSettings);
+      toast({
+        title: "Thành công",
+        description: "Đã lưu cài đặt thông báo",
+      });
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể lưu cài đặt thông báo",
         variant: "destructive",
       });
     }
@@ -581,19 +628,39 @@ export function OKRSystemSettings() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center justify-between">
                     <Label>Nhắc nhở trước deadline 7 ngày</Label>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={notificationSettings.deadline_7_days}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, deadline_7_days: checked }))
+                      }
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>Nhắc nhở trước deadline 3 ngày</Label>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={notificationSettings.deadline_3_days}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, deadline_3_days: checked }))
+                      }
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>Thông báo quá deadline</Label>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={notificationSettings.deadline_overdue}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, deadline_overdue: checked }))
+                      }
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>Gửi email nhắc nhở</Label>
-                    <Switch />
+                    <Switch 
+                      checked={notificationSettings.deadline_email}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, deadline_email: checked }))
+                      }
+                    />
                   </div>
                 </div>
               </div>
@@ -605,19 +672,39 @@ export function OKRSystemSettings() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center justify-between">
                     <Label>Cập nhật Key Result</Label>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={notificationSettings.key_result_update}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, key_result_update: checked }))
+                      }
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>OKR hoàn thành</Label>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={notificationSettings.okr_completion}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, okr_completion: checked }))
+                      }
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>Tiến độ chậm (dưới 30%)</Label>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={notificationSettings.slow_progress}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, slow_progress: checked }))
+                      }
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>Nhắc nhở check-in hàng tuần</Label>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={notificationSettings.weekly_checkin_reminder}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, weekly_checkin_reminder: checked }))
+                      }
+                    />
                   </div>
                 </div>
               </div>
@@ -629,19 +716,39 @@ export function OKRSystemSettings() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center justify-between">
                     <Label>Được mention trong comment</Label>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={notificationSettings.mention_in_comment}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, mention_in_comment: checked }))
+                      }
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>Được thêm vào OKR</Label>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={notificationSettings.added_to_okr}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, added_to_okr: checked }))
+                      }
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>OKR được liên kết</Label>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={notificationSettings.okr_linked}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, okr_linked: checked }))
+                      }
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>Yêu cầu phê duyệt</Label>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={notificationSettings.approval_request}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, approval_request: checked }))
+                      }
+                    />
                   </div>
                 </div>
               </div>
@@ -653,19 +760,39 @@ export function OKRSystemSettings() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center justify-between">
                     <Label>Mở khóa thành tựu mới</Label>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={notificationSettings.new_achievement}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, new_achievement: checked }))
+                      }
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>Nhận OKR Coins</Label>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={notificationSettings.okr_coins_received}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, okr_coins_received: checked }))
+                      }
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>Tăng hạng trong bảng xếp hạng</Label>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={notificationSettings.leaderboard_rank_up}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, leaderboard_rank_up: checked }))
+                      }
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <Label>Chu kỳ OKR kết thúc</Label>
-                    <Switch defaultChecked />
+                    <Switch 
+                      checked={notificationSettings.cycle_ended}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings(prev => ({ ...prev, cycle_ended: checked }))
+                      }
+                    />
                   </div>
                 </div>
               </div>
@@ -677,7 +804,12 @@ export function OKRSystemSettings() {
                 <div className="grid grid-cols-1 gap-4">
                   <div className="flex items-center space-x-4">
                     <Label className="w-48">Tần suất gửi tóm tắt</Label>
-                    <Select defaultValue="weekly">
+                    <Select 
+                      value={notificationSettings.summary_frequency}
+                      onValueChange={(value) => 
+                        setNotificationSettings(prev => ({ ...prev, summary_frequency: value }))
+                      }
+                    >
                       <SelectTrigger className="w-48">
                         <SelectValue />
                       </SelectTrigger>
@@ -691,7 +823,12 @@ export function OKRSystemSettings() {
                   </div>
                   <div className="flex items-center space-x-4">
                     <Label className="w-48">Thời gian gửi</Label>
-                    <Select defaultValue="09:00">
+                    <Select 
+                      value={notificationSettings.summary_time}
+                      onValueChange={(value) => 
+                        setNotificationSettings(prev => ({ ...prev, summary_time: value }))
+                      }
+                    >
                       <SelectTrigger className="w-48">
                         <SelectValue />
                       </SelectTrigger>
@@ -708,9 +845,13 @@ export function OKRSystemSettings() {
                 </div>
               </div>
 
-              <Button className="w-full">
+              <Button 
+                onClick={handleSaveNotifications} 
+                disabled={saveNotificationSettings.isPending}
+                className="w-full"
+              >
                 <Save className="h-4 w-4 mr-2" />
-                Lưu cài đặt thông báo
+                {saveNotificationSettings.isPending ? 'Đang lưu...' : 'Lưu cài đặt thông báo'}
               </Button>
             </CardContent>
           </Card>

@@ -616,3 +616,28 @@ export function useSaveAchievements() {
     }
   });
 }
+
+// Notification Settings Management
+export function useSaveNotificationSettings() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (notificationSettings: any) => {
+      const { data, error } = await supabase
+        .from('okr_system_settings')
+        .upsert({
+          setting_type: 'notifications',
+          settings: notificationSettings,
+          updated_by: (await supabase.auth.getUser()).data.user?.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['okr-system-settings'] });
+    }
+  });
+}
