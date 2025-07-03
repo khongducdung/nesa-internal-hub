@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { 
   Lightbulb, 
   Plus, 
@@ -18,10 +18,11 @@ import {
   Clock,
   Users,
   Search,
-  Filter
+  Filter,
+  Eye
 } from 'lucide-react';
 import { useMyIdeas, useSharedIdeas, useCreateIdea, useUpdateIdea, useDeleteIdea, type Idea, type CreateIdeaData } from '@/hooks/useIdeas';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogOverlay } from '@/components/ui/dialog';
 
 interface IdeaFormData {
   title: string;
@@ -46,6 +47,7 @@ const priorityLabels = {
 export function IdeaWidget() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingIdea, setEditingIdea] = useState<Idea | null>(null);
+  const [viewingIdea, setViewingIdea] = useState<Idea | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterPriority, setFilterPriority] = useState<string>('all');
   
@@ -144,28 +146,39 @@ export function IdeaWidget() {
               >
                 <div className="flex items-start justify-between mb-2">
                   <h4 className="font-medium text-sm line-clamp-1 text-foreground">{idea.title}</h4>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {ideas === myIdeas && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0"
-                          onClick={() => handleEdit(idea)}
-                        >
-                          <Edit3 className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 text-red-500 hover:text-red-600"
-                          onClick={() => handleDelete(idea.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </>
-                    )}
-                  </div>
+                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                     <Button
+                       variant="ghost"
+                       size="sm"
+                       className="h-6 w-6 p-0"
+                       onClick={() => setViewingIdea(idea)}
+                       title="Xem chi tiết"
+                     >
+                       <Eye className="h-3 w-3" />
+                     </Button>
+                     {ideas === myIdeas && (
+                       <>
+                         <Button
+                           variant="ghost"
+                           size="sm"
+                           className="h-6 w-6 p-0"
+                           onClick={() => handleEdit(idea)}
+                           title="Chỉnh sửa"
+                         >
+                           <Edit3 className="h-3 w-3" />
+                         </Button>
+                         <Button
+                           variant="ghost"
+                           size="sm"
+                           className="h-6 w-6 p-0 text-red-500 hover:text-red-600"
+                           onClick={() => handleDelete(idea.id)}
+                           title="Xóa"
+                         >
+                           <Trash2 className="h-3 w-3" />
+                         </Button>
+                       </>
+                     )}
+                   </div>
                 </div>
                 
                 <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
@@ -233,7 +246,16 @@ export function IdeaWidget() {
                 <Plus className="h-4 w-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto"
+              style={{
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '90vw',
+                maxWidth: '900px'
+              }}
+            >
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Lightbulb className="h-5 w-5 text-yellow-500" />
@@ -253,17 +275,15 @@ export function IdeaWidget() {
                   />
                 </div>
                 
-                <div>
-                  <Label htmlFor="content">Nội dung *</Label>
-                  <Textarea
-                    id="content"
-                    value={formData.content}
-                    onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                    placeholder="Mô tả chi tiết ý tưởng của bạn..."
-                    rows={4}
-                    required
-                  />
-                </div>
+                 <div>
+                   <Label htmlFor="content">Nội dung *</Label>
+                   <RichTextEditor
+                     value={formData.content}
+                     onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
+                     placeholder="Mô tả chi tiết ý tưởng của bạn..."
+                     minHeight="120px"
+                   />
+                 </div>
                 
                 <div>
                   <Label htmlFor="tags">Tags</Label>
@@ -312,8 +332,88 @@ export function IdeaWidget() {
                 </div>
               </form>
             </DialogContent>
-          </Dialog>
-        </div>
+           </Dialog>
+
+           {/* View Idea Dialog */}
+           <Dialog open={!!viewingIdea} onOpenChange={() => setViewingIdea(null)}>
+             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto"
+               style={{
+                 position: 'fixed',
+                 top: '50%',
+                 left: '50%',
+                 transform: 'translate(-50%, -50%)',
+                 width: '90vw',
+                 maxWidth: '900px'
+               }}
+             >
+               <DialogHeader>
+                 <DialogTitle className="flex items-center gap-2">
+                   <Lightbulb className="h-5 w-5 text-yellow-500" />
+                   {viewingIdea?.title}
+                 </DialogTitle>
+               </DialogHeader>
+               
+               {viewingIdea && (
+                 <div className="space-y-6">
+                   <div className="flex items-center gap-4">
+                     <Badge variant="outline" className={`${priorityColors[viewingIdea.priority]}`}>
+                       Mức độ: {priorityLabels[viewingIdea.priority]}
+                     </Badge>
+                     {viewingIdea.is_shared && (
+                       <Badge variant="outline" className="bg-blue-100 text-blue-700">
+                         <Share2 className="h-3 w-3 mr-1" />
+                         Đã chia sẻ
+                       </Badge>
+                     )}
+                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                       <Clock className="h-3 w-3" />
+                       {new Date(viewingIdea.created_at).toLocaleDateString('vi-VN')}
+                     </div>
+                   </div>
+
+                   <div>
+                     <Label className="text-base font-medium">Nội dung:</Label>
+                     <div 
+                       className="mt-2 p-4 border rounded-lg bg-gray-50 prose prose-sm max-w-none"
+                       dangerouslySetInnerHTML={{ __html: viewingIdea.content }}
+                     />
+                   </div>
+
+                   {viewingIdea.tags.length > 0 && (
+                     <div>
+                       <Label className="text-base font-medium">Tags:</Label>
+                       <div className="flex flex-wrap gap-2 mt-2">
+                         {viewingIdea.tags.map((tag, index) => (
+                           <span
+                             key={index}
+                             className="inline-flex items-center text-sm bg-secondary text-secondary-foreground px-2 py-1 rounded"
+                           >
+                             <Tag className="h-3 w-3 mr-1" />
+                             {tag}
+                           </span>
+                         ))}
+                       </div>
+                     </div>
+                   )}
+
+                   <div className="flex justify-end gap-2 pt-4 border-t">
+                     <Button variant="outline" onClick={() => setViewingIdea(null)}>
+                       Đóng
+                     </Button>
+                     {viewingIdea.created_by === myIdeas.find(idea => idea.id === viewingIdea.id)?.created_by && (
+                       <Button onClick={() => {
+                         handleEdit(viewingIdea);
+                         setViewingIdea(null);
+                       }}>
+                         Chỉnh sửa
+                       </Button>
+                     )}
+                   </div>
+                 </div>
+               )}
+             </DialogContent>
+           </Dialog>
+         </div>
         
         {/* Search and Filter */}
         <div className="space-y-2">
