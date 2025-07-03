@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
+import { RightTaskbar } from './RightTaskbar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -40,6 +41,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </main>
         </div>
       </div>
+      
+      <RightTaskbar />
     </div>
   );
 }
