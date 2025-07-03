@@ -1,11 +1,11 @@
 
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { OKRDashboardSimple } from '@/components/okr/OKRDashboardSimple';
+import { OKRDashboard } from '@/components/okr/OKRDashboard';
 
 export default function OKR() {
   return (
     <DashboardLayout>
-      <OKRDashboardSimple />
+      <OKRDashboard />
     </DashboardLayout>
   );
 }
