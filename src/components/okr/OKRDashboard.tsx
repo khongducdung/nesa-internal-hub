@@ -102,11 +102,7 @@ export function OKRDashboard() {
         </div>
       </div>
 
-      {/* Cycle Progress */}
-      {dashboardStats}
-
-      {/* Stats Cards */}
-      {dashboardStats}
+      {/* Cycle Progress and Stats Cards are rendered below in the conditional block */}
 
       {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
