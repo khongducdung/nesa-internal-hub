@@ -659,3 +659,82 @@ export const useOKRLeaderboard = () => {
     }
   });
 };
+
+// Personal OKRs hook
+function useMyOKRs() {
+  return useQuery({
+    queryKey: ['my-okrs'],
+    queryFn: async () => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return [];
+
+      const { data: employee } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('auth_user_id', user.user.id)
+        .single();
+
+      if (!employee) return [];
+
+      const { data, error } = await supabase
+        .from('okr_objectives')
+        .select(`*,key_results:okr_key_results(*),employee:employees(id, full_name, employee_code)`)
+        .eq('owner_type', 'individual')
+        .eq('employee_id', employee.id)
+        .order('created_at', { ascending: false });
+
+      if (error) return [];
+      return (data || []).map(okr => ({
+        ...okr,
+        time_to_deadline: Math.ceil((new Date(okr.end_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+      }));
+    }
+  });
+}
+
+function useUpdateKeyResultProgress() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ keyResultId, newValue }: { keyResultId: string; newValue: number; }) => {
+      const { data, error } = await supabase
+        .from('okr_key_results')
+        .update({ current_value: newValue, progress: Math.min(100, (newValue / 100) * 100) })
+        .eq('id', keyResultId);
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-okrs'] })
+  });
+}
+
+function useCreateOKRCheckIn() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (checkIn: any) => {
+      const { data, error } = await supabase
+        .from('okr_check_ins')
+        .insert({ ...checkIn, created_by: (await supabase.auth.getUser()).data.user?.id });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-okrs'] })
+  });
+}
+
+// Export all hooks
+export {
+  useCreateOKR,
+  useUpdateOKR,
+  useDeleteOKR,
+  useCompanyOKRs,
+  useDepartmentOKRs,
+  useIndividualOKRs,
+  useMyOKRs,
+  useCurrentOKRCycle,
+  useOKRDashboardStats,
+  useCreateOKRCycle,
+  useOKRCycles,
+  useOKRLeaderboard,
+  useUpdateKeyResultProgress,
+  useCreateOKRCheckIn
+};

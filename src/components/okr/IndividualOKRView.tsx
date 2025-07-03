@@ -6,14 +6,15 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { User, Plus, Target, TrendingUp, AlertCircle, CheckCircle, Eye, Calendar, MessageCircle, Edit, Trash2 } from 'lucide-react';
 
-import { useMyOKRs } from '@/hooks/useOKRSystem';
+import { useMyOKRs, useUpdateKeyResultProgress } from '@/hooks/useOKRSystem';
 import { OKRDetailView } from './OKRDetailView';
 import { OKRGamificationPanel } from './OKRGamificationPanel';
 import { CreateOKRDialog } from './CreateOKRDialog';
 import { EditOKRDialog } from './EditOKRDialog';
 import { DeleteOKRDialog } from './DeleteOKRDialog';
 import { OKRCheckInDialog } from './OKRCheckInDialog';
-import type { OKRObjective } from '@/types/okr';
+import { KeyResultProgressDialog } from './KeyResultProgressDialog';
+import type { OKRObjective, KeyResult } from '@/types/okr';
 
 export function IndividualOKRView() {
   const { data: myOKRs = [], isLoading } = useMyOKRs();
@@ -22,6 +23,7 @@ export function IndividualOKRView() {
   const [editingOKR, setEditingOKR] = useState<OKRObjective | null>(null);
   const [deletingOKR, setDeletingOKR] = useState<OKRObjective | null>(null);
   const [checkInOKR, setCheckInOKR] = useState<OKRObjective | null>(null);
+  const [editingKeyResult, setEditingKeyResult] = useState<KeyResult | null>(null);
 
   if (isLoading) {
     return (
@@ -269,6 +271,12 @@ export function IndividualOKRView() {
         open={!!checkInOKR} 
         onOpenChange={(open) => !open && setCheckInOKR(null)}
         okr={checkInOKR}
+      />
+
+      <KeyResultProgressDialog 
+        open={!!editingKeyResult} 
+        onOpenChange={(open) => !open && setEditingKeyResult(null)}
+        keyResult={editingKeyResult}
       />
     </div>
   );

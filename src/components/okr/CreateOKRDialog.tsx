@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Trash2, Target } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useCreateOKR, useCompanyOKRs, useDepartmentOKRs } from '@/hooks/useOKRSystem';
+import { useCreateOKR, useCompanyOKRs, useDepartmentOKRs, useCurrentOKRCycle } from '@/hooks/useOKRSystem';
 import { useToast } from '@/hooks/use-toast';
+import { useDepartments } from '@/hooks/useDepartments';
+import { useEmployees } from '@/hooks/useEmployees';
 
 interface CreateOKRDialogProps {
   open: boolean;
@@ -31,6 +33,9 @@ export function CreateOKRDialog({ open, onOpenChange }: CreateOKRDialogProps) {
   const createOKR = useCreateOKR();
   const { data: companyOKRs = [] } = useCompanyOKRs();
   const { data: departmentOKRs = [] } = useDepartmentOKRs();
+  const { data: currentCycle } = useCurrentOKRCycle();
+  const { data: departments = [] } = useDepartments();
+  const { data: employees = [] } = useEmployees();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -181,6 +186,54 @@ export function CreateOKRDialog({ open, onOpenChange }: CreateOKRDialogProps) {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Department Selection for Department OKRs */}
+              {formData.owner_type === 'department' && (
+                <div>
+                  <Label htmlFor="department">Phòng ban *</Label>
+                  <Select 
+                    value={formData.department_id} 
+                    onValueChange={(value) => 
+                      setFormData(prev => ({ ...prev, department_id: value }))
+                    }
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Chọn phòng ban" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Employee Selection for Individual OKRs */}
+              {formData.owner_type === 'individual' && (
+                <div>
+                  <Label htmlFor="employee">Nhân viên *</Label>
+                  <Select 
+                    value={formData.employee_id} 
+                    onValueChange={(value) => 
+                      setFormData(prev => ({ ...prev, employee_id: value }))
+                    }
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Chọn nhân viên" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {employees.map((emp) => (
+                        <SelectItem key={emp.id} value={emp.id}>
+                          {emp.full_name} ({emp.employee_code})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {/* Parent OKR Selection */}
               {formData.owner_type !== 'company' && (

@@ -1,200 +1,208 @@
-// Key Result Progress Update Dialog - Cập nhật tiến độ Key Result
+// Key Result Progress Dialog - Dialog for updating key result progress
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, TrendingDown, Target, AlertCircle, CheckCircle } from 'lucide-react';
+import { TrendingUp, Target, Plus, Minus } from 'lucide-react';
+import { useUpdateKeyResultProgress } from '@/hooks/useOKRSystem';
+import { useToast } from '@/hooks/use-toast';
 import type { KeyResult } from '@/types/okr';
-import { useUpdateKeyResult } from '@/hooks/useOKRSystem';
 
 interface KeyResultProgressDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  keyResult: KeyResult;
+  keyResult?: KeyResult | null;
 }
 
 export function KeyResultProgressDialog({ open, onOpenChange, keyResult }: KeyResultProgressDialogProps) {
-  const [currentValue, setCurrentValue] = useState(keyResult.current_value);
+  const { toast } = useToast();
+  const updateProgress = useUpdateKeyResultProgress();
+  
+  const [newValue, setNewValue] = useState(keyResult?.current_value || 0);
   const [notes, setNotes] = useState('');
-  const [status, setStatus] = useState<'not_started' | 'on_track' | 'at_risk' | 'completed'>(keyResult.status);
-  
-  const updateKeyResult = useUpdateKeyResult();
-  
-  const calculatedProgress = keyResult.target_value > 0 
-    ? Math.min(100, Math.round((currentValue / keyResult.target_value) * 100))
-    : 0;
-  
-  const progressChange = calculatedProgress - keyResult.progress;
-  
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-500';
-      case 'on_track': return 'bg-blue-500';
-      case 'at_risk': return 'bg-yellow-500';
-      case 'not_started': return 'bg-gray-500';
-      default: return 'bg-gray-500';
+
+  React.useEffect(() => {
+    if (keyResult) {
+      setNewValue(keyResult.current_value);
+      setNotes('');
     }
-  };
-  
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed': return <CheckCircle className="h-4 w-4" />;
-      case 'on_track': return <TrendingUp className="h-4 w-4" />;
-      case 'at_risk': return <AlertCircle className="h-4 w-4" />;
-      case 'not_started': return <Target className="h-4 w-4" />;
-      default: return <Target className="h-4 w-4" />;
-    }
-  };
+  }, [keyResult]);
 
   const handleSubmit = () => {
-    updateKeyResult.mutate({
-      id: keyResult.id,
-      current_value: currentValue,
-      progress: calculatedProgress,
-      status: calculatedProgress >= 100 ? 'completed' : status,
-      notes
+    if (!keyResult) return;
+
+    updateProgress.mutate({
+      keyResultId: keyResult.id,
+      newValue,
+      notes: notes.trim() || undefined
     }, {
       onSuccess: () => {
+        toast({
+          title: "Thành công",
+          description: "Đã cập nhật tiến độ Key Result"
+        });
         onOpenChange(false);
-        setNotes('');
       }
     });
   };
+
+  const calculateProgress = () => {
+    if (!keyResult) return 0;
+    return Math.min(100, Math.max(0, (newValue / keyResult.target_value) * 100));
+  };
+
+  const handleQuickUpdate = (increment: number) => {
+    if (!keyResult) return;
+    const step = keyResult.target_value * 0.1; // 10% của target
+    setNewValue(prev => Math.max(0, Math.min(keyResult.target_value, prev + (increment * step))));
+  };
+
+  if (!keyResult) return null;
+
+  const currentProgress = calculateProgress();
+  const progressDiff = currentProgress - keyResult.progress;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
+            <TrendingUp className="h-5 w-5" />
             Cập nhật tiến độ Key Result
           </DialogTitle>
           <DialogDescription>
-            {keyResult.title}
+            Cập nhật giá trị hiện tại và theo dõi tiến độ
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Current Progress Overview */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Tình trạng hiện tại</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className={`${getStatusColor(keyResult.status)} text-white`}>
-                    {getStatusIcon(keyResult.status)}
-                    <span className="ml-1">
-                      {keyResult.status === 'completed' ? 'Hoàn thành' :
-                       keyResult.status === 'on_track' ? 'Đúng tiến độ' :
-                       keyResult.status === 'at_risk' ? 'Có rủi ro' : 'Chưa bắt đầu'}
-                    </span>
-                  </Badge>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold">{keyResult.progress}%</div>
-                  <div className="text-sm text-muted-foreground">
-                    {keyResult.current_value} / {keyResult.target_value} {keyResult.unit}
-                  </div>
-                </div>
-              </div>
-              <Progress value={keyResult.progress} className="h-2" />
-            </CardContent>
-          </Card>
-
-          {/* Update Form */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="current_value">Giá trị hiện tại *</Label>
-              <Input
-                id="current_value"
-                type="number"
-                value={currentValue}
-                onChange={(e) => setCurrentValue(parseFloat(e.target.value) || 0)}
-                placeholder={`Nhập giá trị (${keyResult.unit})`}
-                className="mt-1"
-              />
-              <div className="text-sm text-muted-foreground mt-1">
+          {/* Key Result Info */}
+          <div className="bg-muted/50 p-4 rounded-lg">
+            <h4 className="font-medium mb-2">{keyResult.title}</h4>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <Badge variant="outline">
+                <Target className="h-3 w-3 mr-1" />
                 Mục tiêu: {keyResult.target_value} {keyResult.unit}
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="status">Trạng thái</Label>
-              <Select value={status} onValueChange={(value: any) => setStatus(value)}>
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Chọn trạng thái" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="not_started">Chưa bắt đầu</SelectItem>
-                  <SelectItem value="on_track">Đúng tiến độ</SelectItem>
-                  <SelectItem value="at_risk">Có rủi ro</SelectItem>
-                  <SelectItem value="completed">Hoàn thành</SelectItem>
-                </SelectContent>
-              </Select>
+              </Badge>
+              <Badge variant="outline">
+                Hiện tại: {keyResult.current_value} {keyResult.unit}
+              </Badge>
+              <Badge variant="outline">
+                {keyResult.progress}% hoàn thành
+              </Badge>
             </div>
           </div>
 
-          {/* New Progress Preview */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                {progressChange > 0 ? (
-                  <TrendingUp className="h-5 w-5 text-green-600" />
-                ) : progressChange < 0 ? (
-                  <TrendingDown className="h-5 w-5 text-red-600" />
-                ) : (
-                  <Target className="h-5 w-5 text-gray-600" />
-                )}
-                Tiến độ mới
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className={`${getStatusColor(calculatedProgress >= 100 ? 'completed' : status)} text-white`}>
-                    {getStatusIcon(calculatedProgress >= 100 ? 'completed' : status)}
-                    <span className="ml-1">
-                      {calculatedProgress >= 100 ? 'Hoàn thành' :
-                       status === 'on_track' ? 'Đúng tiến độ' :
-                       status === 'at_risk' ? 'Có rủi ro' : 'Chưa bắt đầu'}
-                    </span>
+          {/* Quick Update Buttons */}
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleQuickUpdate(-1)}
+              disabled={newValue <= 0}
+            >
+              <Minus className="h-4 w-4" />
+              -10%
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleQuickUpdate(1)}
+              disabled={newValue >= keyResult.target_value}
+            >
+              <Plus className="h-4 w-4" />
+              +10%
+            </Button>
+            <span className="text-sm text-muted-foreground ml-2">
+              Cập nhật nhanh theo 10% mục tiêu
+            </span>
+          </div>
+
+          {/* Current Value */}
+          <div>
+            <Label htmlFor="current_value">Giá trị hiện tại *</Label>
+            <div className="flex items-center gap-2 mt-1">
+              <Input
+                id="current_value"
+                type="number"
+                min="0"
+                max={keyResult.target_value}
+                value={newValue}
+                onChange={(e) => setNewValue(parseFloat(e.target.value) || 0)}
+                className="flex-1"
+              />
+              <span className="text-sm text-muted-foreground min-w-fit">
+                {keyResult.unit}
+              </span>
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Từ 0 đến {keyResult.target_value} {keyResult.unit}
+            </div>
+          </div>
+
+          {/* Progress Preview */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Tiến độ mới</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">
+                  {currentProgress.toFixed(1)}%
+                </span>
+                {progressDiff !== 0 && (
+                  <Badge variant={progressDiff > 0 ? 'default' : 'destructive'} className="text-xs">
+                    {progressDiff > 0 ? '+' : ''}{progressDiff.toFixed(1)}%
                   </Badge>
-                  {progressChange !== 0 && (
-                    <Badge variant={progressChange > 0 ? 'default' : 'destructive'}>
-                      {progressChange > 0 ? '+' : ''}{progressChange.toFixed(1)}%
-                    </Badge>
-                  )}
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold">{calculatedProgress}%</div>
-                  <div className="text-sm text-muted-foreground">
-                    {currentValue} / {keyResult.target_value} {keyResult.unit}
-                  </div>
-                </div>
+                )}
               </div>
-              <Progress value={calculatedProgress} className="h-2" />
-            </CardContent>
-          </Card>
+            </div>
+            <Progress value={currentProgress} className="h-3" />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>0%</span>
+              <span>50%</span>
+              <span>100%</span>
+            </div>
+          </div>
 
           {/* Notes */}
           <div>
-            <Label htmlFor="notes">Ghi chú về tiến độ</Label>
+            <Label htmlFor="notes">Ghi chú về cập nhật</Label>
             <Textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Mô tả về tiến độ, thách thức, kế hoạch tiếp theo..."
+              placeholder="Mô tả về việc cập nhật tiến độ, nguồn dữ liệu, thành tựu đạt được..."
               className="mt-1"
               rows={3}
             />
+          </div>
+
+          {/* Preview Summary */}
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <h4 className="font-medium text-blue-900 mb-2">Tóm tắt cập nhật</h4>
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span>Giá trị cũ:</span>
+                <span>{keyResult.current_value} {keyResult.unit}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Giá trị mới:</span>
+                <span className="font-medium">{newValue} {keyResult.unit}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Thay đổi:</span>
+                <span className={newValue > keyResult.current_value ? 'text-green-600 font-medium' : newValue < keyResult.current_value ? 'text-red-600 font-medium' : ''}>
+                  {newValue > keyResult.current_value ? '+' : ''}{(newValue - keyResult.current_value).toFixed(1)} {keyResult.unit}
+                </span>
+              </div>
+              <div className="flex justify-between border-t pt-1">
+                <span>Tiến độ mới:</span>
+                <span className="font-medium">{currentProgress.toFixed(1)}%</span>
+              </div>
+            </div>
           </div>
 
           {/* Actions */}
@@ -202,8 +210,11 @@ export function KeyResultProgressDialog({ open, onOpenChange, keyResult }: KeyRe
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Hủy
             </Button>
-            <Button onClick={handleSubmit} disabled={updateKeyResult.isPending}>
-              {updateKeyResult.isPending ? 'Đang cập nhật...' : 'Cập nhật tiến độ'}
+            <Button 
+              onClick={handleSubmit} 
+              disabled={updateProgress.isPending || newValue === keyResult.current_value}
+            >
+              {updateProgress.isPending ? 'Đang cập nhật...' : 'Cập nhật tiến độ'}
             </Button>
           </div>
         </div>

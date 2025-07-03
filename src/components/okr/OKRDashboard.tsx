@@ -260,9 +260,131 @@ export function OKRDashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          {/* Enhanced Overview Section */}
+          {/* Cycle Progress - Enhanced like the image */}
+          {dashboardStats && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Tiến độ chu kỳ
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-primary mb-2">
+                      {dashboardStats.cycle_progress.progress_percentage}%
+                    </div>
+                    <div className="text-sm font-medium text-muted-foreground mb-3">Hoàn thành</div>
+                    <Progress 
+                      value={dashboardStats.cycle_progress.progress_percentage} 
+                      className="h-3 rounded-full" 
+                    />
+                  </div>
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-blue-600 mb-2">
+                      {dashboardStats.cycle_progress.completed_days}
+                    </div>
+                    <div className="text-sm font-medium text-muted-foreground">Ngày đã qua</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-orange-600 mb-2">
+                      {dashboardStats.cycle_progress.remaining_days}
+                    </div>
+                    <div className="text-sm font-medium text-muted-foreground">Ngày còn lại</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-gray-700 mb-2">
+                      {dashboardStats.cycle_progress.total_days}
+                    </div>
+                    <div className="text-sm font-medium text-muted-foreground">Tổng số ngày</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Main Stats - Like the image layout */}
+          {dashboardStats && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Tổng số OKR</CardTitle>
+                  <Target className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">{dashboardStats.okr_summary.total}</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {dashboardStats.okr_summary.completed} hoàn thành
+                  </div>
+                  <Progress 
+                    value={dashboardStats.okr_summary.total > 0 ? (dashboardStats.okr_summary.completed / dashboardStats.okr_summary.total) * 100 : 0} 
+                    className="mt-2 h-1"
+                  />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Đúng tiến độ</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-green-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-green-600">
+                    {dashboardStats.okr_summary.on_track}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {dashboardStats.okr_summary.total > 0 ? Math.round((dashboardStats.okr_summary.on_track / dashboardStats.okr_summary.total) * 100) : 0}%
+                  </div>
+                  <Progress 
+                    value={dashboardStats.okr_summary.total > 0 ? (dashboardStats.okr_summary.on_track / dashboardStats.okr_summary.total) * 100 : 0} 
+                    className="mt-2 h-1"
+                  />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Có rủi ro</CardTitle>
+                  <AlertCircle className="h-4 w-4 text-yellow-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-yellow-600">
+                    {dashboardStats.okr_summary.at_risk}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {dashboardStats.okr_summary.total > 0 ? Math.round((dashboardStats.okr_summary.at_risk / dashboardStats.okr_summary.total) * 100) : 0}%
+                  </div>
+                  <Progress 
+                    value={dashboardStats.okr_summary.total > 0 ? (dashboardStats.okr_summary.at_risk / dashboardStats.okr_summary.total) * 100 : 0} 
+                    className="mt-2 h-1"
+                  />
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Quá hạn</CardTitle>
+                  <Clock className="h-4 w-4 text-red-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-red-600">
+                    {dashboardStats.okr_summary.overdue}
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {dashboardStats.okr_summary.total > 0 ? Math.round((dashboardStats.okr_summary.overdue / dashboardStats.okr_summary.total) * 100) : 0}%
+                  </div>
+                  <Progress 
+                    value={dashboardStats.okr_summary.total > 0 ? (dashboardStats.okr_summary.overdue / dashboardStats.okr_summary.total) * 100 : 0} 
+                    className="mt-2 h-1"
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Level-specific OKRs */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-            {/* Company Level OKRs */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">OKR Công ty</CardTitle>
@@ -278,7 +400,6 @@ export function OKRDashboard() {
               </CardContent>
             </Card>
 
-            {/* Department Level OKRs */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">OKR Phòng ban</CardTitle>
@@ -294,7 +415,6 @@ export function OKRDashboard() {
               </CardContent>
             </Card>
 
-            {/* Individual Level OKRs */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">OKR Cá nhân</CardTitle>
@@ -310,7 +430,6 @@ export function OKRDashboard() {
               </CardContent>
             </Card>
 
-            {/* Total Alignment Score */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Điểm liên kết</CardTitle>
