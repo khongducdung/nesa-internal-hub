@@ -1,58 +1,97 @@
-import React from 'react';
-import { Settings, Bell, MessageCircle, Calendar, Search, Plus, Home, User, BarChart3, FileText } from 'lucide-react';
+import React, { useState } from 'react';
+import { Settings, Bell, MessageCircle, Calendar, Search, Plus } from 'lucide-react';
 
 export function RightTaskbar() {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
+
   const utilities = [
-    { icon: Home, label: 'Trang chủ', color: 'from-blue-500 to-blue-600' },
-    { icon: User, label: 'Hồ sơ', color: 'from-green-500 to-green-600' },
-    { icon: BarChart3, label: 'Thống kê', color: 'from-purple-500 to-purple-600' },
-    { icon: FileText, label: 'Báo cáo', color: 'from-orange-500 to-orange-600' },
-    { icon: Bell, label: 'Thông báo', color: 'from-red-500 to-red-600' },
-    { icon: MessageCircle, label: 'Tin nhắn', color: 'from-teal-500 to-teal-600' },
-    { icon: Calendar, label: 'Lịch', color: 'from-indigo-500 to-indigo-600' },
-    { icon: Search, label: 'Tìm kiếm', color: 'from-pink-500 to-pink-600' },
-    { icon: Settings, label: 'Cài đặt', color: 'from-gray-500 to-gray-600' },
-    { icon: Plus, label: 'Thêm tiện ích', color: 'from-emerald-500 to-emerald-600' },
+    { icon: Plus, label: 'Thêm tiện ích', color: 'text-blue-600' },
+    { icon: Settings, label: 'Cài đặt', color: 'text-slate-600' },
+    { icon: Bell, label: 'Thông báo', color: 'text-amber-600' },
+    { icon: MessageCircle, label: 'Tin nhắn', color: 'text-green-600' },
+    { icon: Calendar, label: 'Lịch', color: 'text-purple-600' },
+    { icon: Search, label: 'Tìm kiếm', color: 'text-orange-600' },
   ];
 
+  const handleMouseEnter = () => {
+    setIsVisible(true);
+    setIsHovering(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsVisible(false);
+    setIsHovering(false);
+  };
+
   return (
-    <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50">
-      <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-4">
-        <div className="flex flex-col gap-3">
+    <div className="fixed right-0 top-0 h-full z-[9999] pointer-events-none">
+      {/* Hover trigger area - wider and more visible */}
+      <div
+        className="absolute right-0 top-0 w-8 h-full bg-transparent pointer-events-auto cursor-pointer"
+        onMouseEnter={handleMouseEnter}
+      />
+
+      {/* Taskbar */}
+      <div
+        className={`
+          absolute right-3 top-1/2 -translate-y-1/2
+          w-16 px-3 py-4
+          bg-white/90 backdrop-blur-xl
+          border border-gray-200/50 shadow-2xl
+          rounded-2xl
+          transition-all duration-300 ease-out
+          pointer-events-auto
+          ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'}
+        `}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className="flex flex-col items-center space-y-3">
           {utilities.map((utility, index) => (
             <button
               key={index}
               className={`
-                relative group w-14 h-14 rounded-2xl
-                bg-gradient-to-br ${utility.color}
-                hover:scale-110 hover:rotate-3 
-                transition-all duration-300 ease-out
-                shadow-lg hover:shadow-xl
+                w-10 h-10 rounded-xl
+                bg-white/80 hover:bg-white
+                border border-gray-200/50 hover:border-gray-300
                 flex items-center justify-center
-                overflow-hidden
+                transition-all duration-200
+                hover:scale-110 hover:shadow-md
+                group relative
               `}
               title={utility.label}
-              onClick={() => alert(`Clicked: ${utility.label}`)}
+              onClick={() => console.log(`Clicked: ${utility.label}`)}
             >
-              {/* Background glow effect */}
-              <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              
-              {/* Icon */}
-              <utility.icon className="w-6 h-6 text-white z-10 group-hover:scale-110 transition-transform duration-300" />
+              <utility.icon className={`w-5 h-5 ${utility.color} group-hover:scale-110 transition-transform`} />
               
               {/* Tooltip */}
-              <div className="absolute right-full mr-3 px-3 py-2 bg-gray-900/90 backdrop-blur-sm text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap translate-x-2 group-hover:translate-x-0">
+              <div className="absolute right-full mr-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                 {utility.label}
-                <div className="absolute left-full top-1/2 -translate-y-1/2 border-l-4 border-l-gray-900/90 border-y-4 border-y-transparent"></div>
               </div>
             </button>
           ))}
         </div>
-        
-        {/* Decorative elements */}
-        <div className="absolute -top-2 -left-2 w-4 h-4 bg-blue-500/30 rounded-full blur-sm"></div>
-        <div className="absolute -bottom-2 -right-2 w-3 h-3 bg-purple-500/30 rounded-full blur-sm"></div>
+
+        {/* Indicator dot */}
+        <div className="absolute -left-1.5 top-1/2 -translate-y-1/2">
+          <div className="w-3 h-3 rounded-full bg-blue-500 shadow-lg" />
+        </div>
       </div>
+
+      {/* Always visible indicator when hidden */}
+      <div 
+        className={`
+          absolute right-0 top-1/2 -translate-y-1/2 
+          w-2 h-12 
+          bg-gradient-to-b from-blue-500 to-purple-500 
+          rounded-l-lg shadow-lg
+          transition-all duration-300
+          pointer-events-auto cursor-pointer
+          ${isHovering ? 'opacity-100 w-3' : 'opacity-70 hover:opacity-100 hover:w-3'}
+        `}
+        onMouseEnter={handleMouseEnter}
+      />
     </div>
   );
 }
