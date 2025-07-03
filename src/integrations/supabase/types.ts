@@ -2480,6 +2480,33 @@ export type Database = {
         }
         Relationships: []
       }
+      okr_system_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          setting_type: string
+          settings: Json
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          setting_type: string
+          settings?: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          setting_type?: string
+          settings?: Json
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       okr_user_achievements: {
         Row: {
           achievement_id: string

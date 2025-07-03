@@ -596,13 +596,20 @@ export function useSaveAchievements() {
   
   return useMutation({
     mutationFn: async (achievements: any[]) => {
-      const { data, error } = await supabase
-        .from('okr_achievements')
-        .upsert(achievements)
-        .select();
-
-      if (error) throw error;
-      return data;
+      const promises = achievements.map(achievement => 
+        supabase
+          .from('okr_achievements')
+          .upsert({
+            ...achievement,
+            icon: typeof achievement.icon === 'string' ? achievement.icon : '🏆'
+          })
+      );
+      
+      const results = await Promise.all(promises);
+      const error = results.find(result => result.error);
+      if (error?.error) throw error.error;
+      
+      return results.map(result => result.data).flat();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['okr-achievements'] });
