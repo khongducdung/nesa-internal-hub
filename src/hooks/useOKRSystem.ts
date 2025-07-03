@@ -539,3 +539,73 @@ export function useCreateOKRCheckIn() {
     }
   });
 }
+
+// Reward System Management
+export function useSaveRewardSettings() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (settings: any) => {
+      const { data, error } = await supabase
+        .from('okr_system_settings')
+        .upsert({
+          setting_type: 'rewards',
+          settings: settings,
+          updated_by: (await supabase.auth.getUser()).data.user?.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['okr-system-settings'] });
+    }
+  });
+}
+
+// Alignment Settings Management
+export function useSaveAlignmentSettings() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (settings: any) => {
+      const { data, error } = await supabase
+        .from('okr_system_settings')
+        .upsert({
+          setting_type: 'alignment',
+          settings: settings,
+          updated_by: (await supabase.auth.getUser()).data.user?.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['okr-system-settings'] });
+    }
+  });
+}
+
+// Achievement Management
+export function useSaveAchievements() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (achievements: any[]) => {
+      const { data, error } = await supabase
+        .from('okr_achievements')
+        .upsert(achievements)
+        .select();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['okr-achievements'] });
+    }
+  });
+}

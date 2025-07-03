@@ -25,6 +25,11 @@ import {
 } from 'lucide-react';
 
 export function OKRSystemSettings() {
+  const { toast } = useToast();
+  const saveRewardSettings = useSaveRewardSettings();
+  const saveAlignmentSettings = useSaveAlignmentSettings();
+  const saveAchievements = useSaveAchievements();
+  
   const [rewardSettings, setRewardSettings] = useState({
     enable_gamification: true,
     okr_completion_coins: 100,
@@ -69,14 +74,36 @@ export function OKRSystemSettings() {
     auto_status_update: true
   });
 
-  const handleSaveRewards = () => {
-    // TODO: Save reward settings to database
-    console.log('Saving reward settings:', rewardSettings);
+  const handleSaveRewards = async () => {
+    try {
+      await saveRewardSettings.mutateAsync(rewardSettings);
+      toast({
+        title: "Thành công",
+        description: "Đã lưu cài đặt hệ thống thưởng",
+      });
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể lưu cài đặt",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleSaveAlignment = () => {
-    // TODO: Save alignment settings to database
-    console.log('Saving alignment settings:', alignmentSettings);
+  const handleSaveAlignment = async () => {
+    try {
+      await saveAlignmentSettings.mutateAsync(alignmentSettings);
+      toast({
+        title: "Thành công", 
+        description: "Đã lưu cài đặt liên kết OKR",
+      });
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể lưu cài đặt liên kết",
+        variant: "destructive",
+      });
+    }
   };
 
   const addNewAchievement = () => {
