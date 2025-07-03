@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Settings, Bell, MessageCircle, Calendar, Search, Plus, Lightbulb } from 'lucide-react';
 import { IdeaWidget } from '@/components/widgets/IdeaWidget';
@@ -41,8 +42,12 @@ export function RightTaskbar() {
     }
   };
 
+  const handleOverlayClick = () => {
+    setActiveWidget(null);
+  };
+
   return (
-    <div className="fixed right-0 top-0 h-full z-[9999] pointer-events-none">
+    <div className="fixed right-0 top-0 h-full z-[40] pointer-events-none">
       {/* Hover trigger area - wider and more visible */}
       <div
         className="absolute right-0 top-0 w-8 h-full bg-transparent pointer-events-auto cursor-pointer"
@@ -52,8 +57,8 @@ export function RightTaskbar() {
       {/* Overlay */}
       {activeWidget && (
         <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-          onClick={() => setActiveWidget(null)}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+          onClick={handleOverlayClick}
         />
       )}
 
@@ -78,6 +83,7 @@ export function RightTaskbar() {
           rounded-2xl
           transition-all duration-300 ease-out
           pointer-events-auto
+          z-[45]
           ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'}
         `}
         onMouseEnter={handleMouseEnter}
@@ -128,6 +134,7 @@ export function RightTaskbar() {
           rounded-l-lg shadow-lg
           transition-all duration-300
           pointer-events-auto cursor-pointer
+          z-[45]
           ${isHovering ? 'opacity-100 w-3' : 'opacity-70 hover:opacity-100 hover:w-3'}
         `}
         onMouseEnter={handleMouseEnter}
