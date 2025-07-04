@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -96,6 +97,7 @@ export const useUpdateSystemSetting = () => {
     },
     onSuccess: ({ key }) => {
       queryClient.invalidateQueries({ queryKey: ['system-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['system-overview'] });
       toast({
         title: 'Thành công',
         description: `Cập nhật cài đặt "${key}" thành công`
@@ -121,7 +123,7 @@ export const useSystemStats = () => {
       
       return data as unknown as SystemStats;
     },
-    refetchInterval: 30000 // Refresh mỗi 30 giây
+    refetchInterval: 30000 // Refresh every 30 seconds
   });
 };
 

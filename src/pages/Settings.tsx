@@ -1,10 +1,12 @@
+
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SystemOverviewCard } from '@/components/settings/SystemOverviewCard';
-import { SystemConfigCard } from '@/components/settings/SystemConfigCard';
+import { SystemHealthCard } from '@/components/settings/SystemHealthCard';
+import { DeploymentConfigCard } from '@/components/settings/DeploymentConfigCard';
+import { PerformanceMonitorCard } from '@/components/settings/PerformanceMonitorCard';
+import { IntegrationConfigCard } from '@/components/settings/IntegrationConfigCard';
 import { UserManagementCard } from '@/components/settings/UserManagementCard';
 import { SecurityCard } from '@/components/settings/SecurityCard';
-import { NotificationsCard } from '@/components/settings/NotificationsCard';
-import { APIConfigCard } from '@/components/settings/APIConfigCard';
 import { SystemLogsCard } from '@/components/settings/SystemLogsCard';
 
 export default function Settings() {
@@ -15,7 +17,7 @@ export default function Settings() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Cài đặt hệ thống</h1>
           <p className="text-muted-foreground mt-2">
-            Quản lý cấu hình, bảo mật và các thiết lập hệ thống NESA
+            Quản lý cấu hình, triển khai và giám sát hệ thống NESA
           </p>
         </div>
 
@@ -24,21 +26,30 @@ export default function Settings() {
           <SystemOverviewCard />
         </div>
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        {/* System Health - Full Width */}
+        <div className="mb-8">
+          <SystemHealthCard />
+        </div>
+
+        {/* Configuration Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
           {/* Left Column */}
           <div className="space-y-8">
-            <SystemConfigCard />
-            <SecurityCard />
-            <NotificationsCard />
+            <DeploymentConfigCard />
+            <IntegrationConfigCard />
           </div>
 
           {/* Right Column */}
           <div className="space-y-8">
-            <UserManagementCard />
-            <APIConfigCard />
-            <SystemLogsCard />
+            <PerformanceMonitorCard />
+            <SecurityCard />
           </div>
+        </div>
+
+        {/* Management & Logs Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <UserManagementCard />
+          <SystemLogsCard />
         </div>
       </div>
     </DashboardLayout>
