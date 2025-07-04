@@ -21,11 +21,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Edit, Trash2, Plus, Search } from 'lucide-react';
+import { Edit, Trash2, Plus, Search, Award, FileText } from 'lucide-react';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useDeleteEmployee } from '@/hooks/useEmployeeMutations';
 import { EmployeeEditDialog } from './EmployeeEditDialog';
 import { EmployeeFormDialog } from './EmployeeFormDialog';
+import { CompetencyFrameworkViewDialog } from './CompetencyFrameworkViewDialog';
+import { EmployeeJobDescriptionDialog } from './EmployeeJobDescriptionDialog';
 
 export function EmployeeList() {
   const { data: employees, isLoading } = useEmployees();
@@ -34,6 +36,8 @@ export function EmployeeList() {
   const [deletingEmployee, setDeletingEmployee] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewingCompetencyEmployee, setViewingCompetencyEmployee] = useState<string | null>(null);
+  const [viewingJobDescEmployee, setViewingJobDescEmployee] = useState<string | null>(null);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -129,25 +133,43 @@ export function EmployeeList() {
                   <TableCell>{employee.positions?.name || 'N/A'}</TableCell>
                   <TableCell>{getLevelBadge(employee.employee_level || 'level_3')}</TableCell>
                   <TableCell>{getStatusBadge(employee.work_status || 'active')}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditingEmployee(employee.id)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setDeletingEmployee(employee.id)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                   <TableCell className="text-right">
+                     <div className="flex items-center justify-end gap-2">
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => setViewingCompetencyEmployee(employee.id)}
+                         title="Xem khung năng lực"
+                       >
+                         <Award className="h-4 w-4" />
+                       </Button>
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => setViewingJobDescEmployee(employee.id)}
+                         title="Xem mô tả công việc"
+                       >
+                         <FileText className="h-4 w-4" />
+                       </Button>
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => setEditingEmployee(employee.id)}
+                         title="Chỉnh sửa"
+                       >
+                         <Edit className="h-4 w-4" />
+                       </Button>
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => setDeletingEmployee(employee.id)}
+                         className="text-red-600 hover:text-red-700"
+                         title="Xóa"
+                       >
+                         <Trash2 className="h-4 w-4" />
+                       </Button>
+                     </div>
+                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -167,6 +189,24 @@ export function EmployeeList() {
           employeeId={editingEmployee}
           open={!!editingEmployee}
           onClose={() => setEditingEmployee(null)}
+        />
+      )}
+
+      {/* Competency Framework Dialog */}
+      {viewingCompetencyEmployee && (
+        <CompetencyFrameworkViewDialog
+          open={!!viewingCompetencyEmployee}
+          onClose={() => setViewingCompetencyEmployee(null)}
+          frameworkId={employees?.find(emp => emp.id === viewingCompetencyEmployee)?.position_id}
+        />
+      )}
+
+      {/* Job Description Dialog */}
+      {viewingJobDescEmployee && (
+        <EmployeeJobDescriptionDialog
+          open={!!viewingJobDescEmployee}
+          onClose={() => setViewingJobDescEmployee(null)}
+          employeeId={viewingJobDescEmployee}
         />
       )}
 
