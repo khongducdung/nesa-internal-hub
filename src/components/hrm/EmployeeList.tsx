@@ -198,6 +198,7 @@ export function EmployeeList() {
           open={!!viewingCompetencyEmployee}
           onClose={() => setViewingCompetencyEmployee(null)}
           frameworkId={employees?.find(emp => emp.id === viewingCompetencyEmployee)?.position_id}
+          employeeId={viewingCompetencyEmployee}
         />
       )}
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useEmployees } from '@/hooks/useEmployees';
 
 interface EmployeeJobDescriptionDialogProps {
@@ -37,13 +38,17 @@ export function EmployeeJobDescriptionDialog({ open, onClose, employeeId }: Empl
         </DialogHeader>
         
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+          <div className="flex items-start gap-4">
+            <Avatar className="h-16 w-16">
+              <AvatarImage src={employee.avatar_url || undefined} alt={employee.full_name} />
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
+                {employee.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
               <h3 className="font-semibold text-lg">{employee.full_name}</h3>
-              <p className="text-sm text-muted-foreground">Mã NV: {employee.employee_code}</p>
-            </div>
-            <div className="flex justify-end items-start">
-              <Badge className="bg-blue-100 text-blue-800">
+              <p className="text-sm text-muted-foreground mb-2">Mã NV: {employee.employee_code}</p>
+              <Badge className="bg-primary/10 text-primary">
                 {employee.positions?.name || 'Chưa có chức vụ'}
               </Badge>
             </div>

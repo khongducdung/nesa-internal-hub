@@ -3,16 +3,22 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useCompetencyFramework } from '@/hooks/useCompetencyFrameworks';
+import { useEmployees } from '@/hooks/useEmployees';
 
 interface CompetencyFrameworkViewDialogProps {
   open: boolean;
   onClose: () => void;
   frameworkId?: string;
+  employeeId?: string;
 }
 
-export function CompetencyFrameworkViewDialog({ open, onClose, frameworkId }: CompetencyFrameworkViewDialogProps) {
+export function CompetencyFrameworkViewDialog({ open, onClose, frameworkId, employeeId }: CompetencyFrameworkViewDialogProps) {
   const { data: framework, isLoading } = useCompetencyFramework(frameworkId || '');
+  const { data: employees } = useEmployees();
+  
+  const employee = employees?.find(emp => emp.id === employeeId);
 
   const getLevelBadge = (level: string) => {
     switch (level) {
@@ -66,10 +72,26 @@ export function CompetencyFrameworkViewDialog({ open, onClose, frameworkId }: Co
         </DialogHeader>
         
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {employee && (
+            <div className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg">
+              <Avatar className="h-14 w-14">
+                <AvatarImage src={employee.avatar_url || undefined} alt={employee.full_name} />
+                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                  {employee.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <h4 className="font-medium">{employee.full_name}</h4>
+                <p className="text-sm text-muted-foreground">Mã NV: {employee.employee_code}</p>
+                <p className="text-sm text-muted-foreground">{employee.positions?.name || 'N/A'}</p>
+              </div>
+            </div>
+          )}
+          
+          <div className="flex items-start justify-between">
             <div>
               <h3 className="font-semibold text-lg">{framework.name}</h3>
-              <p className="text-sm text-gray-600">Vị trí: {framework.positions?.name || 'N/A'}</p>
+              <p className="text-sm text-muted-foreground">Vị trí: {framework.positions?.name || 'N/A'}</p>
             </div>
             <div className="flex justify-end">
               {getStatusBadge(framework.status || 'active')}
