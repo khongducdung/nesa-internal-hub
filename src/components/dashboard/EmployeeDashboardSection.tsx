@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useUserAttendanceSummary, useUserOKRProgress } from '@/hooks/useDashboard';
 import { useNavigate } from 'react-router-dom';
+import { AttendanceQuickActions } from './AttendanceQuickActions';
 
 export function EmployeeDashboardSection() {
   const { data: attendanceSummary } = useUserAttendanceSummary();
@@ -125,30 +126,7 @@ export function EmployeeDashboardSection() {
         </Card>
 
         {/* Quick Check-in */}
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg text-blue-800">
-              <CheckCircle className="h-5 w-5" />
-              Chấm công nhanh
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <p className="text-blue-700 text-sm">
-                {new Date().getHours() < 12 
-                  ? 'Chúc bạn một ngày làm việc hiệu quả!' 
-                  : 'Hy vọng bạn đã có một ngày làm việc tốt!'}
-              </p>
-              <Button 
-                className="w-full bg-blue-600 hover:bg-blue-700"
-                onClick={() => navigate('/attendance')}
-              >
-                <Clock className="h-4 w-4 mr-2" />
-                Chấm công ngay
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <AttendanceQuickActions />
       </div>
 
       {/* Quick Actions */}

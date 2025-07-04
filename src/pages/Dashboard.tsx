@@ -5,7 +5,7 @@ import { AdminDashboardSection } from '@/components/dashboard/AdminDashboardSect
 import { EmployeeDashboardSection } from '@/components/dashboard/EmployeeDashboardSection';
 import { OKRLeaderboardSection } from '@/components/dashboard/OKRLeaderboardSection';
 import { CompetencyFrameworkSection } from '@/components/dashboard/CompetencyFrameworkSection';
-import { RecentNotificationsSection } from '@/components/dashboard/RecentNotificationsSection';
+import { RecentActivitiesSection } from '@/components/dashboard/RecentActivitiesSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -50,7 +50,7 @@ export default function Dashboard() {
     <DashboardLayout>
       <div className="space-y-6">
         {/* Hero Welcome Section */}
-        <Card className="border-0 shadow-xl overflow-hidden relative bg-gradient-to-r from-primary via-primary/90 to-primary/80">
+        <Card className="border-0 shadow-xl overflow-hidden relative bg-gradient-to-r from-blue-700 via-blue-800 to-blue-900">
           <CardContent className="p-0">
             {/* Decorative elements */}
             <div className="absolute -top-20 -left-20 w-40 h-40 bg-white/10 rounded-full"></div>
@@ -105,9 +105,9 @@ export default function Dashboard() {
             <OKRLeaderboardSection />
           </div>
 
-          {/* Recent Notifications */}
+          {/* Recent Activities */}
           <div className="lg:col-span-1">
-            <RecentNotificationsSection />
+            <RecentActivitiesSection />
           </div>
         </div>
 
