@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -453,7 +452,7 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
                 <Checkbox
                   id="create_account"
                   checked={createAccount}
-                  onCheckedChange={setCreateAccount}
+                  onCheckedChange={(checked) => setCreateAccount(checked === true)}
                 />
                 <Label htmlFor="create_account">
                   Tạo tài khoản đăng nhập cho nhân viên
