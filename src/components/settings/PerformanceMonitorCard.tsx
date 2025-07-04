@@ -112,7 +112,7 @@ export function PerformanceMonitorCard() {
               <span className="text-sm font-semibold">145ms</span>
             </div>
             <Progress value={25} className="h-2" />
-            <p className="text-xs text-muted-foreground">Tốt (< 200ms)</p>
+            <p className="text-xs text-muted-foreground">Tốt (&lt; 200ms)</p>
           </div>
 
           <div className="space-y-2">
