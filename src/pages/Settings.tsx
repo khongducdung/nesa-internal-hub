@@ -26,6 +26,11 @@ export default function Settings() {
           <SystemOverviewCard />
         </div>
 
+        {/* User Management - Full Width */}
+        <div className="mb-8">
+          <UserManagementCard />
+        </div>
+
         {/* System Health - Full Width */}
         <div className="mb-8">
           <SystemHealthCard />
@@ -46,9 +51,8 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Management & Logs Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          <UserManagementCard />
+        {/* System Logs - Full Width */}
+        <div className="mb-8">
           <SystemLogsCard />
         </div>
       </div>

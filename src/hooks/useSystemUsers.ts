@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -106,35 +107,66 @@ export const useDeleteSystemUser = () => {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      // Xóa roles trước
+      // Bước 1: Xóa các bản ghi liên quan trước
+      console.log('Deleting user:', userId);
+      
+      // Xóa user_system_roles
       const { error: roleError } = await supabase
         .from('user_system_roles')
         .delete()
         .eq('user_id', userId);
 
-      if (roleError) throw roleError;
+      if (roleError) {
+        console.error('Error deleting user roles:', roleError);
+        throw new Error(`Lỗi xóa vai trò: ${roleError.message}`);
+      }
 
-      // Xóa profile
+      // Xóa notification_settings
+      const { error: notificationError } = await supabase
+        .from('notification_settings')
+        .delete()
+        .eq('user_id', userId);
+
+      if (notificationError) {
+        console.error('Error deleting notification settings:', notificationError);
+        // Không throw error vì có thể chưa có notification settings
+      }
+
+      // Xóa notifications
+      const { error: notificationsError } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', userId);
+
+      if (notificationsError) {
+        console.error('Error deleting notifications:', notificationsError);
+        // Không throw error vì có thể chưa có notifications
+      }
+
+      // Bước 2: Xóa profile
       const { error: profileError } = await supabase
         .from('profiles')
         .delete()
         .eq('id', userId);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Error deleting profile:', profileError);
+        throw new Error(`Lỗi xóa thông tin người dùng: ${profileError.message}`);
+      }
+
+      // Bước 3: Xóa user từ auth.users (nếu có quyền)
+      // Lưu ý: Việc xóa từ auth.users thường chỉ có thể thực hiện bởi service role
+      // hoặc thông qua RPC function
+      console.log('User deleted successfully');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['system-users'] });
-      toast({
-        title: 'Thành công',
-        description: 'Xóa người dùng thành công'
-      });
+      queryClient.invalidateQueries({ queryKey: ['system-stats'] });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Lỗi',
-        description: error.message || 'Có lỗi xảy ra khi xóa người dùng',
-        variant: 'destructive'
-      });
+      console.error('Delete user error:', error);
+      // Error sẽ được handle ở component
+      throw error;
     }
   });
 };
