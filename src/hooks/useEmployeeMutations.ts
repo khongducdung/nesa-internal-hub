@@ -2,14 +2,38 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { EmployeeWithDetails } from './useEmployees';
+
+// Create a type for employee update that only includes database fields
+type EmployeeUpdateData = {
+  employee_code?: string;
+  full_name?: string;
+  email?: string;
+  phone?: string;
+  department_id?: string;
+  position_id?: string;
+  hire_date?: string;
+  salary?: number;
+  employee_level?: 'level_1' | 'level_2' | 'level_3';
+  work_status?: 'active' | 'inactive' | 'pending';
+  address?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  notes?: string;
+  job_description?: string;
+  contract_file_url?: string;
+  cv_file_url?: string;
+  profile_id?: string;
+  manager_id?: string;
+  avatar_url?: string;
+  auth_user_id?: string;
+};
 
 export function useUpdateEmployee() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<EmployeeWithDetails> }) => {
+    mutationFn: async ({ id, data }: { id: string; data: EmployeeUpdateData }) => {
       console.log('Updating employee with data:', data);
       
       const { error } = await supabase
@@ -87,7 +111,7 @@ export function useCreateEmployee() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (data: Partial<EmployeeWithDetails>) => {
+    mutationFn: async (data: EmployeeUpdateData) => {
       console.log('Creating employee with data:', data);
       
       const { error } = await supabase
