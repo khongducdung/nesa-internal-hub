@@ -4,17 +4,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
 
-// Use the actual database type
-type Process = Database['public']['Tables']['processes']['Row'];
+// Use the actual database type for processes table
+type ProcessRow = Database['public']['Tables']['processes']['Row'];
 type ProcessInsert = Database['public']['Tables']['processes']['Insert'];
 type ProcessUpdate = Database['public']['Tables']['processes']['Update'];
 
 // Extended type for queries with joined data
-export interface ProcessWithDetails extends Process {
+export interface ProcessWithDetails extends ProcessRow {
   created_by_user?: {
     id: string;
     full_name: string;
-  };
+  } | null;
 }
 
 export const useProcesses = () => {
@@ -27,11 +27,10 @@ export const useProcesses = () => {
           *,
           created_by_user:profiles!created_by(id, full_name)
         `)
-        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as ProcessWithDetails[];
+      return (data || []) as ProcessWithDetails[];
     }
   });
 };
@@ -44,10 +43,11 @@ export const useCreateProcess = () => {
     mutationFn: async (processData: {
       name: string;
       description?: string;
-      content?: string;
-      status?: 'draft' | 'active' | 'inactive';
-      target_type?: 'employee' | 'department' | 'position' | 'general';
-      target_ids?: string[];
+      assigned_user_id?: string;
+      department_id?: string;
+      position_id?: string;
+      status?: 'active' | 'inactive' | 'pending';
+      steps?: any;
     }) => {
       const { data, error } = await supabase
         .from('processes')
@@ -119,7 +119,7 @@ export const useDeleteProcess = () => {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from('processes')
-        .update({ is_active: false })
+        .update({ status: 'inactive' })
         .eq('id', id);
 
       if (error) throw error;
@@ -142,4 +142,4 @@ export const useDeleteProcess = () => {
 };
 
 // Export the types for use in other components
-export type { Process, ProcessWithDetails };
+export type { ProcessRow as Process, ProcessWithDetails };

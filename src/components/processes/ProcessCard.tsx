@@ -35,40 +35,36 @@ export function ProcessCard({ process, onView, onEdit, onDelete }: ProcessCardPr
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      draft: 'bg-gray-100 text-gray-800 border-gray-200',
+      pending: 'bg-gray-100 text-gray-800 border-gray-200',
       active: 'bg-green-100 text-green-800 border-green-200',
       inactive: 'bg-red-100 text-red-800 border-red-200'
     };
     
     const labels = {
-      draft: 'Nháp',
+      pending: 'Chờ xử lý',
       active: 'Hoạt động',
       inactive: 'Không hoạt động'
     };
     
     return (
-      <Badge variant="outline" className={variants[status as keyof typeof variants] || variants.draft}>
+      <Badge variant="outline" className={variants[status as keyof typeof variants] || variants.pending}>
         {labels[status as keyof typeof labels] || status}
       </Badge>
     );
   };
 
-  const getTargetIcon = (targetType: string) => {
-    switch (targetType) {
-      case 'employee': return <User className="h-4 w-4" />;
-      case 'department': return <Building2 className="h-4 w-4" />;
-      case 'position': return <Users className="h-4 w-4" />;
-      default: return <Globe className="h-4 w-4" />;
-    }
+  const getTargetIcon = () => {
+    if (process.department_id) return <Building2 className="h-4 w-4" />;
+    if (process.position_id) return <Users className="h-4 w-4" />;
+    if (process.assigned_user_id) return <User className="h-4 w-4" />;
+    return <Globe className="h-4 w-4" />;
   };
 
-  const getTargetLabel = (targetType: string) => {
-    switch (targetType) {
-      case 'employee': return 'Nhân viên';
-      case 'department': return 'Phòng ban';
-      case 'position': return 'Vị trí';
-      default: return 'Tất cả';
-    }
+  const getTargetLabel = () => {
+    if (process.department_id) return 'Phòng ban';
+    if (process.position_id) return 'Vị trí';
+    if (process.assigned_user_id) return 'Nhân viên';
+    return 'Tất cả';
   };
 
   const canEdit = isAdmin || process.created_by === user?.id;
@@ -135,8 +131,8 @@ export function ProcessCard({ process, onView, onEdit, onDelete }: ProcessCardPr
             {getStatusBadge(process.status)}
             
             <div className="flex items-center gap-1 text-sm text-gray-600">
-              {getTargetIcon(process.target_type)}
-              <span>{getTargetLabel(process.target_type)}</span>
+              {getTargetIcon()}
+              <span>{getTargetLabel()}</span>
             </div>
           </div>
           

@@ -37,9 +37,10 @@ export function ProcessFormDialog({
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
     description: initialData?.description || '',
-    content: initialData?.content || '',
-    status: initialData?.status || 'draft' as 'draft' | 'active' | 'inactive',
-    target_type: initialData?.target_type || 'general' as 'employee' | 'department' | 'position' | 'general',
+    status: initialData?.status || 'pending' as 'pending' | 'active' | 'inactive',
+    assigned_user_id: initialData?.assigned_user_id || '',
+    department_id: initialData?.department_id || '',
+    position_id: initialData?.position_id || '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -83,17 +84,6 @@ export function ProcessFormDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="content">Nội dung quy trình</Label>
-            <Textarea
-              id="content"
-              value={formData.content}
-              onChange={(e) => handleChange('content', e.target.value)}
-              placeholder="Nội dung chi tiết của quy trình..."
-              rows={6}
-            />
-          </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="status">Trạng thái</Label>
@@ -102,7 +92,7 @@ export function ProcessFormDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="draft">Nháp</SelectItem>
+                  <SelectItem value="pending">Chờ xử lý</SelectItem>
                   <SelectItem value="active">Hoạt động</SelectItem>
                   <SelectItem value="inactive">Không hoạt động</SelectItem>
                 </SelectContent>
@@ -110,18 +100,13 @@ export function ProcessFormDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="target_type">Đối tượng áp dụng</Label>
-              <Select value={formData.target_type} onValueChange={(value) => handleChange('target_type', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="general">Tất cả</SelectItem>
-                  <SelectItem value="department">Phòng ban</SelectItem>
-                  <SelectItem value="position">Vị trí</SelectItem>
-                  <SelectItem value="employee">Nhân viên cụ thể</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="assigned_user_id">Người được giao</Label>
+              <Input
+                id="assigned_user_id"
+                value={formData.assigned_user_id}
+                onChange={(e) => handleChange('assigned_user_id', e.target.value)}
+                placeholder="ID người được giao..."
+              />
             </div>
           </div>
 

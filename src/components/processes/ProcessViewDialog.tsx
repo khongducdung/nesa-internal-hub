@@ -34,40 +34,36 @@ export function ProcessViewDialog({ process, open, onOpenChange, onEdit }: Proce
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      draft: 'bg-gray-100 text-gray-800 border-gray-200',
+      pending: 'bg-gray-100 text-gray-800 border-gray-200',
       active: 'bg-green-100 text-green-800 border-green-200',
       inactive: 'bg-red-100 text-red-800 border-red-200'
     };
     
     const labels = {
-      draft: 'Nháp',
+      pending: 'Chờ xử lý',
       active: 'Hoạt động',
       inactive: 'Không hoạt động'
     };
     
     return (
-      <Badge variant="outline" className={variants[status as keyof typeof variants] || variants.draft}>
+      <Badge variant="outline" className={variants[status as keyof typeof variants] || variants.pending}>
         {labels[status as keyof typeof labels] || status}
       </Badge>
     );
   };
 
-  const getTargetIcon = (targetType: string) => {
-    switch (targetType) {
-      case 'employee': return <User className="h-4 w-4" />;
-      case 'department': return <Building2 className="h-4 w-4" />;
-      case 'position': return <Users className="h-4 w-4" />;
-      default: return <Globe className="h-4 w-4" />;
-    }
+  const getTargetIcon = () => {
+    if (process.department_id) return <Building2 className="h-4 w-4" />;
+    if (process.position_id) return <Users className="h-4 w-4" />;
+    if (process.assigned_user_id) return <User className="h-4 w-4" />;
+    return <Globe className="h-4 w-4" />;
   };
 
-  const getTargetLabel = (targetType: string) => {
-    switch (targetType) {
-      case 'employee': return 'Nhân viên cụ thể';
-      case 'department': return 'Phòng ban';
-      case 'position': return 'Vị trí';
-      default: return 'Áp dụng cho tất cả';
-    }
+  const getTargetLabel = () => {
+    if (process.department_id) return 'Phòng ban cụ thể';
+    if (process.position_id) return 'Vị trí cụ thể';
+    if (process.assigned_user_id) return 'Nhân viên cụ thể';
+    return 'Áp dụng cho tất cả';
   };
 
   const canEdit = isAdmin || process.created_by === user?.id;
@@ -107,25 +103,25 @@ export function ProcessViewDialog({ process, open, onOpenChange, onEdit }: Proce
             <div className="flex items-center gap-4">
               {getStatusBadge(process.status)}
               <div className="flex items-center gap-2 text-sm text-gray-600">
-                {getTargetIcon(process.target_type)}
-                <span>{getTargetLabel(process.target_type)}</span>
+                {getTargetIcon()}
+                <span>{getTargetLabel()}</span>
               </div>
             </div>
           </div>
 
           <Separator />
 
-          {/* Content */}
-          {process.content && (
+          {/* Steps Content */}
+          {process.steps && (
             <div className="space-y-4">
               <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                Nội dung quy trình
+                Các bước thực hiện
               </h3>
               
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="whitespace-pre-wrap text-sm text-gray-700">
-                  {process.content}
+                  {typeof process.steps === 'string' ? process.steps : JSON.stringify(process.steps, null, 2)}
                 </div>
               </div>
             </div>

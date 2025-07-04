@@ -49,8 +49,8 @@ export default function ProcessManagement() {
       color: 'from-green-500 to-green-600',
     },
     {
-      title: 'Nháp',
-      value: processes.filter(p => p.status === 'draft').length.toString(),
+      title: 'Chờ xử lý',
+      value: processes.filter(p => p.status === 'pending').length.toString(),
       icon: Clock,
       color: 'from-yellow-500 to-yellow-600',
     },
@@ -192,7 +192,7 @@ export default function ProcessManagement() {
                 <SelectContent>
                   <SelectItem value="all">Tất cả trạng thái</SelectItem>
                   <SelectItem value="active">Hoạt động</SelectItem>
-                  <SelectItem value="draft">Nháp</SelectItem>
+                  <SelectItem value="pending">Chờ xử lý</SelectItem>
                   <SelectItem value="inactive">Không hoạt động</SelectItem>
                 </SelectContent>
               </Select>
