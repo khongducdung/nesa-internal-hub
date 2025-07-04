@@ -1,17 +1,23 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Department } from '@/types/database';
 
+export interface DepartmentWithEmployeeCount extends Department {
+  employee_count: number;
+}
+
 export const useDepartments = () => {
   return useQuery({
     queryKey: ['departments'],
-    queryFn: async (): Promise<Department[]> => {
+    queryFn: async (): Promise<DepartmentWithEmployeeCount[]> => {
       console.log('Fetching departments...');
       
       const { data, error } = await supabase
         .from('departments')
-        .select('*')
+        .select(`
+          *,
+          employees!employees_department_id_fkey(id)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -19,8 +25,15 @@ export const useDepartments = () => {
         throw error;
       }
 
-      console.log('Departments fetched successfully:', data);
-      return data || [];
+      // Transform data to include employee count
+      const departmentsWithCount = (data || []).map(dept => ({
+        ...dept,
+        employee_count: dept.employees?.length || 0,
+        employees: undefined // Remove the employees array from the response
+      }));
+
+      console.log('Departments fetched successfully:', departmentsWithCount);
+      return departmentsWithCount;
     },
   });
 };

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Edit, Trash2, Plus, Search } from 'lucide-react';
+import { Edit, Trash2, Plus, Search, Users } from 'lucide-react';
 import { useDepartments } from '@/hooks/useDepartments';
 import { useDeleteDepartment } from '@/hooks/useDepartmentMutations';
 import { DepartmentEditDialog } from './DepartmentEditDialog';
@@ -94,6 +95,7 @@ export function DepartmentList() {
               <TableRow>
                 <TableHead>Tên phòng ban</TableHead>
                 <TableHead>Mô tả</TableHead>
+                <TableHead>Số lượng nhân sự</TableHead>
                 <TableHead>Trạng thái</TableHead>
                 <TableHead>Ngày tạo</TableHead>
                 <TableHead className="text-right">Thao tác</TableHead>
@@ -104,6 +106,13 @@ export function DepartmentList() {
                 <TableRow key={department.id}>
                   <TableCell className="font-medium">{department.name}</TableCell>
                   <TableCell>{department.description || 'N/A'}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-gray-500" />
+                      <span className="font-medium">{department.employee_count}</span>
+                      <span className="text-sm text-gray-500">nhân viên</span>
+                    </div>
+                  </TableCell>
                   <TableCell>{getStatusBadge(department.status || 'active')}</TableCell>
                   <TableCell>{new Date(department.created_at).toLocaleDateString('vi-VN')}</TableCell>
                   <TableCell className="text-right">
