@@ -8,9 +8,10 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: SystemRole;
   requireHR?: boolean;
+  requireAttendanceAccess?: boolean;
 }
 
-export function ProtectedRoute({ children, requiredRole, requireHR }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, requiredRole, requireHR, requireAttendanceAccess }: ProtectedRouteProps) {
   const { user, isLoading, hasRole } = useAuth();
   const { data: employees } = useEmployees();
 
@@ -42,6 +43,22 @@ export function ProtectedRoute({ children, requiredRole, requireHR }: ProtectedR
                           currentEmployee?.positions?.name?.toLowerCase().includes('hr');
     
     if (!isAdmin && !isHRDepartment) {
+      return <Navigate to="/dashboard" replace />;
+    }
+  }
+
+  // Check attendance access requirement (admin or HR managers)
+  if (requireAttendanceAccess) {
+    const isAdmin = hasRole('admin') || hasRole('super_admin');
+    
+    // Find current employee info
+    const currentEmployee = employees?.find(emp => emp.auth_user_id === user.id);
+    const isHRManager = currentEmployee?.departments?.name?.toLowerCase().includes('nhân sự') || 
+                       currentEmployee?.departments?.name?.toLowerCase().includes('hr') ||
+                       currentEmployee?.positions?.name?.toLowerCase().includes('nhân sự') ||
+                       currentEmployee?.positions?.name?.toLowerCase().includes('hr');
+    
+    if (!isAdmin && !isHRManager) {
       return <Navigate to="/dashboard" replace />;
     }
   }

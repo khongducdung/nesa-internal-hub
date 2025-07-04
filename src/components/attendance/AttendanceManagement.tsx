@@ -7,19 +7,31 @@ import { AttendanceSettingsManagement } from './AttendanceSettingsManagement';
 import { AttendanceReports } from './AttendanceReports';
 import { CheckInOutInterface } from './CheckInOutInterface';
 import { useAuth } from '@/hooks/useAuth';
+import { useEmployees } from '@/hooks/useEmployees';
 
 export function AttendanceManagement() {
-  const { profile } = useAuth();
+  const { user, hasRole } = useAuth();
+  const { data: employees } = useEmployees();
   
-  // Kiểm tra quyền admin/hr (tạm thời set true cho demo)
-  const isAdmin = true; // Sau này sẽ check từ profile.system_role
+  // Check if user is admin or HR manager
+  const isAdmin = hasRole('admin') || hasRole('super_admin');
+  
+  // Find current employee info
+  const currentEmployee = employees?.find(emp => emp.auth_user_id === user?.id);
+  const isHRManager = currentEmployee?.departments?.name?.toLowerCase().includes('nhân sự') || 
+                     currentEmployee?.departments?.name?.toLowerCase().includes('hr') ||
+                     currentEmployee?.positions?.name?.toLowerCase().includes('nhân sự') ||
+                     currentEmployee?.positions?.name?.toLowerCase().includes('hr');
 
-  if (!isAdmin) {
+  // Check if user has management access (admin or HR manager)
+  const hasManagementAccess = isAdmin || isHRManager;
+
+  if (!hasManagementAccess) {
     return (
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Chấm công</h1>
-          <p className="text-gray-600 mt-1">Check-in/out và theo dõi thời gian làm việc</p>
+          <p className="text-gray-600 mt-1">Check-in/out và theo dõi thời gian làm việc của bạn</p>
         </div>
         <CheckInOutInterface />
       </div>
