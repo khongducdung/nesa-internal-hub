@@ -113,7 +113,7 @@ export function Sidebar() {
       <nav className="flex-1">
         <ul>
           {navigationItems.map((item) => {
-            if (item.roles.length > 0 && !item.roles.some(role => hasRole(role))) {
+            if (item.roles.length > 0 && !item.roles.some(role => hasRole(role as 'admin' | 'super_admin'))) {
               return null;
             }
 
