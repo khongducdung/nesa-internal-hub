@@ -168,3 +168,59 @@ export function useCreateEmployee() {
     },
   });
 }
+
+// Add mutation for creating employee account
+export function useCreateEmployeeAccount() {
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ employeeId, email, password, fullName }: { 
+      employeeId: string; 
+      email: string; 
+      password: string; 
+      fullName: string; 
+    }) => {
+      console.log('Creating account for employee:', employeeId);
+      
+      // Create user account
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: fullName,
+        }
+      });
+
+      if (authError) {
+        throw new Error(`Lỗi tạo tài khoản: ${authError.message}`);
+      }
+
+      // Update employee record with auth_user_id
+      const { error: updateError } = await supabase
+        .from('employees')
+        .update({ auth_user_id: authData.user?.id })
+        .eq('id', employeeId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      return authData.user;
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Thành công',
+        description: 'Tạo tài khoản đăng nhập cho nhân viên thành công',
+      });
+    },
+    onError: (error: any) => {
+      console.error('Error in useCreateEmployeeAccount:', error);
+      toast({
+        title: 'Lỗi',
+        description: error.message || 'Có lỗi xảy ra khi tạo tài khoản',
+        variant: 'destructive',
+      });
+    },
+  });
+}

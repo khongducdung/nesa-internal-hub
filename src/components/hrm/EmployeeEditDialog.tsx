@@ -8,18 +8,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, Upload, FileText, X } from 'lucide-react';
+import { VietnameseDatePicker } from '@/components/ui/vietnamese-date-picker';
+import { Upload, FileText, X } from 'lucide-react';
 import { useEmployees } from '@/hooks/useEmployees';
-import { useUpdateEmployee } from '@/hooks/useEmployeeMutations';
+import { useUpdateEmployee, useCreateEmployeeAccount } from '@/hooks/useEmployeeMutations';
 import { useDepartments } from '@/hooks/useDepartments';
 import { usePositions } from '@/hooks/usePositions';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { formatSalaryInput, parseSalaryValue } from '@/utils/formatters';
 
 interface EmployeeEditDialogProps {
   employeeId: string;
@@ -32,6 +29,7 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
   const { data: departments } = useDepartments();
   const { data: positions } = usePositions();
   const updateEmployee = useUpdateEmployee();
+  const createEmployeeAccount = useCreateEmployeeAccount();
   const { toast } = useToast();
   
   const employee = employees?.find(emp => emp.id === employeeId);
@@ -58,6 +56,8 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [existingContractUrl, setExistingContractUrl] = useState<string>('');
   const [existingCvUrl, setExistingCvUrl] = useState<string>('');
+  const [createAccount, setCreateAccount] = useState(false);
+  const [password, setPassword] = useState('');
 
   useEffect(() => {
     if (employee) {
@@ -69,7 +69,7 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
         department_id: employee.department_id || '',
         position_id: employee.position_id || '',
         hire_date: employee.hire_date ? new Date(employee.hire_date) : null,
-        salary: employee.salary?.toString() || '',
+        salary: employee.salary ? formatSalaryInput(employee.salary.toString()) : '',
         employee_level: employee.employee_level || 'level_3',
         work_status: employee.work_status || 'active',
         address: employee.address || '',
@@ -107,21 +107,6 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
     }
   };
 
-  const formatSalaryInput = (value: string) => {
-    // Remove all non-numeric characters
-    const numericValue = value.replace(/[^\d]/g, '');
-    
-    // Format with thousand separators using Vietnamese locale
-    if (numericValue) {
-      return parseInt(numericValue).toLocaleString('vi-VN');
-    }
-    return '';
-  };
-
-  const parseSalaryValue = (value: string) => {
-    return parseFloat(value.replace(/[,.]/g, '')) || 0;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -139,13 +124,24 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
 
       const updateData = {
         ...formData,
-        hire_date: formData.hire_date ? formData.hire_date.toISOString().split('T')[0] : null,
-        salary: formData.salary ? parseSalaryValue(formData.salary) : null,
-        contract_file_url: contractUrl || null,
-        cv_file_url: cvUrl || null,
+        hire_date: formData.hire_date ? formData.hire_date.toISOString().split('T')[0] : undefined,
+        salary: formData.salary ? parseSalaryValue(formData.salary) : undefined,
+        contract_file_url: contractUrl || undefined,
+        cv_file_url: cvUrl || undefined,
       };
 
       await updateEmployee.mutateAsync({ id: employeeId, data: updateData });
+
+      // Create account if requested and employee doesn't have one
+      if (createAccount && password && !employee?.auth_user_id) {
+        await createEmployeeAccount.mutateAsync({
+          employeeId,
+          email: formData.email,
+          password,
+          fullName: formData.full_name,
+        });
+      }
+
       onClose();
     } catch (error) {
       console.error('Error updating employee:', error);
@@ -271,34 +267,11 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
 
             <div className="space-y-2">
               <Label>Ngày vào làm</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.hire_date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.hire_date ? (
-                      format(formData.hire_date, "dd/MM/yyyy", { locale: vi })
-                    ) : (
-                      <span>Chọn ngày</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.hire_date || undefined}
-                    onSelect={(date) => setFormData({...formData, hire_date: date || null})}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                    locale={vi}
-                  />
-                </PopoverContent>
-              </Popover>
+              <VietnameseDatePicker
+                date={formData.hire_date || undefined}
+                onDateChange={(date) => setFormData({...formData, hire_date: date || null})}
+                placeholder="Chọn ngày"
+              />
             </div>
 
             <div className="space-y-2">
@@ -472,6 +445,36 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
               />
             </div>
           </div>
+
+          {/* Account Creation Section */}
+          {!employee?.auth_user_id && (
+            <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="create_account"
+                  checked={createAccount}
+                  onCheckedChange={setCreateAccount}
+                />
+                <Label htmlFor="create_account">
+                  Tạo tài khoản đăng nhập cho nhân viên
+                </Label>
+              </div>
+              
+              {createAccount && (
+                <div className="space-y-2">
+                  <Label htmlFor="password">Mật khẩu *</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Nhập mật khẩu cho nhân viên"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required={createAccount}
+                  />
+                </div>
+              )}
+            </div>
+          )}
           
           <div className="space-y-2">
             <Label htmlFor="notes">Ghi chú</Label>
@@ -486,8 +489,8 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
             <Button type="button" variant="outline" onClick={onClose}>
               Hủy
             </Button>
-            <Button type="submit" disabled={updateEmployee.isPending}>
-              {updateEmployee.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
+            <Button type="submit" disabled={updateEmployee.isPending || createEmployeeAccount.isPending}>
+              {updateEmployee.isPending || createEmployeeAccount.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
             </Button>
           </div>
         </form>
