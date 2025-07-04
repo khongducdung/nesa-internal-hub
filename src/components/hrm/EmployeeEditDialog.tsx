@@ -4,15 +4,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon, Upload, FileText, X } from 'lucide-react';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useUpdateEmployee } from '@/hooks/useEmployeeMutations';
 import { useDepartments } from '@/hooks/useDepartments';
 import { usePositions } from '@/hooks/usePositions';
-import { Upload, FileText, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface EmployeeEditDialogProps {
   employeeId: string;
@@ -30,14 +37,16 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
   const employee = employees?.find(emp => emp.id === employeeId);
   
   const [formData, setFormData] = useState({
+    employee_code: '',
     full_name: '',
     email: '',
     phone: '',
     department_id: '',
     position_id: '',
+    hire_date: null as Date | null,
+    salary: '',
     employee_level: 'level_3' as 'level_1' | 'level_2' | 'level_3',
     work_status: 'active' as 'active' | 'inactive' | 'pending',
-    salary: '',
     address: '',
     emergency_contact_name: '',
     emergency_contact_phone: '',
@@ -53,23 +62,25 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
   useEffect(() => {
     if (employee) {
       setFormData({
+        employee_code: employee.employee_code || '',
         full_name: employee.full_name || '',
         email: employee.email || '',
         phone: employee.phone || '',
         department_id: employee.department_id || '',
         position_id: employee.position_id || '',
+        hire_date: employee.hire_date ? new Date(employee.hire_date) : null,
+        salary: employee.salary?.toString() || '',
         employee_level: employee.employee_level || 'level_3',
         work_status: employee.work_status || 'active',
-        salary: employee.salary?.toString() || '',
         address: employee.address || '',
         emergency_contact_name: employee.emergency_contact_name || '',
         emergency_contact_phone: employee.emergency_contact_phone || '',
         notes: employee.notes || '',
-        job_description: (employee as any).job_description || '',
+        job_description: employee.job_description || '',
       });
       
-      setExistingContractUrl((employee as any).contract_file_url || '');
-      setExistingCvUrl((employee as any).cv_file_url || '');
+      setExistingContractUrl(employee.contract_file_url || '');
+      setExistingCvUrl(employee.cv_file_url || '');
     }
   }, [employee]);
 
@@ -96,6 +107,21 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
     }
   };
 
+  const formatSalaryInput = (value: string) => {
+    // Remove all non-numeric characters
+    const numericValue = value.replace(/[^\d]/g, '');
+    
+    // Format with thousand separators using Vietnamese locale
+    if (numericValue) {
+      return parseInt(numericValue).toLocaleString('vi-VN');
+    }
+    return '';
+  };
+
+  const parseSalaryValue = (value: string) => {
+    return parseFloat(value.replace(/[,.]/g, '')) || 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -113,7 +139,8 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
 
       const updateData = {
         ...formData,
-        salary: formData.salary ? parseFloat(formData.salary) : null,
+        hire_date: formData.hire_date ? formData.hire_date.toISOString().split('T')[0] : null,
+        salary: formData.salary ? parseSalaryValue(formData.salary) : null,
         contract_file_url: contractUrl || null,
         cv_file_url: cvUrl || null,
       };
@@ -163,7 +190,17 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="employee_code">Mã nhân viên *</Label>
+              <Input
+                id="employee_code"
+                value={formData.employee_code}
+                onChange={(e) => setFormData({...formData, employee_code: e.target.value})}
+                required
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="full_name">Họ và tên *</Label>
               <Input
@@ -195,16 +232,6 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="salary">Lương (VNĐ)</Label>
-              <Input
-                id="salary"
-                type="number"
-                value={formData.salary}
-                onChange={(e) => setFormData({...formData, salary: e.target.value})}
-              />
-            </div>
-            
-            <div className="space-y-2">
               <Label htmlFor="department">Phòng ban</Label>
               <Select 
                 value={formData.department_id} 
@@ -224,13 +251,13 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="position">Vị trí</Label>
+              <Label htmlFor="position">Chức vụ</Label>
               <Select 
                 value={formData.position_id} 
                 onValueChange={(value) => setFormData({...formData, position_id: value})}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Chọn vị trí" />
+                  <SelectValue placeholder="Chọn chức vụ" />
                 </SelectTrigger>
                 <SelectContent>
                   {filteredPositions?.map((pos) => (
@@ -240,6 +267,51 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Ngày vào làm</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !formData.hire_date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formData.hire_date ? (
+                      format(formData.hire_date, "dd/MM/yyyy", { locale: vi })
+                    ) : (
+                      <span>Chọn ngày</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formData.hire_date || undefined}
+                    onSelect={(date) => setFormData({...formData, hire_date: date || null})}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                    locale={vi}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="salary">Lương (VNĐ)</Label>
+              <Input
+                id="salary"
+                placeholder="15,000,000"
+                value={formData.salary}
+                onChange={(e) => {
+                  const formatted = formatSalaryInput(e.target.value);
+                  setFormData({...formData, salary: formatted});
+                }}
+              />
             </div>
             
             <div className="space-y-2">
@@ -252,15 +324,15 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="level_1">Cấp 1 (Quản lý)</SelectItem>
-                  <SelectItem value="level_2">Cấp 2 (Trưởng nhóm)</SelectItem>
+                  <SelectItem value="level_1">Cấp 1 (Cao cấp)</SelectItem>
+                  <SelectItem value="level_2">Cấp 2 (Trung cấp)</SelectItem>
                   <SelectItem value="level_3">Cấp 3 (Nhân viên)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="work_status">Trạng thái</Label>
+              <Label htmlFor="work_status">Trạng thái làm việc</Label>
               <Select 
                 value={formData.work_status} 
                 onValueChange={(value: 'active' | 'inactive' | 'pending') => setFormData({...formData, work_status: value})}
@@ -269,9 +341,9 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Hoạt động</SelectItem>
-                  <SelectItem value="inactive">Ngưng hoạt động</SelectItem>
+                  <SelectItem value="active">Đang làm việc</SelectItem>
                   <SelectItem value="pending">Chờ duyệt</SelectItem>
+                  <SelectItem value="inactive">Nghỉ việc</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -279,8 +351,9 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
           
           <div className="space-y-2">
             <Label htmlFor="address">Địa chỉ</Label>
-            <Input
+            <Textarea
               id="address"
+              placeholder="Nhập địa chỉ..."
               value={formData.address}
               onChange={(e) => setFormData({...formData, address: e.target.value})}
             />
@@ -378,20 +451,22 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
             </div>
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="emergency_contact_name">Người liên hệ khẩn cấp</Label>
               <Input
                 id="emergency_contact_name"
+                placeholder="Tên người liên hệ"
                 value={formData.emergency_contact_name}
                 onChange={(e) => setFormData({...formData, emergency_contact_name: e.target.value})}
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="emergency_contact_phone">SĐT liên hệ khẩn cấp</Label>
+              <Label htmlFor="emergency_contact_phone">SĐT người liên hệ khẩn cấp</Label>
               <Input
                 id="emergency_contact_phone"
+                placeholder="0901234567"
                 value={formData.emergency_contact_phone}
                 onChange={(e) => setFormData({...formData, emergency_contact_phone: e.target.value})}
               />

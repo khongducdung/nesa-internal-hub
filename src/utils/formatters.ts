@@ -7,7 +7,7 @@ export const formatDate = (dateString: string | null | undefined): string => {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return '';
   
-  // Format theo dd/mm/yyyy
+  // Format theo dd/mm/yyyy (Vietnamese standard)
   return date.toLocaleDateString('vi-VN', {
     day: '2-digit',
     month: '2-digit',
@@ -33,10 +33,12 @@ export const formatDateTime = (dateString: string | null | undefined): string =>
 };
 
 export const formatCurrency = (amount: number | null | undefined): string => {
-  if (amount === null || amount === undefined || isNaN(amount)) return '0';
+  if (amount === null || amount === undefined || isNaN(amount)) return '0 ₫';
   
-  // Sử dụng định dạng với dấu phẩy ngăn cách hàng nghìn
+  // Sử dụng định dạng với dấu phẩy ngăn cách hàng nghìn và ký hiệu VNĐ
   return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(amount);
@@ -66,7 +68,7 @@ export const formatTime = (timeString: string | null | undefined): string => {
 };
 
 export const parseCurrency = (value: string): number => {
-  return parseFloat(value.replace(/[,.]/g, '')) || 0;
+  return parseFloat(value.replace(/[,.₫]/g, '')) || 0;
 };
 
 export const formatDateInput = (date: Date | null | undefined): string => {
@@ -86,4 +88,32 @@ export const formatDateFromInput = (inputValue: string): string => {
   if (isNaN(date.getTime())) return '';
   
   return formatDate(date.toISOString());
+};
+
+export const formatDateForDisplay = (dateString: string | null | undefined): string => {
+  if (!dateString) return 'Chưa có';
+  
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Không hợp lệ';
+  
+  return date.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
+
+export const formatSalaryInput = (value: string): string => {
+  // Remove all non-numeric characters
+  const numericValue = value.replace(/[^\d]/g, '');
+  
+  // Format with thousand separators using Vietnamese locale
+  if (numericValue) {
+    return parseInt(numericValue).toLocaleString('vi-VN');
+  }
+  return '';
+};
+
+export const parseSalaryValue = (value: string): number => {
+  return parseFloat(value.replace(/[,.]/g, '')) || 0;
 };

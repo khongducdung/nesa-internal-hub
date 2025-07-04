@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useEmployees } from '@/hooks/useEmployees';
+import { formatDateForDisplay } from '@/utils/formatters';
 
 interface EmployeeJobDescriptionDialogProps {
   open: boolean;
@@ -76,7 +78,7 @@ export function EmployeeJobDescriptionDialog({ open, onClose, employeeId }: Empl
                   </div>
                   {employee.hire_date && (
                     <div>
-                      <span className="font-medium">Ngày vào làm:</span> {new Date(employee.hire_date).toLocaleDateString('vi-VN')}
+                      <span className="font-medium">Ngày vào làm:</span> {formatDateForDisplay(employee.hire_date)}
                     </div>
                   )}
                 </div>
@@ -109,7 +111,7 @@ export function EmployeeJobDescriptionDialog({ open, onClose, employeeId }: Empl
                 <CardTitle>Mô tả công việc</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="whitespace-pre-wrap text-sm">{employee.job_description}</div>
+                <div className="whitespace-pre-wrap text-sm" dangerouslySetInnerHTML={{ __html: employee.job_description }} />
               </CardContent>
             </Card>
           )}
@@ -130,14 +132,14 @@ export function EmployeeJobDescriptionDialog({ open, onClose, employeeId }: Empl
                 <CardTitle>Ghi chú</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="whitespace-pre-wrap text-sm">{employee.notes}</div>
+                <div className="whitespace-pre-wrap text-sm" dangerouslySetInnerHTML={{ __html: employee.notes }} />
               </CardContent>
             </Card>
           )}
 
           <div className="text-sm text-muted-foreground">
-            <p>Ngày tạo: {new Date(employee.created_at).toLocaleDateString('vi-VN')}</p>
-            <p>Cập nhật lần cuối: {new Date(employee.updated_at).toLocaleDateString('vi-VN')}</p>
+            <p>Ngày tạo: {formatDateForDisplay(employee.created_at)}</p>
+            <p>Cập nhật lần cuối: {formatDateForDisplay(employee.updated_at)}</p>
           </div>
         </div>
       </DialogContent>

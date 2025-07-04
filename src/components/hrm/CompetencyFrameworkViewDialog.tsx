@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useCompetencyFramework } from '@/hooks/useCompetencyFrameworks';
 import { useEmployees } from '@/hooks/useEmployees';
+import { formatDateForDisplay } from '@/utils/formatters';
 
 interface CompetencyFrameworkViewDialogProps {
   open: boolean;
@@ -134,8 +135,8 @@ export function CompetencyFrameworkViewDialog({ open, onClose, frameworkId, empl
           </Card>
 
           <div className="text-sm text-gray-500">
-            <p>Ngày tạo: {new Date(framework.created_at).toLocaleDateString('vi-VN')}</p>
-            <p>Cập nhật lần cuối: {new Date(framework.updated_at).toLocaleDateString('vi-VN')}</p>
+            <p>Ngày tạo: {formatDateForDisplay(framework.created_at)}</p>
+            <p>Cập nhật lần cuối: {formatDateForDisplay(framework.updated_at)}</p>
           </div>
         </div>
       </DialogContent>
