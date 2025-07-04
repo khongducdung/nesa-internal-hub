@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -36,9 +35,23 @@ export interface ProcessTemplateWithDetails extends ProcessTemplate {
 }
 
 export const useProcessTemplates = () => {
+  const { user } = useAuth();
+  
   return useQuery({
-    queryKey: ['process-templates'],
+    queryKey: ['process-templates', user?.id],
     queryFn: async () => {
+      // Lấy thông tin nhân viên hiện tại
+      const { data: currentEmployee, error: employeeError } = await supabase
+        .from('employees')
+        .select('id, department_id, position_id')
+        .eq('auth_user_id', user?.id)
+        .single();
+
+      if (employeeError && employeeError.code !== 'PGRST116') {
+        console.error('Error fetching current employee:', employeeError);
+      }
+
+      // Lấy tất cả tài liệu published và active
       const { data, error } = await supabase
         .from('process_templates')
         .select(`
@@ -50,11 +63,57 @@ export const useProcessTemplates = () => {
           )
         `)
         .eq('is_active', true)
+        .eq('status', 'published')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as ProcessTemplateWithDetails[];
+
+      // Lọc tài liệu theo 3 tiêu chí:
+      const filteredData = data?.filter(template => {
+        // Tiêu chí 1: Người dùng là người tạo tài liệu
+        if (template.created_by === user?.id) {
+          return true;
+        }
+
+        // Chỉ áp dụng các tiêu chí khác nếu có thông tin nhân viên
+        if (!currentEmployee) {
+          return false;
+        }
+
+        // Tiêu chí 2: Tài liệu áp dụng cho tất cả
+        if (template.target_type === 'general' || !template.target_type) {
+          return true;
+        }
+
+        // Tiêu chí 3: Tài liệu áp dụng cho phòng ban của người dùng
+        if (template.target_type === 'department' && 
+            template.target_ids && 
+            currentEmployee.department_id &&
+            template.target_ids.includes(currentEmployee.department_id)) {
+          return true;
+        }
+
+        // Tiêu chí 4: Tài liệu áp dụng cho vị trí của người dùng
+        if (template.target_type === 'position' && 
+            template.target_ids && 
+            currentEmployee.position_id &&
+            template.target_ids.includes(currentEmployee.position_id)) {
+          return true;
+        }
+
+        // Tiêu chí 5: Tài liệu áp dụng trực tiếp cho người dùng
+        if (template.target_type === 'employee' && 
+            template.target_ids && 
+            template.target_ids.includes(currentEmployee.id)) {
+          return true;
+        }
+
+        return false;
+      }) || [];
+
+      return filteredData as ProcessTemplateWithDetails[];
     },
+    enabled: !!user?.id,
   });
 };
 
