@@ -23,10 +23,7 @@ export const useProcesses = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('processes')
-        .select(`
-          *,
-          created_by_user:profiles!created_by(id, full_name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -142,4 +139,4 @@ export const useDeleteProcess = () => {
 };
 
 // Export the types for use in other components
-export type { ProcessRow as Process, ProcessWithDetails };
+export type { ProcessRow as Process };
