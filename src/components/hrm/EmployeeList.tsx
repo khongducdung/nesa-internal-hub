@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -230,6 +231,21 @@ export function EmployeeList() {
                 );
               }
               
+              // Parse the competencies from JSON to array
+              let competencies = [];
+              try {
+                if (typeof framework.competencies === 'string') {
+                  competencies = JSON.parse(framework.competencies);
+                } else if (Array.isArray(framework.competencies)) {
+                  competencies = framework.competencies;
+                } else if (framework.competencies && typeof framework.competencies === 'object') {
+                  competencies = Array.isArray(framework.competencies) ? framework.competencies : [];
+                }
+              } catch (error) {
+                console.error('Error parsing competencies:', error);
+                competencies = [];
+              }
+              
               return (
                 <div className="space-y-6">
                   <div>
@@ -239,31 +255,38 @@ export function EmployeeList() {
                   
                   <div>
                     <h4 className="text-md font-medium mb-3">Năng lực yêu cầu:</h4>
-                    <div className="space-y-4">
-                      {framework.competencies?.map((competency: any, index: number) => (
-                        <div key={index} className="border rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <h5 className="font-medium">{competency.name}</h5>
-                            <Badge variant="outline">
-                              Cấp độ {competency.required_level}
-                            </Badge>
-                          </div>
-                          <p className="text-gray-600 text-sm mb-2">{competency.description}</p>
-                          {competency.skills && competency.skills.length > 0 && (
-                            <div>
-                              <p className="text-sm font-medium mb-1">Kỹ năng cần thiết:</p>
-                              <div className="flex flex-wrap gap-1">
-                                {competency.skills.map((skill: string, skillIndex: number) => (
-                                  <Badge key={skillIndex} variant="secondary" className="text-xs">
-                                    {skill}
-                                  </Badge>
-                                ))}
-                              </div>
+                    {competencies.length > 0 ? (
+                      <div className="space-y-4">
+                        {competencies.map((competency: any, index: number) => (
+                          <div key={index} className="border rounded-lg p-4">
+                            <div className="flex justify-between items-start mb-2">
+                              <h5 className="font-medium">{competency.name || 'Không có tên'}</h5>
+                              <Badge variant="outline">
+                                Cấp độ {competency.required_level || 'N/A'}
+                              </Badge>
                             </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                            <p className="text-gray-600 text-sm mb-2">{competency.description || 'Không có mô tả'}</p>
+                            {competency.skills && Array.isArray(competency.skills) && competency.skills.length > 0 && (
+                              <div>
+                                <p className="text-sm font-medium mb-1">Kỹ năng cần thiết:</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {competency.skills.map((skill: string, skillIndex: number) => (
+                                    <Badge key={skillIndex} variant="secondary" className="text-xs">
+                                      {skill}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-600">Chưa có yêu cầu năng lực nào được định nghĩa</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
