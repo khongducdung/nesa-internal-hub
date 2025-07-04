@@ -28,6 +28,31 @@ type EmployeeUpdateData = {
   auth_user_id?: string;
 };
 
+// Create a type for employee creation that requires essential fields
+type EmployeeCreateData = {
+  employee_code: string;
+  full_name: string;
+  email: string;
+  phone?: string;
+  department_id?: string;
+  position_id?: string;
+  hire_date?: string;
+  salary?: number;
+  employee_level?: 'level_1' | 'level_2' | 'level_3';
+  work_status?: 'active' | 'inactive' | 'pending';
+  address?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  notes?: string;
+  job_description?: string;
+  contract_file_url?: string;
+  cv_file_url?: string;
+  profile_id?: string;
+  manager_id?: string;
+  avatar_url?: string;
+  auth_user_id?: string;
+};
+
 export function useUpdateEmployee() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -111,7 +136,7 @@ export function useCreateEmployee() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (data: EmployeeUpdateData) => {
+    mutationFn: async (data: EmployeeCreateData) => {
       console.log('Creating employee with data:', data);
       
       const { error } = await supabase
