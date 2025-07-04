@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Lightbulb } from 'lucide-react';
 import { IdeaWidget } from '@/components/widgets/IdeaWidget';
 
@@ -7,6 +7,7 @@ export function RightTaskbar() {
   const [isVisible, setIsVisible] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const [activeWidget, setActiveWidget] = useState<string | null>(null);
+  const taskbarRef = useRef<HTMLDivElement>(null);
 
   const utilities = [
     { 
@@ -36,18 +37,32 @@ export function RightTaskbar() {
     }
   };
 
-  const handleOverlayClick = () => {
-    setActiveWidget(null);
-  };
+  // Handle click outside to close widget
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (activeWidget && taskbarRef.current && !taskbarRef.current.contains(event.target as Node)) {
+        // Check if click is on the widget itself
+        const widgetElement = document.querySelector('[data-widget-container]');
+        if (!widgetElement || !widgetElement.contains(event.target as Node)) {
+          setActiveWidget(null);
+        }
+      }
+    };
+
+    if (activeWidget) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [activeWidget]);
 
   return (
     <div className="fixed right-0 top-0 h-full z-[40] pointer-events-none">
-      {/* Overlay */}
+      {/* Overlay - simplified without click handler since we handle it in useEffect */}
       {activeWidget && (
-        <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-          onClick={handleOverlayClick}
-        />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
       )}
 
       {/* Active Widget */}
@@ -55,7 +70,7 @@ export function RightTaskbar() {
         const utility = utilities.find(u => u.id === activeWidget);
         const WidgetComponent = utility?.widget;
         return WidgetComponent ? (
-          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-auto">
+          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-auto" data-widget-container>
             <WidgetComponent />
           </div>
         ) : null;
@@ -63,6 +78,7 @@ export function RightTaskbar() {
 
       {/* Taskbar */}
       <div
+        ref={taskbarRef}
         className={`
           absolute right-3 top-1/2 -translate-y-1/2
           w-16 px-3 py-4
@@ -93,7 +109,10 @@ export function RightTaskbar() {
                 group relative
               `}
               title={utility.label}
-              onClick={() => handleUtilityClick(utility.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleUtilityClick(utility.id);
+              }}
             >
               <utility.icon className={`w-5 h-5 ${
                 activeWidget === utility.id ? 'text-primary-foreground' : utility.color
