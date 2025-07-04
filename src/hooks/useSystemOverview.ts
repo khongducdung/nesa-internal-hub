@@ -21,11 +21,11 @@ export const useSystemOverview = () => {
   return useQuery({
     queryKey: ['system-overview'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_system_overview_stats');
+      const { data, error } = await supabase.rpc('get_system_overview_stats' as any);
       
       if (error) throw error;
       
-      return data as SystemOverviewStats;
+      return data as unknown as SystemOverviewStats;
     },
     refetchInterval: 30000 // Refresh every 30 seconds
   });
