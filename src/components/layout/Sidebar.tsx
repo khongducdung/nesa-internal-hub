@@ -1,3 +1,4 @@
+
 import {
   LayoutDashboard,
   Settings,
@@ -23,7 +24,7 @@ import {
   ScrollText,
   LucideIcon,
   KanbanSquare,
-  FileKanban,
+  FolderKanban,
   UserCog2,
   Clock4,
   FileSignature,
@@ -83,44 +84,8 @@ export function Sidebar() {
       roles: [] // Available to all authenticated users
     },
     { 
-      name: 'Nhân sự', 
-      href: '/employees', 
-      icon: Users,
-      roles: []
-    },
-    { 
-      name: 'Chấm công', 
-      href: '/attendance', 
-      icon: Clock4,
-      roles: ['admin', 'super_admin']
-    },
-    { 
-      name: 'Đơn từ', 
-      href: '/leave-requests', 
-      icon: FileSignature,
-      roles: ['admin', 'super_admin']
-    },
-    { 
-      name: 'Tính lương', 
-      href: '/payroll', 
-      icon: FileSpreadsheet,
-      roles: ['admin', 'super_admin']
-    },
-    { 
-      name: 'Tuyển dụng', 
-      href: '/recruitment', 
-      icon: Contact2,
-      roles: ['admin', 'super_admin']
-    },
-    { 
-      name: 'Cơ cấu tổ chức', 
-      href: '/org-chart', 
-      icon: Network,
-      roles: ['admin', 'super_admin']
-    },
-    { 
       name: 'Quy trình', 
-      href: '/processes', 
+      href: '/process-management', 
       icon: FileText,
       roles: [] // Available to all authenticated users
     },
