@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Settings, MessageCircle, Calendar, Plus, Lightbulb } from 'lucide-react';
+import { Lightbulb } from 'lucide-react';
 import { IdeaWidget } from '@/components/widgets/IdeaWidget';
 
 export function RightTaskbar() {
@@ -15,11 +15,7 @@ export function RightTaskbar() {
       label: 'iDea - Ý tưởng', 
       color: 'text-yellow-500',
       widget: IdeaWidget
-    },
-    { id: 'add', icon: Plus, label: 'Thêm tiện ích', color: 'text-blue-600' },
-    { id: 'settings', icon: Settings, label: 'Cài đặt', color: 'text-slate-600' },
-    { id: 'messages', icon: MessageCircle, label: 'Tin nhắn', color: 'text-green-600' },
-    { id: 'calendar', icon: Calendar, label: 'Lịch', color: 'text-purple-600' },
+    }
   ];
 
   const handleMouseEnter = () => {
@@ -46,12 +42,6 @@ export function RightTaskbar() {
 
   return (
     <div className="fixed right-0 top-0 h-full z-[40] pointer-events-none">
-      {/* Hover trigger area - wider and more visible */}
-      <div
-        className="absolute right-0 top-0 w-8 h-full bg-transparent pointer-events-auto cursor-pointer"
-        onMouseEnter={handleMouseEnter}
-      />
-
       {/* Overlay */}
       {activeWidget && (
         <div 
@@ -103,7 +93,7 @@ export function RightTaskbar() {
                 group relative
               `}
               title={utility.label}
-              onClick={() => utility.id ? handleUtilityClick(utility.id) : console.log(`Clicked: ${utility.label}`)}
+              onClick={() => handleUtilityClick(utility.id)}
             >
               <utility.icon className={`w-5 h-5 ${
                 activeWidget === utility.id ? 'text-primary-foreground' : utility.color
@@ -123,7 +113,7 @@ export function RightTaskbar() {
         </div>
       </div>
 
-      {/* Always visible indicator when hidden */}
+      {/* Always visible indicator when hidden - smaller hover area */}
       <div 
         className={`
           absolute right-0 top-1/2 -translate-y-1/2 
