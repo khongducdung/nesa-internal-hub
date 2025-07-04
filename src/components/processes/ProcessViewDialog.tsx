@@ -17,14 +17,14 @@ import {
   Globe,
   Edit2
 } from 'lucide-react';
-import { Process } from '@/hooks/useProcesses';
+import { ProcessWithDetails } from '@/hooks/useProcesses';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ProcessViewDialogProps {
-  process: Process | null;
+  process: ProcessWithDetails | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onEdit: (process: Process) => void;
+  onEdit: (process: ProcessWithDetails) => void;
 }
 
 export function ProcessViewDialog({ process, open, onOpenChange, onEdit }: ProcessViewDialogProps) {

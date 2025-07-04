@@ -14,20 +14,19 @@ import {
   Clock,
   XCircle
 } from 'lucide-react';
-import { useProcesses, useCreateProcess, useUpdateProcess, useDeleteProcess } from '@/hooks/useProcesses';
+import { useProcesses, useCreateProcess, useUpdateProcess, useDeleteProcess, type ProcessWithDetails } from '@/hooks/useProcesses';
 import { ProcessCard } from '@/components/processes/ProcessCard';
 import { ProcessFormDialog } from '@/components/processes/ProcessFormDialog';
 import { ProcessViewDialog } from '@/components/processes/ProcessViewDialog';
 import { useAuth } from '@/hooks/useAuth';
-import type { Process } from '@/hooks/useProcesses';
 
 export default function ProcessManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [selectedProcess, setSelectedProcess] = useState<Process | null>(null);
-  const [editingProcess, setEditingProcess] = useState<Process | null>(null);
+  const [selectedProcess, setSelectedProcess] = useState<ProcessWithDetails | null>(null);
+  const [editingProcess, setEditingProcess] = useState<ProcessWithDetails | null>(null);
 
   const { data: processes = [], isLoading } = useProcesses();
   const createMutation = useCreateProcess();
@@ -84,18 +83,18 @@ export default function ProcessManagement() {
     }
   };
 
-  const handleViewProcess = (process: Process) => {
+  const handleViewProcess = (process: ProcessWithDetails) => {
     setSelectedProcess(process);
     setViewDialogOpen(true);
   };
 
-  const handleEditProcess = (process: Process) => {
+  const handleEditProcess = (process: ProcessWithDetails) => {
     setEditingProcess(process);
     setFormDialogOpen(true);
     setViewDialogOpen(false);
   };
 
-  const handleDeleteProcess = async (process: Process) => {
+  const handleDeleteProcess = async (process: ProcessWithDetails) => {
     if (confirm(`Bạn có chắc chắn muốn xóa quy trình "${process.name}"?`)) {
       await deleteMutation.mutateAsync(process.id);
     }

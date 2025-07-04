@@ -17,13 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Process } from '@/hooks/useProcesses';
+import { ProcessWithDetails } from '@/hooks/useProcesses';
 
 interface ProcessFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: any) => void;
-  initialData?: Process | null;
+  initialData?: ProcessWithDetails | null;
   isLoading?: boolean;
 }
 

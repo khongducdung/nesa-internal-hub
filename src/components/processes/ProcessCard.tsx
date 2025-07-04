@@ -20,14 +20,14 @@ import {
   User,
   Globe
 } from 'lucide-react';
-import { Process } from '@/hooks/useProcesses';
+import { ProcessWithDetails } from '@/hooks/useProcesses';
 import { useAuth } from '@/hooks/useAuth';
 
 interface ProcessCardProps {
-  process: Process;
-  onView: (process: Process) => void;
-  onEdit: (process: Process) => void;
-  onDelete: (process: Process) => void;
+  process: ProcessWithDetails;
+  onView: (process: ProcessWithDetails) => void;
+  onEdit: (process: ProcessWithDetails) => void;
+  onDelete: (process: ProcessWithDetails) => void;
 }
 
 export function ProcessCard({ process, onView, onEdit, onDelete }: ProcessCardProps) {

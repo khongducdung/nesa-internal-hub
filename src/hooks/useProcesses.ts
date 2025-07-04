@@ -2,20 +2,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
 
-// Use the actual database schema from types.ts
-export interface Process {
-  id: string;
-  name: string;
-  description: string | null;
-  content: string | null;
-  status: 'draft' | 'active' | 'inactive';
-  target_type: 'employee' | 'department' | 'position' | 'general';
-  target_ids: string[];
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-  is_active: boolean;
+// Use the actual database type
+type Process = Database['public']['Tables']['processes']['Row'];
+type ProcessInsert = Database['public']['Tables']['processes']['Insert'];
+type ProcessUpdate = Database['public']['Tables']['processes']['Update'];
+
+// Extended type for queries with joined data
+export interface ProcessWithDetails extends Process {
   created_by_user?: {
     id: string;
     full_name: string;
@@ -36,7 +31,7 @@ export const useProcesses = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Process[];
+      return data as ProcessWithDetails[];
     }
   });
 };
@@ -58,7 +53,7 @@ export const useCreateProcess = () => {
         .from('processes')
         .insert([{
           ...processData,
-          created_by: (await supabase.auth.getUser()).data.user?.id
+          created_by: (await supabase.auth.getUser()).data.user?.id || ''
         }])
         .select()
         .single();
@@ -88,7 +83,7 @@ export const useUpdateProcess = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...processData }: Partial<Process> & { id: string }) => {
+    mutationFn: async ({ id, ...processData }: Partial<ProcessUpdate> & { id: string }) => {
       const { data, error } = await supabase
         .from('processes')
         .update(processData)
@@ -145,3 +140,6 @@ export const useDeleteProcess = () => {
     }
   });
 };
+
+// Export the types for use in other components
+export type { Process, ProcessWithDetails };
