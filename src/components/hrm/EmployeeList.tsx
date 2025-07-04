@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Table, 
   TableBody, 
@@ -21,8 +22,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Edit, Trash2, Plus, Search, Award, FileText } from 'lucide-react';
+import { Edit, Trash2, Plus, Search, Award, FileText, Filter } from 'lucide-react';
 import { useEmployees } from '@/hooks/useEmployees';
+import { useDepartments } from '@/hooks/useDepartments';
 import { useDeleteEmployee } from '@/hooks/useEmployeeMutations';
 import { EmployeeEditDialog } from './EmployeeEditDialog';
 import { EmployeeFormDialog } from './EmployeeFormDialog';
@@ -31,11 +33,13 @@ import { EmployeeJobDescriptionDialog } from './EmployeeJobDescriptionDialog';
 
 export function EmployeeList() {
   const { data: employees, isLoading } = useEmployees();
+  const { data: departments } = useDepartments();
   const deleteEmployee = useDeleteEmployee();
   const [editingEmployee, setEditingEmployee] = useState<string | null>(null);
   const [deletingEmployee, setDeletingEmployee] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   const [viewingCompetencyEmployee, setViewingCompetencyEmployee] = useState<string | null>(null);
   const [viewingJobDescEmployee, setViewingJobDescEmployee] = useState<string | null>(null);
 
@@ -65,6 +69,15 @@ export function EmployeeList() {
     }
   };
 
+  const getLevelPriority = (level: string) => {
+    switch (level) {
+      case 'level_1': return 1;
+      case 'level_2': return 2;
+      case 'level_3': return 3;
+      default: return 4;
+    }
+  };
+
   const handleDelete = async () => {
     if (deletingEmployee) {
       await deleteEmployee.mutateAsync(deletingEmployee);
@@ -72,13 +85,30 @@ export function EmployeeList() {
     }
   };
 
-  const filteredEmployees = employees?.filter(employee =>
-    employee.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    employee.employee_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (employee.phone && employee.phone.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    employee.departments?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    employee.positions?.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredAndSortedEmployees = employees
+    ?.filter(employee => {
+      const matchesSearch = employee.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        employee.employee_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (employee.phone && employee.phone.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        employee.departments?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        employee.positions?.name.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesDepartment = selectedDepartment === 'all' || employee.department_id === selectedDepartment;
+      
+      return matchesSearch && matchesDepartment;
+    })
+    .sort((a, b) => {
+      // Sort by employee level (level_1 first, then level_2, then level_3)
+      const levelA = getLevelPriority(a.employee_level || 'level_3');
+      const levelB = getLevelPriority(b.employee_level || 'level_3');
+      
+      if (levelA !== levelB) {
+        return levelA - levelB;
+      }
+      
+      // If same level, sort by full name
+      return a.full_name.localeCompare(b.full_name);
+    });
 
   if (isLoading) {
     return (
@@ -91,16 +121,34 @@ export function EmployeeList() {
   return (
     <>
       <div className="space-y-4">
-        {/* Header with search and create button */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Tìm kiếm nhân viên..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+        {/* Header with search, department filter and create button */}
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-4 flex-1">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Tìm kiếm nhân viên..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <div className="relative min-w-[200px]">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+              <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                <SelectTrigger className="pl-10">
+                  <SelectValue placeholder="Lọc theo phòng ban" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tất cả phòng ban</SelectItem>
+                  {departments?.map((dept) => (
+                    <SelectItem key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <Button onClick={() => setShowCreateForm(true)} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
@@ -124,7 +172,7 @@ export function EmployeeList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredEmployees?.map((employee) => (
+              {filteredAndSortedEmployees?.map((employee) => (
                 <TableRow key={employee.id}>
                   <TableCell className="font-medium">{employee.employee_code}</TableCell>
                   <TableCell>{employee.full_name}</TableCell>
@@ -183,7 +231,6 @@ export function EmployeeList() {
         onClose={() => setShowCreateForm(false)}
       />
 
-      {/* Edit Dialog */}
       {editingEmployee && (
         <EmployeeEditDialog
           employeeId={editingEmployee}
@@ -192,7 +239,6 @@ export function EmployeeList() {
         />
       )}
 
-      {/* Competency Framework Dialog */}
       {viewingCompetencyEmployee && (
         <CompetencyFrameworkViewDialog
           open={!!viewingCompetencyEmployee}
@@ -202,7 +248,6 @@ export function EmployeeList() {
         />
       )}
 
-      {/* Job Description Dialog */}
       {viewingJobDescEmployee && (
         <EmployeeJobDescriptionDialog
           open={!!viewingJobDescEmployee}
@@ -211,7 +256,6 @@ export function EmployeeList() {
         />
       )}
 
-      {/* Delete Confirmation */}
       <AlertDialog open={!!deletingEmployee} onOpenChange={() => setDeletingEmployee(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
