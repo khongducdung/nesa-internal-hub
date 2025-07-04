@@ -169,8 +169,9 @@ export function useCreateEmployee() {
   });
 }
 
-// Add mutation for creating employee account
+// Updated mutation for creating employee account using signUp instead of admin functions
 export function useCreateEmployeeAccount() {
+  const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
@@ -182,33 +183,48 @@ export function useCreateEmployeeAccount() {
     }) => {
       console.log('Creating account for employee:', employeeId);
       
-      // Create user account
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          full_name: fullName,
+      try {
+        // First, create the user account using signUp
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: fullName,
+            }
+          }
+        });
+
+        if (authError) {
+          console.error('Auth error:', authError);
+          throw new Error(`Lỗi tạo tài khoản: ${authError.message}`);
         }
-      });
 
-      if (authError) {
-        throw new Error(`Lỗi tạo tài khoản: ${authError.message}`);
+        if (!authData.user) {
+          throw new Error('Không thể tạo tài khoản người dùng');
+        }
+
+        console.log('User created successfully:', authData.user.id);
+
+        // Update employee record with auth_user_id
+        const { error: updateError } = await supabase
+          .from('employees')
+          .update({ auth_user_id: authData.user.id })
+          .eq('id', employeeId);
+
+        if (updateError) {
+          console.error('Update employee error:', updateError);
+          throw new Error(`Lỗi cập nhật thông tin nhân viên: ${updateError.message}`);
+        }
+
+        return authData.user;
+      } catch (error) {
+        console.error('Error in createEmployeeAccount:', error);
+        throw error;
       }
-
-      // Update employee record with auth_user_id
-      const { error: updateError } = await supabase
-        .from('employees')
-        .update({ auth_user_id: authData.user?.id })
-        .eq('id', employeeId);
-
-      if (updateError) {
-        throw updateError;
-      }
-
-      return authData.user;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['employees'] });
       toast({
         title: 'Thành công',
         description: 'Tạo tài khoản đăng nhập cho nhân viên thành công',
@@ -216,9 +232,22 @@ export function useCreateEmployeeAccount() {
     },
     onError: (error: any) => {
       console.error('Error in useCreateEmployeeAccount:', error);
+      
+      let errorMessage = 'Có lỗi xảy ra khi tạo tài khoản';
+      
+      if (error.message?.includes('User already registered')) {
+        errorMessage = 'Email này đã được đăng ký. Vui lòng sử dụng email khác.';
+      } else if (error.message?.includes('Invalid email')) {
+        errorMessage = 'Email không hợp lệ. Vui lòng kiểm tra lại.';
+      } else if (error.message?.includes('Password')) {
+        errorMessage = 'Mật khẩu không đủ mạnh. Vui lòng sử dụng mật khẩu ít nhất 6 ký tự.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: 'Lỗi',
-        description: error.message || 'Có lỗi xảy ra khi tạo tài khoản',
+        description: errorMessage,
         variant: 'destructive',
       });
     },

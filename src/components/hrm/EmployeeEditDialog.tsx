@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -129,10 +130,29 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
         cv_file_url: cvUrl || undefined,
       };
 
+      // Update employee information first
       await updateEmployee.mutateAsync({ id: employeeId, data: updateData });
 
       // Create account if requested and employee doesn't have one
       if (createAccount && password && !employee?.auth_user_id) {
+        if (!formData.email) {
+          toast({
+            title: 'Lỗi',
+            description: 'Email là bắt buộc để tạo tài khoản đăng nhập',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        if (password.length < 6) {
+          toast({
+            title: 'Lỗi',
+            description: 'Mật khẩu phải có ít nhất 6 ký tự',
+            variant: 'destructive',
+          });
+          return;
+        }
+
         await createEmployeeAccount.mutateAsync({
           employeeId,
           email: formData.email,
@@ -144,11 +164,7 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
       onClose();
     } catch (error) {
       console.error('Error updating employee:', error);
-      toast({
-        title: 'Lỗi',
-        description: 'Có lỗi xảy ra khi cập nhật nhân viên',
-        variant: 'destructive',
-      });
+      // Error will be handled by the mutation's onError callback
     }
   };
 
@@ -465,11 +481,15 @@ export function EmployeeEditDialog({ employeeId, open, onClose }: EmployeeEditDi
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Nhập mật khẩu cho nhân viên"
+                    placeholder="Nhập mật khẩu cho nhân viên (ít nhất 6 ký tự)"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required={createAccount}
+                    minLength={6}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Mật khẩu phải có ít nhất 6 ký tự
+                  </p>
                 </div>
               )}
             </div>
