@@ -3,6 +3,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Users, Building2, Settings, X, Home, FileText, TrendingUp, Target, BarChart3, LogOut, Clock } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useEmployees } from '@/hooks/useEmployees';
+import { useDepartments } from '@/hooks/useDepartments';
+import { usePositions } from '@/hooks/usePositions';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,9 +22,17 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: SidebarProps) {
-  const { profile, isSuperAdmin, isAdmin, signOut } = useAuth();
+  const { profile, isSuperAdmin, isAdmin, signOut, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { data: employees } = useEmployees();
+  const { data: departments } = useDepartments();
+  const { data: positions } = usePositions();
+
+  // Get current employee info
+  const currentEmployee = employees?.find(emp => emp.auth_user_id === user?.id);
+  const currentDepartment = departments?.find(dept => dept.id === currentEmployee?.department_id);
+  const currentPosition = positions?.find(pos => pos.id === currentEmployee?.position_id);
 
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard', access: 'all' },
@@ -94,21 +105,32 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
         <div className={`p-3 border-b border-white/20 ${isCollapsed ? 'px-2' : ''}`}>
           <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} bg-white/10 rounded-lg p-3`}>
             <div className="flex items-center">
-              <div className={`w-10 h-10 bg-white rounded-full flex items-center justify-center flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`}>
-                <span className="text-primary font-bold text-sm">
-                  {profile?.full_name ? profile.full_name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2) : 'DK'}
-                </span>
+              <div className={`w-10 h-10 rounded-full overflow-hidden bg-white/20 flex items-center justify-center flex-shrink-0 ${isCollapsed ? '' : 'mr-3'}`}>
+                {currentEmployee?.avatar_url ? (
+                  <img 
+                    src={currentEmployee.avatar_url} 
+                    alt="Avatar" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-white font-bold text-sm">
+                    {currentEmployee?.full_name 
+                      ? currentEmployee.full_name.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2)
+                      : 'A'
+                    }
+                  </span>
+                )}
               </div>
               {!isCollapsed && (
                 <div className="flex flex-col">
                   <p className="text-sm font-medium text-white leading-tight">
-                    {profile?.full_name || 'Khổng Đức Dũng'}
+                    {currentEmployee?.full_name || 'Admin'}
                   </p>
                   <p className="text-xs text-white/80 leading-tight">
-                    {profile?.employee_code || 'khongducdzung@gmail...'}
+                    {currentDepartment?.name || 'Chưa có phòng ban'}
                   </p>
                   <span className="text-xs bg-primary text-white px-2 py-0.5 rounded mt-1 w-fit">
-                    Admin
+                    {currentPosition?.name || 'Admin'}
                   </span>
                 </div>
               )}
