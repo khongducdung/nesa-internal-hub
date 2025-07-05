@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,33 +78,6 @@ export function IdeaWidget({ onClose }: IdeaWidgetProps) {
   const updateIdea = useUpdateIdea();
   const deleteIdea = useDeleteIdea();
   const createNotification = useCreateNotification();
-
-  // Handle click outside for dialog closure - this will close all windows
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      // If any dialog is open (create, edit, or view), close everything when clicking outside
-      if (isCreateOpen || editingIdea || viewingIdea) {
-        const dialogElement = document.querySelector('[role="dialog"]');
-        if (dialogElement && !dialogElement.contains(event.target as Node)) {
-          // Close all dialogs and the main widget
-          setIsCreateOpen(false);
-          setEditingIdea(null);
-          setViewingIdea(null);
-          if (onClose) {
-            onClose();
-          }
-        }
-      }
-    };
-
-    if (isCreateOpen || editingIdea || viewingIdea) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isCreateOpen, editingIdea, viewingIdea, onClose]);
 
   const resetForm = () => {
     setFormData({
