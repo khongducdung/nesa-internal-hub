@@ -172,24 +172,13 @@ export const useSaveNotificationSettings = () => {
   });
 };
 
-// OKR Data hooks
+// OKR Data hooks - Using mock data for now since the actual OKR tables don't exist yet
 export const useCompanyOKRs = () => {
   return useQuery({
     queryKey: ['company-okrs'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('okrs')
-        .select(`
-          *,
-          key_results (*),
-          department:departments (*),
-          employee:employees (*)
-        `)
-        .eq('owner_type', 'company')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+      // Return mock data since OKR tables don't exist yet
+      return [];
     }
   });
 };
@@ -198,19 +187,8 @@ export const useDepartmentOKRs = () => {
   return useQuery({
     queryKey: ['department-okrs'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('okrs')
-        .select(`
-          *,
-          key_results (*),
-          department:departments (*),
-          employee:employees (*)
-        `)
-        .eq('owner_type', 'department')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+      // Return mock data since OKR tables don't exist yet
+      return [];
     }
   });
 };
@@ -219,19 +197,8 @@ export const useIndividualOKRs = () => {
   return useQuery({
     queryKey: ['individual-okrs'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('okrs')
-        .select(`
-          *,
-          key_results (*),
-          department:departments (*),
-          employee:employees (*)
-        `)
-        .eq('owner_type', 'individual')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+      // Return mock data since OKR tables don't exist yet
+      return [];
     }
   });
 };
@@ -240,23 +207,8 @@ export const useMyOKRs = () => {
   return useQuery({
     queryKey: ['my-okrs'],
     queryFn: async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) return [];
-
-      const { data, error } = await supabase
-        .from('okrs')
-        .select(`
-          *,
-          key_results (*),
-          department:departments (*),
-          employee:employees (*)
-        `)
-        .eq('owner_type', 'individual')
-        .eq('employee_id', userData.user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
+      // Return mock data since OKR tables don't exist yet
+      return [];
     }
   });
 };
@@ -265,14 +217,8 @@ export const useCurrentOKRCycle = () => {
   return useQuery({
     queryKey: ['current-okr-cycle'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('okr_cycles')
-        .select('*')
-        .eq('is_current', true)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      return data;
+      // Return mock data since OKR tables don't exist yet
+      return null;
     }
   });
 };
@@ -281,33 +227,54 @@ export const useOKRDashboardStats = () => {
   return useQuery({
     queryKey: ['okr-dashboard-stats'],
     queryFn: async () => {
-      // This would normally aggregate data from multiple tables
-      // For now, return mock data structure
+      // Return mock data structure that matches what the components expect
       return {
         totalOKRs: 0,
         completedOKRs: 0,
         averageProgress: 0,
-        upcomingDeadlines: 0
+        upcomingDeadlines: 0,
+        cycle_progress: {
+          total_days: 90,
+          completed_days: 30,
+          remaining_days: 60,
+          progress_percentage: 33
+        },
+        okr_summary: {
+          total: 0,
+          completed: 0,
+          on_track: 0,
+          at_risk: 0,
+          overdue: 0
+        },
+        key_results_summary: {
+          total: 0,
+          completed: 0,
+          on_track: 0,
+          at_risk: 0,
+          not_started: 0
+        },
+        company_okrs: 0,
+        department_okrs: 0,
+        individual_okrs: 0,
+        alignment_score: 0,
+        recent_activities: [],
+        top_performers: [],
+        alerts: []
       };
     }
   });
 };
 
-// OKR Mutation hooks
+// OKR Mutation hooks - Using mock implementations
 export const useCreateOKR = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (okrData: any) => {
-      const { data, error } = await supabase
-        .from('okrs')
-        .insert([okrData])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      // Mock implementation - will need real OKR tables
+      console.log('Creating OKR:', okrData);
+      return { id: 'mock-id', ...okrData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company-okrs'] });
@@ -336,15 +303,9 @@ export const useUpdateOKR = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...updateData }: any) => {
-      const { data, error } = await supabase
-        .from('okrs')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      // Mock implementation - will need real OKR tables
+      console.log('Updating OKR:', id, updateData);
+      return { id, ...updateData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company-okrs'] });
@@ -373,12 +334,8 @@ export const useDeleteOKR = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('okrs')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
+      // Mock implementation - will need real OKR tables
+      console.log('Deleting OKR:', id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company-okrs'] });
@@ -407,14 +364,9 @@ export const useCreateOKRCycle = () => {
 
   return useMutation({
     mutationFn: async (cycleData: any) => {
-      const { data, error } = await supabase
-        .from('okr_cycles')
-        .insert([cycleData])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      // Mock implementation - will need real OKR tables
+      console.log('Creating OKR Cycle:', cycleData);
+      return { id: 'mock-cycle-id', ...cycleData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['current-okr-cycle'] });
@@ -440,15 +392,9 @@ export const useUpdateKeyResultProgress = () => {
 
   return useMutation({
     mutationFn: async ({ keyResultId, newValue }: { keyResultId: string; newValue: number }) => {
-      const { data, error } = await supabase
-        .from('key_results')
-        .update({ current_value: newValue })
-        .eq('id', keyResultId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      // Mock implementation - will need real key_results table
+      console.log('Updating Key Result Progress:', keyResultId, newValue);
+      return { keyResultId, newValue };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company-okrs'] });
@@ -473,14 +419,9 @@ export const useCreateOKRCheckIn = () => {
 
   return useMutation({
     mutationFn: async (checkInData: any) => {
-      const { data, error } = await supabase
-        .from('okr_check_ins')
-        .insert([checkInData])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      // Mock implementation - will need real check-in table
+      console.log('Creating OKR Check-in:', checkInData);
+      return { id: 'mock-checkin-id', ...checkInData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company-okrs'] });
