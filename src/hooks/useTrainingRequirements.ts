@@ -10,7 +10,7 @@ export interface TrainingRequirement {
   reason?: string;
   course_url?: string;
   duration_days: number;
-  target_type: 'general' | 'department' | 'position' | 'employee';
+  target_type: 'general' | 'department' | 'position' | 'employee' | 'mixed';
   target_ids?: string[];
   auto_assign_after_days: number;
   is_active: boolean;
