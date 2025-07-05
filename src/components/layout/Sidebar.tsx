@@ -1,7 +1,6 @@
-
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Users, Building2, Settings, X, Home, FileText, TrendingUp, Target, BarChart3, LogOut, Clock } from 'lucide-react';
+import { Users, Building2, Settings, X, Home, FileText, TrendingUp, Target, BarChart3, LogOut, Clock, Bot } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
@@ -36,6 +35,7 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
 
   const menuItems = [
     { icon: Home, label: 'Dashboard', path: '/dashboard', access: 'all' },
+    { icon: Bot, label: 'NESA AI', path: 'https://nesa.ai.vn', access: 'all', external: true },
     { icon: Users, label: 'Quản lý nhân sự', path: '/hrm', access: 'all' },
     { icon: Clock, label: 'Chấm công', path: '/attendance', access: 'all' },
     { icon: FileText, label: 'Quản lý quy trình', path: '/processes', access: 'all' },
@@ -44,9 +44,13 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
     { icon: Settings, label: 'Cài đặt hệ thống', path: '/settings', access: 'super_admin' }
   ];
 
-  const handleNavigation = (path: string) => {
+  const handleNavigation = (path: string, external?: boolean) => {
     console.log('Navigating to:', path);
-    navigate(path);
+    if (external) {
+      window.open(path, '_blank');
+    } else {
+      navigate(path);
+    }
     if (window.innerWidth < 1024) {
       toggleSidebar();
     }
@@ -169,7 +173,7 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
         <nav className="flex-1 p-3 pt-6 space-y-1 overflow-y-auto">
           {menuItems.map(item => {
             if (!hasAccess(item.access)) return null;
-            const isActive = location.pathname === item.path;
+            const isActive = !item.external && location.pathname === item.path;
             const Icon = item.icon;
             
             return (
@@ -181,7 +185,7 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
                     ? 'bg-white/10 text-white' 
                     : 'text-white/80 hover:bg-white/10 hover:text-white'
                 }`}
-                onClick={() => handleNavigation(item.path)}
+                onClick={() => handleNavigation(item.path, item.external)}
                 title={isCollapsed ? item.label : undefined}
               >
                 <Icon className={`h-5 w-5 ${isActive ? 'text-white' : ''} ${isCollapsed ? '' : 'mr-3'}`} />
