@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -22,15 +23,6 @@ interface CompanyPolicyFormProps {
   initialData?: CompanyPolicy | null;
 }
 
-interface CustomNotificationDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onConfirm: (sendNotification: boolean) => void;
-  targetCount: number;
-  itemName: string;
-  isUpdate: boolean;
-}
-
 function CustomNotificationDialog({
   open,
   onOpenChange,
@@ -38,7 +30,14 @@ function CustomNotificationDialog({
   targetCount,
   itemName,
   isUpdate
-}: CustomNotificationDialogProps) {
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: (sendNotification: boolean) => void;
+  targetCount: number;
+  itemName: string;
+  isUpdate: boolean;
+}) {
   const [sendNotification, setSendNotification] = useState(true);
 
   const handleConfirm = () => {
@@ -331,11 +330,16 @@ export function CompanyPolicyForm({ open, onOpenChange, onSubmit, initialData }:
               </Select>
             </div>
 
-            <TargetSelector
-              targetType={formData.target_type}
-              selectedIds={formData.target_ids}
-              onSelectionChange={(ids) => setFormData(prev => ({ ...prev, target_ids: ids }))}
-            />
+            {formData.target_type !== 'general' && (
+              <div className="space-y-2">
+                <Label>Chọn đối tượng áp dụng</Label>
+                <TargetSelector
+                  targetType={formData.target_type}
+                  selectedIds={formData.target_ids}
+                  onSelectionChange={(ids) => setFormData(prev => ({ ...prev, target_ids: ids }))}
+                />
+              </div>
+            )}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
