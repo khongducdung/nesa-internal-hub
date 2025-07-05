@@ -8,6 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { BarChart3, TrendingUp, TrendingDown, Target, Users, Building2, Calendar, Download, FileText } from 'lucide-react';
 import { useOKRDashboardStats, useCompanyOKRs, useDepartmentOKRs, useIndividualOKRs } from '@/hooks/useOKRSystem';
 
+// Define proper types for the statistics
+type DepartmentStat = {
+  total: number;
+  avgProgress: number;
+  progressSum: number;
+};
+
+type DepartmentStats = Record<string, DepartmentStat>;
+
 export function OKRAnalytics() {
   const { data: dashboardStats } = useOKRDashboardStats();
   const { data: companyOKRs = [] } = useCompanyOKRs();
@@ -18,27 +27,28 @@ export function OKRAnalytics() {
   
   const getStatusStats = () => {
     const total = allOKRs.length;
-    const completed = allOKRs.filter(okr => okr.status === 'completed').length;
-    const onTrack = allOKRs.filter(okr => okr.progress >= 70 && okr.status !== 'completed').length;
-    const atRisk = allOKRs.filter(okr => okr.progress < 70 && okr.progress >= 30).length;
-    const overdue = allOKRs.filter(okr => okr.progress < 30).length;
+    const completed = allOKRs.filter((okr: any) => okr.status === 'completed').length;
+    const onTrack = allOKRs.filter((okr: any) => okr.progress >= 70 && okr.status !== 'completed').length;
+    const atRisk = allOKRs.filter((okr: any) => okr.progress < 70 && okr.progress >= 30).length;
+    const overdue = allOKRs.filter((okr: any) => okr.progress < 30).length;
     
     return { total, completed, onTrack, atRisk, overdue };
   };
 
   const statusStats = getStatusStats();
-  const avgProgress = allOKRs.length > 0 ? Math.round(allOKRs.reduce((sum, okr) => sum + okr.progress, 0) / allOKRs.length) : 0;
+  const avgProgress = allOKRs.length > 0 ? Math.round(allOKRs.reduce((sum: number, okr: any) => sum + (okr.progress || 0), 0) / allOKRs.length) : 0;
 
-  const departmentStats = departmentOKRs.reduce((acc, okr) => {
+  // Fix the departmentStats typing
+  const departmentStats: DepartmentStats = departmentOKRs.reduce((acc: DepartmentStats, okr: any) => {
     const deptName = okr.department?.name || 'Không xác định';
     if (!acc[deptName]) {
       acc[deptName] = { total: 0, avgProgress: 0, progressSum: 0 };
     }
     acc[deptName].total++;
-    acc[deptName].progressSum += okr.progress;
+    acc[deptName].progressSum += okr.progress || 0;
     acc[deptName].avgProgress = Math.round(acc[deptName].progressSum / acc[deptName].total);
     return acc;
-  }, {} as Record<string, { total: number; avgProgress: number; progressSum: number }>);
+  }, {} as DepartmentStats);
 
   return (
     <div className="space-y-6">
@@ -197,7 +207,7 @@ export function OKRAnalytics() {
           <CardContent>
             <div className="text-2xl font-bold">{companyOKRs.length}</div>
             <div className="text-sm text-muted-foreground mt-1">
-              TB: {companyOKRs.length > 0 ? Math.round(companyOKRs.reduce((sum, okr) => sum + okr.progress, 0) / companyOKRs.length) : 0}%
+              TB: {companyOKRs.length > 0 ? Math.round(companyOKRs.reduce((sum: number, okr: any) => sum + (okr.progress || 0), 0) / companyOKRs.length) : 0}%
             </div>
           </CardContent>
         </Card>
@@ -212,7 +222,7 @@ export function OKRAnalytics() {
           <CardContent>
             <div className="text-2xl font-bold">{departmentOKRs.length}</div>
             <div className="text-sm text-muted-foreground mt-1">
-              TB: {departmentOKRs.length > 0 ? Math.round(departmentOKRs.reduce((sum, okr) => sum + okr.progress, 0) / departmentOKRs.length) : 0}%
+              TB: {departmentOKRs.length > 0 ? Math.round(departmentOKRs.reduce((sum: number, okr: any) => sum + (okr.progress || 0), 0) / departmentOKRs.length) : 0}%
             </div>
           </CardContent>
         </Card>
@@ -227,7 +237,7 @@ export function OKRAnalytics() {
           <CardContent>
             <div className="text-2xl font-bold">{individualOKRs.length}</div>
             <div className="text-sm text-muted-foreground mt-1">
-              TB: {individualOKRs.length > 0 ? Math.round(individualOKRs.reduce((sum, okr) => sum + okr.progress, 0) / individualOKRs.length) : 0}%
+              TB: {individualOKRs.length > 0 ? Math.round(individualOKRs.reduce((sum: number, okr: any) => sum + (okr.progress || 0), 0) / individualOKRs.length) : 0}%
             </div>
           </CardContent>
         </Card>
