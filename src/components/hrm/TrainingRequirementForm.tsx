@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -7,13 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { useDepartments } from '@/hooks/useDepartments';
-import { usePositions } from '@/hooks/usePositions';
-import { useEmployees } from '@/hooks/useEmployees';
 import { useCreateTrainingRequirement } from '@/hooks/useTrainingRequirements';
+import { MultiTargetSelector } from './MultiTargetSelector';
 
 const trainingRequirementSchema = z.object({
   name: z.string().min(1, 'Tên chương trình không được để trống'),
@@ -21,22 +18,24 @@ const trainingRequirementSchema = z.object({
   reason: z.string().optional(),
   course_url: z.string().url('URL khóa học không hợp lệ').optional().or(z.literal('')),
   duration_days: z.number().min(1, 'Thời gian phải lớn hơn 0'),
-  target_type: z.enum(['general', 'department', 'position', 'employee']),
-  target_ids: z.array(z.string()).optional(),
   auto_assign_after_days: z.number().min(0, 'Số ngày không được âm'),
   is_active: z.boolean(),
 });
 
 type TrainingRequirementFormData = z.infer<typeof trainingRequirementSchema>;
 
+interface TargetSelection {
+  type: 'department' | 'position' | 'employee';
+  id: string;
+  name: string;
+}
+
 interface TrainingRequirementFormProps {
   onSuccess?: () => void;
 }
 
 export function TrainingRequirementForm({ onSuccess }: TrainingRequirementFormProps) {
-  const { data: departments } = useDepartments();
-  const { data: positions } = usePositions();
-  const { data: employees } = useEmployees();
+  const [selectedTargets, setSelectedTargets] = useState<TargetSelection[]>([]);
   const createTrainingRequirement = useCreateTrainingRequirement();
 
   const form = useForm<TrainingRequirementFormData>({
@@ -47,105 +46,48 @@ export function TrainingRequirementForm({ onSuccess }: TrainingRequirementFormPr
       reason: '',
       course_url: '',
       duration_days: 30,
-      target_type: 'general',
-      target_ids: [],
       auto_assign_after_days: 0,
       is_active: true,
     },
   });
 
-  const targetType = form.watch('target_type');
-
   const onSubmit = async (data: TrainingRequirementFormData) => {
     try {
-      // Ensure all required fields are present and properly typed
+      // Process selected targets to determine target_type and target_ids
+      let target_type: 'general' | 'department' | 'position' | 'employee' | 'mixed' = 'general';
+      let target_ids: string[] = [];
+
+      if (selectedTargets.length > 0) {
+        // Check if all targets are of the same type
+        const uniqueTypes = [...new Set(selectedTargets.map(t => t.type))];
+        
+        if (uniqueTypes.length === 1) {
+          target_type = uniqueTypes[0];
+        } else {
+          target_type = 'mixed';
+        }
+        
+        target_ids = selectedTargets.map(t => t.id);
+      }
+
       const formattedData = {
         name: data.name,
         description: data.description || undefined,
         reason: data.reason || undefined,
         course_url: data.course_url || undefined,
         duration_days: data.duration_days,
-        target_type: data.target_type,
-        target_ids: data.target_ids || undefined,
+        target_type,
+        target_ids: target_ids.length > 0 ? target_ids : undefined,
         auto_assign_after_days: data.auto_assign_after_days,
         is_active: data.is_active,
       };
       
       await createTrainingRequirement.mutateAsync(formattedData);
       form.reset();
+      setSelectedTargets([]);
       onSuccess?.();
     } catch (error) {
       console.error('Error creating training requirement:', error);
-    }
-  };
-
-  const renderTargetSelection = () => {
-    switch (targetType) {
-      case 'department':
-        return (
-          <div className="space-y-2">
-            <Label>Chọn phòng ban</Label>
-            <Select
-              value={form.watch('target_ids')?.[0] || ''}
-              onValueChange={(value) => form.setValue('target_ids', [value])}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn phòng ban" />
-              </SelectTrigger>
-              <SelectContent>
-                {departments?.map((dept) => (
-                  <SelectItem key={dept.id} value={dept.id}>
-                    {dept.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        );
-      case 'position':
-        return (
-          <div className="space-y-2">
-            <Label>Chọn chức vụ</Label>
-            <Select
-              value={form.watch('target_ids')?.[0] || ''}
-              onValueChange={(value) => form.setValue('target_ids', [value])}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn chức vụ" />
-              </SelectTrigger>
-              <SelectContent>
-                {positions?.map((pos) => (
-                  <SelectItem key={pos.id} value={pos.id}>
-                    {pos.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        );
-      case 'employee':
-        return (
-          <div className="space-y-2">
-            <Label>Chọn nhân viên</Label>
-            <Select
-              value={form.watch('target_ids')?.[0] || ''}
-              onValueChange={(value) => form.setValue('target_ids', [value])}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn nhân viên" />
-              </SelectTrigger>
-              <SelectContent>
-                {employees?.map((emp) => (
-                  <SelectItem key={emp.id} value={emp.id}>
-                    {emp.full_name} ({emp.employee_code})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        );
-      default:
-        return null;
     }
   };
 
@@ -216,41 +158,24 @@ export function TrainingRequirementForm({ onSuccess }: TrainingRequirementFormPr
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Đối tượng áp dụng</Label>
-              <Select
-                value={targetType}
-                onValueChange={(value) => {
-                  form.setValue('target_type', value as any);
-                  form.setValue('target_ids', []);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="general">Tất cả nhân viên</SelectItem>
-                  <SelectItem value="department">Theo phòng ban</SelectItem>
-                  <SelectItem value="position">Theo chức vụ</SelectItem>
-                  <SelectItem value="employee">Nhân viên cụ thể</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="auto_assign_after_days">Tự động giao sau (ngày)</Label>
-              <Input
-                id="auto_assign_after_days"
-                type="number"
-                {...form.register('auto_assign_after_days', { valueAsNumber: true })}
-                min="0"
-                placeholder="0 = giao ngay lập tức"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="auto_assign_after_days">Tự động giao sau (ngày)</Label>
+            <Input
+              id="auto_assign_after_days"
+              type="number"
+              {...form.register('auto_assign_after_days', { valueAsNumber: true })}
+              min="0"
+              placeholder="0 = giao ngay lập tức"
+            />
           </div>
 
-          {renderTargetSelection()}
+          <div className="space-y-4">
+            <Label>Đối tượng áp dụng</Label>
+            <MultiTargetSelector
+              selectedTargets={selectedTargets}
+              onSelectionChange={setSelectedTargets}
+            />
+          </div>
 
           <div className="flex items-center space-x-2">
             <Switch
