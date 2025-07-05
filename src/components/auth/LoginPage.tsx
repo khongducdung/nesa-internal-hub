@@ -67,85 +67,24 @@ export function LoginPage() {
         variant: "destructive"
       });
     } else {
-      // Create a custom toast for password reset that appears in center and lasts 20 seconds
-      const customToastElement = document.createElement('div');
-      customToastElement.innerHTML = `
-        <div style="
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          z-index: 9999;
-          background: white;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          padding: 24px;
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-          max-width: 500px;
-          width: 90vw;
-          backdrop-filter: blur(8px);
-          background-color: rgba(255, 255, 255, 0.95);
-        ">
-          <div style="display: flex; align-items: flex-start; gap: 16px;">
-            <div style="flex: 1;">
-              <h3 style="font-weight: 600; font-size: 16px; margin: 0 0 8px 0; color: #1f2937;">
-                NESA Groups - cấp lại mật khẩu
-              </h3>
-              <p style="color: #6b7280; font-size: 14px; line-height: 1.5; margin: 0;">
-                Ê...! Cái não cá vàng, sau lần này nhớ đổi mật khẩu giống như mật khẩu ngân hàng đó em nhé. Hay là mật khẩu ngân hàng cũng quên nốt hả cái đồ tồi này. Thôi kệ em, em kiểm tra email đi.
-              </p>
-            </div>
-            <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
-              background: none;
-              border: none;
-              font-size: 18px;
-              color: #9ca3af;
-              cursor: pointer;
-              padding: 0;
-              width: 24px;
-              height: 24px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border-radius: 4px;
-            " onmouseover="this.style.color='#6b7280'" onmouseout="this.style.color='#9ca3af'">×</button>
-          </div>
-        </div>
-      `;
-
-      // Create backdrop
+      // Tạo backdrop blur chỉ cho thông báo lấy lại mật khẩu
       const backdrop = document.createElement('div');
-      backdrop.style.cssText = `
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-        z-index: 9998;
-      `;
-
+      backdrop.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-[99]';
+      backdrop.id = 'password-reset-backdrop';
       document.body.appendChild(backdrop);
-      document.body.appendChild(customToastElement);
-
-      // Auto remove after 20 seconds
+      
+      toast({
+        title: "NESA Groups - cấp lại mật khẩu",
+        description: "Ê...! Cái não cá vàng, sau lần này nhớ đổi mật khẩu giống như mật khẩu ngân hàng đó em nhé. Hay là mật khẩu ngân hàng cũng quên nốt hả cái đồ tồi này. Thôi kệ em, em kiểm tra email đi.",
+      });
+      
+      // Xóa backdrop sau 5 giây
       setTimeout(() => {
-        if (customToastElement.parentElement) {
-          document.body.removeChild(customToastElement);
-        }
-        if (backdrop.parentElement) {
-          document.body.removeChild(backdrop);
+        const backdropElement = document.getElementById('password-reset-backdrop');
+        if (backdropElement) {
+          document.body.removeChild(backdropElement);
         }
       }, 20000);
-
-      // Allow clicking backdrop to close
-      backdrop.onclick = () => {
-        if (customToastElement.parentElement) {
-          document.body.removeChild(customToastElement);
-        }
-        if (backdrop.parentElement) {
-          document.body.removeChild(backdrop);
-        }
-      };
-
       setShowResetForm(false);
       setResetEmail('');
     }
