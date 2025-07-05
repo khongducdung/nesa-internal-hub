@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { IdeaTargetSelector } from './IdeaTargetSelector';
 import { 
   Lightbulb, 
   Plus, 
@@ -25,12 +27,19 @@ import { useMyIdeas, useSharedIdeas, useCreateIdea, useUpdateIdea, useDeleteIdea
 import { useCreateNotification } from '@/hooks/useNotifications';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogOverlay } from '@/components/ui/dialog';
 
+interface TargetSelection {
+  type: 'department' | 'position' | 'employee';
+  id: string;
+  name: string;
+}
+
 interface IdeaFormData {
   title: string;
   content: string;
   tags: string;
   is_shared: boolean;
   priority: 'low' | 'medium' | 'high';
+  shareTargets: TargetSelection[];
 }
 
 interface IdeaWidgetProps {
@@ -60,7 +69,8 @@ export function IdeaWidget({ onClose }: IdeaWidgetProps) {
     content: '',
     tags: '',
     is_shared: false,
-    priority: 'medium'
+    priority: 'medium',
+    shareTargets: []
   });
 
   const { data: myIdeas = [] } = useMyIdeas();
@@ -103,7 +113,8 @@ export function IdeaWidget({ onClose }: IdeaWidgetProps) {
       content: '',
       tags: '',
       is_shared: false,
-      priority: 'medium'
+      priority: 'medium',
+      shareTargets: []
     });
     setEditingIdea(null);
   };
@@ -111,12 +122,24 @@ export function IdeaWidget({ onClose }: IdeaWidgetProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const ideaData: CreateIdeaData = {
+    // Prepare share data
+    const shareData = formData.is_shared && formData.shareTargets.length > 0 ? {
+      shared_with_departments: formData.shareTargets
+        .filter(t => t.type === 'department')
+        .map(t => t.id),
+      shared_with_users: formData.shareTargets
+        .filter(t => t.type === 'employee')
+        .map(t => t.id),
+      // Note: positions would need a separate field in the database
+    } : {};
+
+    const ideaData: CreateIdeaData & any = {
       title: formData.title,
       content: formData.content,
       tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
       is_shared: formData.is_shared,
-      priority: formData.priority
+      priority: formData.priority,
+      ...shareData
     };
 
     if (editingIdea) {
@@ -125,22 +148,10 @@ export function IdeaWidget({ onClose }: IdeaWidgetProps) {
     } else {
       const newIdea = await createIdea.mutateAsync(ideaData);
       
-      // Create notification if idea is shared
-      if (ideaData.is_shared) {
-        // For now, we'll create a general notification - later we can extend to specific users/departments
-        const user = await import('@/integrations/supabase/client').then(m => m.supabase.auth.getUser());
-        if (user.data.user) {
-          createNotification.mutate({
-            user_id: user.data.user.id,
-            title: 'Ý tưởng mới được chia sẻ',
-            message: `Ý tưởng "${ideaData.title}" đã được chia sẻ công khai`,
-            type: 'info',
-            category: 'ideas',
-            reference_id: newIdea.id,
-            reference_type: 'ideas',
-            created_by: user.data.user.id
-          });
-        }
+      // Create notifications for shared ideas
+      if (ideaData.is_shared && formData.shareTargets.length > 0) {
+        // This would need to be implemented based on your notification system
+        console.log('Create notifications for shared idea:', formData.shareTargets);
       }
       
       // Reset form but keep dialog open for new ideas
@@ -149,7 +160,8 @@ export function IdeaWidget({ onClose }: IdeaWidgetProps) {
         content: '',
         tags: '',
         is_shared: false,
-        priority: 'medium'
+        priority: 'medium',
+        shareTargets: []
       });
     }
 
@@ -165,7 +177,8 @@ export function IdeaWidget({ onClose }: IdeaWidgetProps) {
       content: idea.content,
       tags: idea.tags.join(', '),
       is_shared: idea.is_shared,
-      priority: idea.priority
+      priority: idea.priority,
+      shareTargets: [] // Would need to reconstruct from idea data
     });
     setIsCreateOpen(true);
   };
@@ -280,7 +293,7 @@ export function IdeaWidget({ onClose }: IdeaWidgetProps) {
   };
 
   return (
-    <div className="w-[500px] h-[650px] bg-background border border-border/50 rounded-2xl shadow-xl backdrop-blur-xl overflow-hidden" style={{ zIndex: 60 }}>
+    <div className="w-[500px] h-[650px] bg-background border border-border/50 rounded-2xl shadow-xl backdrop-blur-xl overflow-hidden" style={{ zIndex: 70 }}>
       {/* Header */}
       <div className="p-4 border-b border-border/50 bg-gradient-to-r from-primary/5 to-purple-500/5">
         <div className="flex items-center justify-between mb-3">
@@ -298,7 +311,7 @@ export function IdeaWidget({ onClose }: IdeaWidgetProps) {
                   <Plus className="h-4 w-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-[95vw]" style={{ zIndex: 70 }}>
+              <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-[95vw]" style={{ zIndex: 80 }}>
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Lightbulb className="h-5 w-5 text-yellow-500" />
@@ -344,10 +357,10 @@ export function IdeaWidget({ onClose }: IdeaWidgetProps) {
                       <Select value={formData.priority} onValueChange={(value: 'low' | 'medium' | 'high') => 
                         setFormData(prev => ({ ...prev, priority: value }))
                       }>
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger className="w-32" style={{ zIndex: 9999 }}>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent style={{ zIndex: 9999 }}>
                           <SelectItem value="low">Thấp</SelectItem>
                           <SelectItem value="medium">Trung bình</SelectItem>
                           <SelectItem value="high">Cao</SelectItem>
@@ -361,9 +374,16 @@ export function IdeaWidget({ onClose }: IdeaWidgetProps) {
                         checked={formData.is_shared}
                         onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_shared: checked }))}
                       />
-                      <Label htmlFor="share" className="text-sm">Chia sẻ công khai</Label>
+                      <Label htmlFor="share" className="text-sm">Chia sẻ</Label>
                     </div>
                   </div>
+
+                  {formData.is_shared && (
+                    <IdeaTargetSelector
+                      selectedTargets={formData.shareTargets}
+                      onSelectionChange={(targets) => setFormData(prev => ({ ...prev, shareTargets: targets }))}
+                    />
+                  )}
                   
                   <div className="flex gap-2 pt-2">
                     <Button type="submit" disabled={createIdea.isPending || updateIdea.isPending} className="flex-1">
@@ -379,7 +399,7 @@ export function IdeaWidget({ onClose }: IdeaWidgetProps) {
 
              {/* View Idea Dialog */}
              <Dialog open={!!viewingIdea} onOpenChange={() => setViewingIdea(null)}>
-               <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-[95vw]" style={{ zIndex: 70 }}>
+               <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-[95vw]" style={{ zIndex: 80 }}>
                  <DialogHeader>
                    <DialogTitle className="flex items-center gap-2">
                      <Lightbulb className="h-5 w-5 text-yellow-500" />

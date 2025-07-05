@@ -41,17 +41,19 @@ export function RightTaskbar() {
     setActiveWidget(null);
   };
 
-  // Remove the useEffect that handles click outside
-  // The main widget should not close when clicking outside
-
   return (
     <div className="fixed right-0 top-0 h-full z-[40] pointer-events-none">
+      {/* Backdrop overlay when widget is active */}
+      {activeWidget && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[45] pointer-events-auto" />
+      )}
+
       {/* Active Widget */}
       {activeWidget && (() => {
         const utility = utilities.find(u => u.id === activeWidget);
         const WidgetComponent = utility?.widget;
         return WidgetComponent ? (
-          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-auto" data-widget-container>
+          <div className="fixed inset-0 flex items-center justify-center z-[60] pointer-events-auto" data-widget-container>
             <WidgetComponent onClose={handleCloseWidget} />
           </div>
         ) : null;
@@ -68,7 +70,7 @@ export function RightTaskbar() {
           rounded-2xl
           transition-all duration-300 ease-out
           pointer-events-auto
-          z-[45]
+          z-[50]
           ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'}
         `}
         onMouseEnter={handleMouseEnter}
@@ -122,7 +124,7 @@ export function RightTaskbar() {
           rounded-l-lg shadow-lg
           transition-all duration-300
           pointer-events-auto cursor-pointer
-          z-[45]
+          z-[50]
           ${isHovering ? 'opacity-100 w-3' : 'opacity-70 hover:opacity-100 hover:w-3'}
         `}
         onMouseEnter={handleMouseEnter}
