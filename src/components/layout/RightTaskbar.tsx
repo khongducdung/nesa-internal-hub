@@ -37,41 +37,22 @@ export function RightTaskbar() {
     }
   };
 
-  // Handle click outside to close widget
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (activeWidget && taskbarRef.current && !taskbarRef.current.contains(event.target as Node)) {
-        // Check if click is on the widget itself
-        const widgetElement = document.querySelector('[data-widget-container]');
-        if (!widgetElement || !widgetElement.contains(event.target as Node)) {
-          setActiveWidget(null);
-        }
-      }
-    };
+  const handleCloseWidget = () => {
+    setActiveWidget(null);
+  };
 
-    if (activeWidget) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [activeWidget]);
+  // Remove the useEffect that handles click outside
+  // The main widget should not close when clicking outside
 
   return (
     <div className="fixed right-0 top-0 h-full z-[40] pointer-events-none">
-      {/* Overlay - simplified without click handler since we handle it in useEffect */}
-      {activeWidget && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
-      )}
-
       {/* Active Widget */}
       {activeWidget && (() => {
         const utility = utilities.find(u => u.id === activeWidget);
         const WidgetComponent = utility?.widget;
         return WidgetComponent ? (
           <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-auto" data-widget-container>
-            <WidgetComponent />
+            <WidgetComponent onClose={handleCloseWidget} />
           </div>
         ) : null;
       })()}

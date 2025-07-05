@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,8 @@ import {
   Clock,
   Users,
   Search,
-  Eye
+  Eye,
+  X
 } from 'lucide-react';
 import { useMyIdeas, useSharedIdeas, useCreateIdea, useUpdateIdea, useDeleteIdea, type Idea, type CreateIdeaData } from '@/hooks/useIdeas';
 import { useCreateNotification } from '@/hooks/useNotifications';
@@ -30,6 +31,10 @@ interface IdeaFormData {
   tags: string;
   is_shared: boolean;
   priority: 'low' | 'medium' | 'high';
+}
+
+interface IdeaWidgetProps {
+  onClose?: () => void;
 }
 
 const priorityColors = {
@@ -44,7 +49,7 @@ const priorityLabels = {
   high: 'Cao'
 };
 
-export function IdeaWidget() {
+export function IdeaWidget({ onClose }: IdeaWidgetProps) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingIdea, setEditingIdea] = useState<Idea | null>(null);
   const [viewingIdea, setViewingIdea] = useState<Idea | null>(null);
@@ -64,6 +69,33 @@ export function IdeaWidget() {
   const updateIdea = useUpdateIdea();
   const deleteIdea = useDeleteIdea();
   const createNotification = useCreateNotification();
+
+  // Handle click outside for dialog closure - this will close all windows
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // If any dialog is open (create, edit, or view), close everything when clicking outside
+      if (isCreateOpen || editingIdea || viewingIdea) {
+        const dialogElement = document.querySelector('[role="dialog"]');
+        if (dialogElement && !dialogElement.contains(event.target as Node)) {
+          // Close all dialogs and the main widget
+          setIsCreateOpen(false);
+          setEditingIdea(null);
+          setViewingIdea(null);
+          if (onClose) {
+            onClose();
+          }
+        }
+      }
+    };
+
+    if (isCreateOpen || editingIdea || viewingIdea) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isCreateOpen, editingIdea, viewingIdea, onClose]);
 
   const resetForm = () => {
     setFormData({
@@ -259,161 +291,170 @@ export function IdeaWidget() {
             <h2 className="font-semibold text-foreground">iDea</h2>
           </div>
           
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="h-8 w-8 p-0" onClick={resetForm}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-[95vw]" style={{ zIndex: 70 }}>
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                  <Lightbulb className="h-5 w-5 text-yellow-500" />
-                  {editingIdea ? 'Chỉnh sửa ý tưởng' : 'Ý tưởng mới'}
-                </DialogTitle>
-              </DialogHeader>
-              
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Tiêu đề *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Nhập tiêu đề ý tưởng..."
-                    required
-                  />
-                </div>
+          <div className="flex items-center gap-2">
+            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="h-8 w-8 p-0" onClick={resetForm}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-[95vw]" style={{ zIndex: 70 }}>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Lightbulb className="h-5 w-5 text-yellow-500" />
+                    {editingIdea ? 'Chỉnh sửa ý tưởng' : 'Ý tưởng mới'}
+                  </DialogTitle>
+                </DialogHeader>
                 
-                 <div>
-                   <Label htmlFor="content">Nội dung *</Label>
-                   <RichTextEditor
-                     value={formData.content}
-                     onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
-                     placeholder="Mô tả chi tiết ý tưởng của bạn..."
-                     minHeight="120px"
-                   />
-                 </div>
-                
-                <div>
-                  <Label htmlFor="tags">Tags</Label>
-                  <Input
-                    id="tags"
-                    value={formData.tags}
-                    onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
-                    placeholder="Tag1, Tag2, Tag3..."
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <Label htmlFor="priority">Mức độ ưu tiên</Label>
-                    <Select value={formData.priority} onValueChange={(value: 'low' | 'medium' | 'high') => 
-                      setFormData(prev => ({ ...prev, priority: value }))
-                    }>
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Thấp</SelectItem>
-                        <SelectItem value="medium">Trung bình</SelectItem>
-                        <SelectItem value="high">Cao</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="title">Tiêu đề *</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="Nhập tiêu đề ý tưởng..."
+                      required
+                    />
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      id="share"
-                      checked={formData.is_shared}
-                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_shared: checked }))}
-                    />
-                    <Label htmlFor="share" className="text-sm">Chia sẻ công khai</Label>
-                  </div>
-                </div>
-                
-                <div className="flex gap-2 pt-2">
-                  <Button type="submit" disabled={createIdea.isPending || updateIdea.isPending} className="flex-1">
-                    {editingIdea ? 'Cập nhật' : 'Lưu ý tưởng'}
-                  </Button>
-                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
-                    Hủy
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-           </Dialog>
-
-           {/* View Idea Dialog */}
-           <Dialog open={!!viewingIdea} onOpenChange={() => setViewingIdea(null)}>
-             <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-[95vw]" style={{ zIndex: 70 }}>
-               <DialogHeader>
-                 <DialogTitle className="flex items-center gap-2">
-                   <Lightbulb className="h-5 w-5 text-yellow-500" />
-                   {viewingIdea?.title}
-                 </DialogTitle>
-               </DialogHeader>
-               
-               {viewingIdea && (
-                 <div className="space-y-6">
-                   <div className="flex items-center gap-4">
-                     <Badge variant="outline" className={`${priorityColors[viewingIdea.priority]}`}>
-                       Mức độ: {priorityLabels[viewingIdea.priority]}
-                     </Badge>
-                     {viewingIdea.is_shared && (
-                       <Badge variant="outline" className="bg-blue-100 text-blue-700">
-                         <Share2 className="h-3 w-3 mr-1" />
-                         Đã chia sẻ
-                       </Badge>
-                     )}
-                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                       <Clock className="h-3 w-3" />
-                       {new Date(viewingIdea.created_at).toLocaleDateString('vi-VN')}
-                     </div>
-                   </div>
-
                    <div>
-                     <Label className="text-base font-medium">Nội dung:</Label>
-                     <div 
-                       className="mt-2 p-4 border rounded-lg bg-gray-50 prose prose-sm max-w-none"
-                       dangerouslySetInnerHTML={{ __html: viewingIdea.content }}
+                     <Label htmlFor="content">Nội dung *</Label>
+                     <RichTextEditor
+                       value={formData.content}
+                       onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
+                       placeholder="Mô tả chi tiết ý tưởng của bạn..."
+                       minHeight="120px"
                      />
                    </div>
+                  
+                  <div>
+                    <Label htmlFor="tags">Tags</Label>
+                    <Input
+                      id="tags"
+                      value={formData.tags}
+                      onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
+                      placeholder="Tag1, Tag2, Tag3..."
+                    />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="priority">Mức độ ưu tiên</Label>
+                      <Select value={formData.priority} onValueChange={(value: 'low' | 'medium' | 'high') => 
+                        setFormData(prev => ({ ...prev, priority: value }))
+                      }>
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Thấp</SelectItem>
+                          <SelectItem value="medium">Trung bình</SelectItem>
+                          <SelectItem value="high">Cao</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        id="share"
+                        checked={formData.is_shared}
+                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_shared: checked }))}
+                      />
+                      <Label htmlFor="share" className="text-sm">Chia sẻ công khai</Label>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2 pt-2">
+                    <Button type="submit" disabled={createIdea.isPending || updateIdea.isPending} className="flex-1">
+                      {editingIdea ? 'Cập nhật' : 'Lưu ý tưởng'}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+                      Hủy
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+             </Dialog>
 
-                   {viewingIdea.tags.length > 0 && (
-                     <div>
-                       <Label className="text-base font-medium">Tags:</Label>
-                       <div className="flex flex-wrap gap-2 mt-2">
-                         {viewingIdea.tags.map((tag, index) => (
-                           <span
-                             key={index}
-                             className="inline-flex items-center text-sm bg-secondary text-secondary-foreground px-2 py-1 rounded"
-                           >
-                             <Tag className="h-3 w-3 mr-1" />
-                             {tag}
-                           </span>
-                         ))}
+             {/* View Idea Dialog */}
+             <Dialog open={!!viewingIdea} onOpenChange={() => setViewingIdea(null)}>
+               <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto w-[95vw]" style={{ zIndex: 70 }}>
+                 <DialogHeader>
+                   <DialogTitle className="flex items-center gap-2">
+                     <Lightbulb className="h-5 w-5 text-yellow-500" />
+                     {viewingIdea?.title}
+                   </DialogTitle>
+                 </DialogHeader>
+                 
+                 {viewingIdea && (
+                   <div className="space-y-6">
+                     <div className="flex items-center gap-4">
+                       <Badge variant="outline" className={`${priorityColors[viewingIdea.priority]}`}>
+                         Mức độ: {priorityLabels[viewingIdea.priority]}
+                       </Badge>
+                       {viewingIdea.is_shared && (
+                         <Badge variant="outline" className="bg-blue-100 text-blue-700">
+                           <Share2 className="h-3 w-3 mr-1" />
+                           Đã chia sẻ
+                         </Badge>
+                       )}
+                       <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                         <Clock className="h-3 w-3" />
+                         {new Date(viewingIdea.created_at).toLocaleDateString('vi-VN')}
                        </div>
                      </div>
-                   )}
 
-                   <div className="flex justify-end gap-2 pt-4 border-t">
-                     <Button variant="outline" onClick={() => setViewingIdea(null)}>
-                       Đóng
-                     </Button>
-                     {viewingIdea.created_by === myIdeas.find(idea => idea.id === viewingIdea.id)?.created_by && (
-                       <Button onClick={() => {
-                         handleEdit(viewingIdea);
-                         setViewingIdea(null);
-                       }}>
-                         Chỉnh sửa
-                       </Button>
+                     <div>
+                       <Label className="text-base font-medium">Nội dung:</Label>
+                       <div 
+                         className="mt-2 p-4 border rounded-lg bg-gray-50 prose prose-sm max-w-none"
+                         dangerouslySetInnerHTML={{ __html: viewingIdea.content }}
+                       />
+                     </div>
+
+                     {viewingIdea.tags.length > 0 && (
+                       <div>
+                         <Label className="text-base font-medium">Tags:</Label>
+                         <div className="flex flex-wrap gap-2 mt-2">
+                           {viewingIdea.tags.map((tag, index) => (
+                             <span
+                               key={index}
+                               className="inline-flex items-center text-sm bg-secondary text-secondary-foreground px-2 py-1 rounded"
+                             >
+                               <Tag className="h-3 w-3 mr-1" />
+                               {tag}
+                             </span>
+                           ))}
+                         </div>
+                       </div>
                      )}
+
+                     <div className="flex justify-end gap-2 pt-4 border-t">
+                       <Button variant="outline" onClick={() => setViewingIdea(null)}>
+                         Đóng
+                       </Button>
+                       {viewingIdea.created_by === myIdeas.find(idea => idea.id === viewingIdea.id)?.created_by && (
+                         <Button onClick={() => {
+                           handleEdit(viewingIdea);
+                           setViewingIdea(null);
+                         }}>
+                           Chỉnh sửa
+                         </Button>
+                       )}
+                     </div>
                    </div>
-                 </div>
-               )}
-             </DialogContent>
-           </Dialog>
+                 )}
+               </DialogContent>
+             </Dialog>
+
+             {/* Close button for main widget */}
+             {onClose && (
+               <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={onClose}>
+                 <X className="h-4 w-4" />
+               </Button>
+             )}
+          </div>
          </div>
         
         {/* Search only */}
