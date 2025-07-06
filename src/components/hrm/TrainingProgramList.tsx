@@ -53,16 +53,19 @@ export function TrainingProgramList() {
   };
 
   const handleView = (program: TrainingProgram) => {
+    console.log('View program:', program);
     setSelectedProgram(program);
     setShowViewDialog(true);
   };
 
   const handleEdit = (program: TrainingProgram) => {
+    console.log('Edit program:', program);
     setSelectedProgram(program);
     setShowEditForm(true);
   };
 
   const handleDelete = async (program: TrainingProgram) => {
+    console.log('Delete program:', program);
     try {
       await deleteProgram.mutateAsync(program.id);
     } catch (error) {
@@ -73,6 +76,12 @@ export function TrainingProgramList() {
   const handleCloseEditForm = () => {
     setShowEditForm(false);
     setSelectedProgram(null);
+  };
+
+  const handleEditFromView = (program: TrainingProgram) => {
+    setShowViewDialog(false);
+    setSelectedProgram(program);
+    setShowEditForm(true);
   };
 
   if (isLoading) {
@@ -242,6 +251,7 @@ export function TrainingProgramList() {
                           size="sm"
                           onClick={() => handleView(program)}
                           className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+                          title="Xem chi tiết"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -250,6 +260,7 @@ export function TrainingProgramList() {
                           size="sm"
                           onClick={() => handleEdit(program)}
                           className="h-8 w-8 p-0 hover:bg-orange-50 hover:text-orange-600"
+                          title="Chỉnh sửa"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -259,6 +270,7 @@ export function TrainingProgramList() {
                               variant="ghost"
                               size="sm"
                               className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                              title="Xóa"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -367,7 +379,7 @@ export function TrainingProgramList() {
         program={selectedProgram}
         open={showViewDialog}
         onOpenChange={setShowViewDialog}
-        onEdit={handleEdit}
+        onEdit={handleEditFromView}
       />
     </div>
   );
