@@ -3,7 +3,11 @@ import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useTrainingRequirements } from '@/hooks/useTrainingRequirements';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useTrainingRequirements, TrainingRequirement, useUpdateTrainingRequirement, useDeleteTrainingRequirement } from '@/hooks/useTrainingRequirements';
+import { TrainingRequirementForm } from './TrainingRequirementForm';
+import { TrainingRequirementViewDialog } from './TrainingRequirementViewDialog';
 import { ExternalLink, BookOpen, Eye, Pencil, Trash2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -13,6 +17,12 @@ interface TrainingRequirementListProps {
 
 export function TrainingRequirementList({ searchTerm }: TrainingRequirementListProps) {
   const { data: requirements, isLoading } = useTrainingRequirements();
+  const updateRequirement = useUpdateTrainingRequirement();
+  const deleteRequirement = useDeleteTrainingRequirement();
+  
+  const [selectedRequirement, setSelectedRequirement] = useState<TrainingRequirement | null>(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const filteredRequirements = requirements?.filter(req =>
     req.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -39,19 +49,33 @@ export function TrainingRequirementList({ searchTerm }: TrainingRequirementListP
     }
   };
 
-  const handleView = (requirement: any) => {
-    // TODO: Implement view functionality
-    console.log('View requirement:', requirement);
+  const handleView = (requirement: TrainingRequirement) => {
+    setSelectedRequirement(requirement);
+    setShowViewDialog(true);
   };
 
-  const handleEdit = (requirement: any) => {
-    // TODO: Implement edit functionality
-    console.log('Edit requirement:', requirement);
+  const handleEdit = (requirement: TrainingRequirement) => {
+    setSelectedRequirement(requirement);
+    setShowEditDialog(true);
   };
 
-  const handleDelete = (requirement: any) => {
-    // TODO: Implement delete functionality
-    console.log('Delete requirement:', requirement);
+  const handleDelete = async (requirement: TrainingRequirement) => {
+    try {
+      await deleteRequirement.mutateAsync(requirement.id);
+    } catch (error) {
+      console.error('Error deleting requirement:', error);
+    }
+  };
+
+  const handleCloseEditDialog = () => {
+    setShowEditDialog(false);
+    setSelectedRequirement(null);
+  };
+
+  const handleEditFromView = (requirement: TrainingRequirement) => {
+    setShowViewDialog(false);
+    setSelectedRequirement(requirement);
+    setShowEditDialog(true);
   };
 
   if (isLoading) {
@@ -87,9 +111,17 @@ export function TrainingRequirementList({ searchTerm }: TrainingRequirementListP
                 {filteredRequirements.map((requirement) => (
                   <TableRow key={requirement.id} className="border-gray-100 hover:bg-gray-50/50">
                     <TableCell className="py-4 px-6">
-                      <h3 className="font-medium text-gray-900">
-                        {requirement.name}
-                      </h3>
+                      <div>
+                        <h3 className="font-medium text-gray-900 cursor-pointer hover:text-blue-600" 
+                            onClick={() => handleView(requirement)}>
+                          {requirement.name}
+                        </h3>
+                        {requirement.description && (
+                          <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                            {requirement.description}
+                          </p>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="py-4 text-center">
                       <Badge className={`${getTargetTypeColor(requirement.target_type)} font-medium text-xs`}>
@@ -129,6 +161,7 @@ export function TrainingRequirementList({ searchTerm }: TrainingRequirementListP
                           size="sm"
                           onClick={() => handleView(requirement)}
                           className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+                          title="Xem chi tiết"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -137,17 +170,40 @@ export function TrainingRequirementList({ searchTerm }: TrainingRequirementListP
                           size="sm"
                           onClick={() => handleEdit(requirement)}
                           className="h-8 w-8 p-0 hover:bg-orange-50 hover:text-orange-600"
+                          title="Chỉnh sửa"
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(requirement)}
-                          className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                              title="Xóa"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Bạn có chắc chắn muốn xóa yêu cầu đào tạo "{requirement.name}"? 
+                                Hành động này không thể hoàn tác.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Hủy</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(requirement)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Xóa
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -196,6 +252,29 @@ export function TrainingRequirementList({ searchTerm }: TrainingRequirementListP
           </div>
         </div>
       )}
+
+      {/* View Dialog */}
+      <TrainingRequirementViewDialog
+        requirement={selectedRequirement}
+        open={showViewDialog}
+        onOpenChange={setShowViewDialog}
+        onEdit={handleEditFromView}
+      />
+
+      {/* Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">Chỉnh sửa yêu cầu đào tạo</DialogTitle>
+          </DialogHeader>
+          {selectedRequirement && (
+            <TrainingRequirementForm 
+              onSuccess={handleCloseEditDialog}
+              initialData={selectedRequirement}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

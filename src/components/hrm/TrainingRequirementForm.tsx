@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { useCreateTrainingRequirement } from '@/hooks/useTrainingRequirements';
+import { useCreateTrainingRequirement, useUpdateTrainingRequirement, TrainingRequirement } from '@/hooks/useTrainingRequirements';
 import { MultiTargetSelector } from './MultiTargetSelector';
 
 const trainingRequirementSchema = z.object({
@@ -32,24 +32,42 @@ interface TargetSelection {
 
 interface TrainingRequirementFormProps {
   onSuccess?: () => void;
+  initialData?: TrainingRequirement;
 }
 
-export function TrainingRequirementForm({ onSuccess }: TrainingRequirementFormProps) {
+export function TrainingRequirementForm({ onSuccess, initialData }: TrainingRequirementFormProps) {
   const [selectedTargets, setSelectedTargets] = useState<TargetSelection[]>([]);
   const createTrainingRequirement = useCreateTrainingRequirement();
+  const updateTrainingRequirement = useUpdateTrainingRequirement();
+
+  const isEditing = !!initialData;
 
   const form = useForm<TrainingRequirementFormData>({
     resolver: zodResolver(trainingRequirementSchema),
     defaultValues: {
-      name: '',
-      description: '',
-      reason: '',
-      course_url: '',
-      duration_days: 30,
-      auto_assign_after_days: 0,
-      is_active: true,
+      name: initialData?.name || '',
+      description: initialData?.description || '',
+      reason: initialData?.reason || '',
+      course_url: initialData?.course_url || '',
+      duration_days: initialData?.duration_days || 30,
+      auto_assign_after_days: initialData?.auto_assign_after_days || 0,
+      is_active: initialData?.is_active ?? true,
     },
   });
+
+  // Load initial targets when editing
+  useEffect(() => {
+    if (initialData && initialData.target_ids) {
+      // Note: This is a simplified version. In a real app, you'd need to fetch
+      // the actual names for these IDs from departments, positions, or employees tables
+      const targets: TargetSelection[] = initialData.target_ids.map(id => ({
+        type: 'employee', // This should be determined based on the actual data
+        id,
+        name: `Target ${id}`, // This should be the actual name
+      }));
+      setSelectedTargets(targets);
+    }
+  }, [initialData]);
 
   const onSubmit = async (data: TrainingRequirementFormData) => {
     try {
@@ -82,19 +100,31 @@ export function TrainingRequirementForm({ onSuccess }: TrainingRequirementFormPr
         is_active: data.is_active,
       };
       
-      await createTrainingRequirement.mutateAsync(formattedData);
-      form.reset();
-      setSelectedTargets([]);
+      if (isEditing && initialData) {
+        await updateTrainingRequirement.mutateAsync({
+          id: initialData.id,
+          data: formattedData
+        });
+      } else {
+        await createTrainingRequirement.mutateAsync(formattedData);
+      }
+
+      if (!isEditing) {
+        form.reset();
+        setSelectedTargets([]);
+      }
       onSuccess?.();
     } catch (error) {
-      console.error('Error creating training requirement:', error);
+      console.error('Error saving training requirement:', error);
     }
   };
+
+  const isPending = createTrainingRequirement.isPending || updateTrainingRequirement.isPending;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Tạo yêu cầu đào tạo mới</CardTitle>
+        <CardTitle>{isEditing ? 'Chỉnh sửa yêu cầu đào tạo' : 'Tạo yêu cầu đào tạo mới'}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -187,11 +217,11 @@ export function TrainingRequirementForm({ onSuccess }: TrainingRequirementFormPr
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button
-              type="submit"
-              disabled={createTrainingRequirement.isPending}
-            >
-              {createTrainingRequirement.isPending ? 'Đang tạo...' : 'Tạo yêu cầu đào tạo'}
+            <Button type="submit" disabled={isPending}>
+              {isPending 
+                ? (isEditing ? 'Đang cập nhật...' : 'Đang tạo...') 
+                : (isEditing ? 'Cập nhật yêu cầu đào tạo' : 'Tạo yêu cầu đào tạo')
+              }
             </Button>
           </div>
         </form>

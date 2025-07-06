@@ -123,6 +123,69 @@ export function useCreateTrainingRequirement() {
   });
 }
 
+export function useUpdateTrainingRequirement() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<TrainingRequirement> }) => {
+      const { data: result, error } = await supabase
+        .from('training_requirements')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['training-requirements'] });
+      toast({
+        title: 'Thành công',
+        description: 'Cập nhật yêu cầu đào tạo thành công',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Lỗi',
+        description: error.message || 'Có lỗi xảy ra khi cập nhật yêu cầu đào tạo',
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
+export function useDeleteTrainingRequirement() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('training_requirements')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['training-requirements'] });
+      toast({
+        title: 'Thành công',
+        description: 'Xóa yêu cầu đào tạo thành công',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Lỗi',
+        description: error.message || 'Có lỗi xảy ra khi xóa yêu cầu đào tạo',
+        variant: 'destructive',
+      });
+    },
+  });
+}
+
 export function useUpdateTrainingAssignmentProgress() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
