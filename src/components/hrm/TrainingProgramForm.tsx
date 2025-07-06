@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useCreateTrainingProgram } from '@/hooks/useTrainingPrograms';
+import { useCreateTrainingProgram, useUpdateTrainingProgram, TrainingProgram } from '@/hooks/useTrainingPrograms';
 
 const trainingProgramFormSchema = z.object({
   name: z.string().min(1, 'Tên chương trình là bắt buộc'),
@@ -24,15 +24,24 @@ type TrainingProgramFormData = z.infer<typeof trainingProgramFormSchema>;
 
 interface TrainingProgramFormProps {
   onClose: () => void;
+  initialData?: TrainingProgram;
 }
 
-export function TrainingProgramForm({ onClose }: TrainingProgramFormProps) {
+export function TrainingProgramForm({ onClose, initialData }: TrainingProgramFormProps) {
   const createTrainingProgram = useCreateTrainingProgram();
+  const updateTrainingProgram = useUpdateTrainingProgram();
+  const isEditing = !!initialData;
 
   const form = useForm<TrainingProgramFormData>({
     resolver: zodResolver(trainingProgramFormSchema),
     defaultValues: {
-      status: 'active',
+      name: initialData?.name || '',
+      description: initialData?.description || '',
+      trainer: initialData?.trainer || '',
+      start_date: initialData?.start_date ? initialData.start_date.split('T')[0] : '',
+      end_date: initialData?.end_date ? initialData.end_date.split('T')[0] : '',
+      max_participants: initialData?.max_participants?.toString() || '',
+      status: initialData?.status || 'active',
     },
   });
 
@@ -47,7 +56,14 @@ export function TrainingProgramForm({ onClose }: TrainingProgramFormProps) {
       status: data.status,
     };
 
-    await createTrainingProgram.mutateAsync(trainingData);
+    if (isEditing && initialData) {
+      await updateTrainingProgram.mutateAsync({ 
+        id: initialData.id, 
+        data: trainingData 
+      });
+    } else {
+      await createTrainingProgram.mutateAsync(trainingData);
+    }
     onClose();
   };
 
@@ -169,8 +185,14 @@ export function TrainingProgramForm({ onClose }: TrainingProgramFormProps) {
           <Button type="button" variant="outline" onClick={onClose}>
             Hủy
           </Button>
-          <Button type="submit" disabled={createTrainingProgram.isPending}>
-            {createTrainingProgram.isPending ? 'Đang tạo...' : 'Tạo chương trình'}
+          <Button 
+            type="submit" 
+            disabled={createTrainingProgram.isPending || updateTrainingProgram.isPending}
+          >
+            {createTrainingProgram.isPending || updateTrainingProgram.isPending 
+              ? (isEditing ? 'Đang cập nhật...' : 'Đang tạo...') 
+              : (isEditing ? 'Cập nhật chương trình' : 'Tạo chương trình')
+            }
           </Button>
         </div>
       </form>
