@@ -116,6 +116,18 @@ export function AvatarUpload({ employeeId, currentAvatarUrl, fullName, onAvatarU
     }
   };
 
+  const extractFileNameFromUrl = (url: string): string | null => {
+    try {
+      const urlParts = url.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+      // Remove query parameters if any
+      return fileName.split('?')[0];
+    } catch (error) {
+      console.error('Error extracting filename from URL:', error);
+      return null;
+    }
+  };
+
   const handleUpload = async () => {
     if (!croppedImageBlob && !selectedFile) return;
 
@@ -141,11 +153,17 @@ export function AvatarUpload({ employeeId, currentAvatarUrl, fullName, onAvatarU
 
       // Delete old avatar if exists
       if (currentAvatarUrl) {
-        const oldPath = currentAvatarUrl.split('/').pop();
-        if (oldPath) {
-          await supabase.storage
-            .from('employee-files')
-            .remove([`avatars/${oldPath}`]);
+        const oldFileName = extractFileNameFromUrl(currentAvatarUrl);
+        if (oldFileName) {
+          try {
+            await supabase.storage
+              .from('employee-files')
+              .remove([`avatars/${oldFileName}`]);
+            console.log('Old avatar deleted successfully');
+          } catch (deleteError) {
+            console.error('Error deleting old avatar:', deleteError);
+            // Continue with upload even if delete fails
+          }
         }
       }
 
