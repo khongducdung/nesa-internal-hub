@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,16 +31,28 @@ import {
   Plus,
   Trash2
 } from 'lucide-react';
-import { useSaveRewardSettings, useSaveAlignmentSettings, useSaveAchievements, useSaveNotificationSettings } from '@/hooks/useOKRSystem';
+import { 
+  useSaveRewardSettings, 
+  useSaveAlignmentSettings, 
+  useSaveAchievements, 
+  useSaveNotificationSettings,
+  useOKRSystemSettings
+} from '@/hooks/useOKRSystem';
 import { useToast } from '@/hooks/use-toast';
 
 export function OKRSystemSettings() {
   const { toast } = useToast();
+  const { data: systemSettings = [], isLoading: isLoadingSettings } = useOKRSystemSettings();
   const saveRewardSettings = useSaveRewardSettings();
   const saveAlignmentSettings = useSaveAlignmentSettings();
   const saveAchievements = useSaveAchievements();
   const saveNotificationSettings = useSaveNotificationSettings();
   
+  // Load existing settings from database
+  const rewardsData = systemSettings.find(s => s.setting_type === 'rewards')?.settings || {};
+  const alignmentData = systemSettings.find(s => s.setting_type === 'alignment')?.settings || {};
+  const notificationsData = systemSettings.find(s => s.setting_type === 'notifications')?.settings || {};
+
   const [rewardSettings, setRewardSettings] = useState({
     enable_gamification: true,
     okr_completion_coins: 100,
@@ -51,7 +63,8 @@ export function OKRSystemSettings() {
     dedication_points_base: 5,
     achievement_multiplier: 1.5,
     season_bonus: true,
-    tier_progression: true
+    tier_progression: true,
+    ...rewardsData
   });
 
   const [alignmentSettings, setAlignmentSettings] = useState({
@@ -66,7 +79,8 @@ export function OKRSystemSettings() {
     misalignment_alerts: true,
     alignment_scoring: true,
     enable_peer_alignment: false,
-    auto_status_update: true
+    auto_status_update: true,
+    ...alignmentData
   });
 
   const [achievements, setAchievements] = useState([
@@ -117,8 +131,28 @@ export function OKRSystemSettings() {
     
     // Email settings
     summary_frequency: 'weekly',
-    summary_time: '09:00'
+    summary_time: '09:00',
+    ...notificationsData
   });
+
+  // Update local state when data loads
+  useEffect(() => {
+    if (rewardsData && Object.keys(rewardsData).length > 0) {
+      setRewardSettings(prev => ({ ...prev, ...rewardsData }));
+    }
+  }, [rewardsData]);
+
+  useEffect(() => {
+    if (alignmentData && Object.keys(alignmentData).length > 0) {
+      setAlignmentSettings(prev => ({ ...prev, ...alignmentData }));
+    }
+  }, [alignmentData]);
+
+  useEffect(() => {
+    if (notificationsData && Object.keys(notificationsData).length > 0) {
+      setNotificationSettings(prev => ({ ...prev, ...notificationsData }));
+    }
+  }, [notificationsData]);
 
   const handleSaveRewards = async () => {
     try {
@@ -127,10 +161,11 @@ export function OKRSystemSettings() {
         title: "Thành công",
         description: "Đã lưu cài đặt hệ thống thưởng",
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error saving rewards:', error);
       toast({
         title: "Lỗi",
-        description: "Không thể lưu cài đặt",
+        description: error.message || "Không thể lưu cài đặt",
         variant: "destructive",
       });
     }
@@ -143,10 +178,11 @@ export function OKRSystemSettings() {
         title: "Thành công", 
         description: "Đã lưu cài đặt liên kết OKR",
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error saving alignment:', error);
       toast({
         title: "Lỗi",
-        description: "Không thể lưu cài đặt liên kết",
+        description: error.message || "Không thể lưu cài đặt liên kết",
         variant: "destructive",
       });
     }
@@ -172,10 +208,11 @@ export function OKRSystemSettings() {
         title: "Thành công",
         description: "Đã lưu danh sách thành tựu",
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error saving achievements:', error);
       toast({
         title: "Lỗi",
-        description: "Không thể lưu thành tựu",
+        description: error.message || "Không thể lưu thành tựu",
         variant: "destructive",
       });
     }
@@ -188,10 +225,11 @@ export function OKRSystemSettings() {
         title: "Thành công",
         description: "Đã lưu cài đặt thông báo",
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error saving notifications:', error);
       toast({
         title: "Lỗi",
-        description: "Không thể lưu cài đặt thông báo",
+        description: error.message || "Không thể lưu cài đặt thông báo",
         variant: "destructive",
       });
     }
@@ -216,6 +254,29 @@ export function OKRSystemSettings() {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (isLoadingSettings) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              <Settings className="h-6 w-6" />
+              Cài đặt hệ thống OKR
+            </h2>
+            <p className="text-muted-foreground mt-1">
+              Quản lý cấu hình và tùy chỉnh hệ thống OKR
+            </p>
+          </div>
+        </div>
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center py-8 text-gray-500">Đang tải cài đặt...</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -1,3 +1,4 @@
+
 // OKR System Hooks - Complete implementation for OKR management
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -546,12 +547,18 @@ export function useSaveRewardSettings() {
   
   return useMutation({
     mutationFn: async (settings: any) => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Not authenticated');
+
       const { data, error } = await supabase
         .from('okr_system_settings')
         .upsert({
           setting_type: 'rewards',
           settings: settings,
-          updated_by: (await supabase.auth.getUser()).data.user?.id
+          updated_by: user.user.id,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'setting_type'
         })
         .select()
         .single();
@@ -571,12 +578,18 @@ export function useSaveAlignmentSettings() {
   
   return useMutation({
     mutationFn: async (settings: any) => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Not authenticated');
+
       const { data, error } = await supabase
         .from('okr_system_settings')
         .upsert({
           setting_type: 'alignment',
           settings: settings,
-          updated_by: (await supabase.auth.getUser()).data.user?.id
+          updated_by: user.user.id,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'setting_type'
         })
         .select()
         .single();
@@ -596,20 +609,30 @@ export function useSaveAchievements() {
   
   return useMutation({
     mutationFn: async (achievements: any[]) => {
-      const promises = achievements.map(achievement => 
-        supabase
-          .from('okr_achievements')
-          .upsert({
-            ...achievement,
-            icon: typeof achievement.icon === 'string' ? achievement.icon : '🏆'
-          })
-      );
-      
-      const results = await Promise.all(promises);
-      const error = results.find(result => result.error);
-      if (error?.error) throw error.error;
-      
-      return results.map(result => result.data).flat();
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Not authenticated');
+
+      // Delete existing achievements first
+      await supabase
+        .from('okr_achievements')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+
+      // Insert new achievements
+      const achievementsData = achievements.map(achievement => ({
+        ...achievement,
+        icon: typeof achievement.icon === 'string' ? achievement.icon : '🏆',
+        created_by: user.user.id,
+        updated_at: new Date().toISOString()
+      }));
+
+      const { data, error } = await supabase
+        .from('okr_achievements')
+        .insert(achievementsData)
+        .select();
+
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['okr-achievements'] });
@@ -623,12 +646,18 @@ export function useSaveNotificationSettings() {
   
   return useMutation({
     mutationFn: async (notificationSettings: any) => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Not authenticated');
+
       const { data, error } = await supabase
         .from('okr_system_settings')
         .upsert({
           setting_type: 'notifications',
           settings: notificationSettings,
-          updated_by: (await supabase.auth.getUser()).data.user?.id
+          updated_by: user.user.id,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'setting_type'
         })
         .select()
         .single();
@@ -638,6 +667,22 @@ export function useSaveNotificationSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['okr-system-settings'] });
+    }
+  });
+}
+
+// Load OKR System Settings
+export function useOKRSystemSettings() {
+  return useQuery({
+    queryKey: ['okr-system-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('okr_system_settings')
+        .select('*')
+        .order('setting_type');
+
+      if (error) throw error;
+      return data || [];
     }
   });
 }
