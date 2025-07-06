@@ -48,10 +48,10 @@ export function OKRSystemSettings() {
   const saveAchievements = useSaveAchievements();
   const saveNotificationSettings = useSaveNotificationSettings();
   
-  // Load existing settings from database
-  const rewardsData = systemSettings.find(s => s.setting_type === 'rewards')?.settings || {};
-  const alignmentData = systemSettings.find(s => s.setting_type === 'alignment')?.settings || {};
-  const notificationsData = systemSettings.find(s => s.setting_type === 'notifications')?.settings || {};
+  // Load existing settings from database with proper null checks
+  const rewardsData = systemSettings.find(s => s.setting_type === 'rewards')?.settings;
+  const alignmentData = systemSettings.find(s => s.setting_type === 'alignment')?.settings;
+  const notificationsData = systemSettings.find(s => s.setting_type === 'notifications')?.settings;
 
   const [rewardSettings, setRewardSettings] = useState({
     enable_gamification: true,
@@ -64,7 +64,7 @@ export function OKRSystemSettings() {
     achievement_multiplier: 1.5,
     season_bonus: true,
     tier_progression: true,
-    ...rewardsData
+    ...(rewardsData && typeof rewardsData === 'object' ? rewardsData : {})
   });
 
   const [alignmentSettings, setAlignmentSettings] = useState({
@@ -80,7 +80,7 @@ export function OKRSystemSettings() {
     alignment_scoring: true,
     enable_peer_alignment: false,
     auto_status_update: true,
-    ...alignmentData
+    ...(alignmentData && typeof alignmentData === 'object' ? alignmentData : {})
   });
 
   const [achievements, setAchievements] = useState([
@@ -132,24 +132,24 @@ export function OKRSystemSettings() {
     // Email settings
     summary_frequency: 'weekly',
     summary_time: '09:00',
-    ...notificationsData
+    ...(notificationsData && typeof notificationsData === 'object' ? notificationsData : {})
   });
 
-  // Update local state when data loads
+  // Update local state when data loads with proper null checks
   useEffect(() => {
-    if (rewardsData && Object.keys(rewardsData).length > 0) {
+    if (rewardsData && typeof rewardsData === 'object' && Object.keys(rewardsData).length > 0) {
       setRewardSettings(prev => ({ ...prev, ...rewardsData }));
     }
   }, [rewardsData]);
 
   useEffect(() => {
-    if (alignmentData && Object.keys(alignmentData).length > 0) {
+    if (alignmentData && typeof alignmentData === 'object' && Object.keys(alignmentData).length > 0) {
       setAlignmentSettings(prev => ({ ...prev, ...alignmentData }));
     }
   }, [alignmentData]);
 
   useEffect(() => {
-    if (notificationsData && Object.keys(notificationsData).length > 0) {
+    if (notificationsData && typeof notificationsData === 'object' && Object.keys(notificationsData).length > 0) {
       setNotificationSettings(prev => ({ ...prev, ...notificationsData }));
     }
   }, [notificationsData]);
@@ -436,7 +436,6 @@ export function OKRSystemSettings() {
           </Card>
         </TabsContent>
 
-        {/* Alignment Settings */}
         <TabsContent value="alignment" className="space-y-4">
           <Card>
             <CardHeader>
@@ -543,7 +542,6 @@ export function OKRSystemSettings() {
           </Card>
         </TabsContent>
 
-        {/* Achievements */}
         <TabsContent value="achievements" className="space-y-4">
           <Card>
             <CardHeader>
@@ -671,7 +669,6 @@ export function OKRSystemSettings() {
           </Card>
         </TabsContent>
 
-        {/* Notifications */}
         <TabsContent value="notifications" className="space-y-4">
           <Card>
             <CardHeader>
