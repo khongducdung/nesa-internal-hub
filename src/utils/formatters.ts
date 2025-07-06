@@ -70,3 +70,33 @@ export function formatTimeAgo(dateString: string | undefined): string {
     return 'Thời gian không hợp lệ';
   }
 }
+
+// Additional formatter functions needed by other components
+export function formatDateForDisplay(dateString: string | undefined): string {
+  return formatDate(dateString);
+}
+
+export function formatDateInput(date: Date): string {
+  if (!date) return '';
+  return date.toISOString().split('T')[0];
+}
+
+export function formatDateFromInput(dateString: string): Date | null {
+  if (!dateString) return null;
+  return new Date(dateString);
+}
+
+export function formatSalaryInput(value: string): string {
+  // Remove all non-numeric characters
+  const numericValue = value.replace(/[^\d]/g, '');
+  
+  // Format with thousand separators using Vietnamese locale
+  if (numericValue) {
+    return parseInt(numericValue).toLocaleString('vi-VN');
+  }
+  return '';
+}
+
+export function parseSalaryValue(value: string): number {
+  return parseFloat(value.replace(/[,.]/g, '')) || 0;
+}
