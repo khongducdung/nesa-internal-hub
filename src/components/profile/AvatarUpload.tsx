@@ -129,7 +129,14 @@ export function AvatarUpload({ employeeId, currentAvatarUrl, fullName, onAvatarU
   };
 
   const handleUpload = async () => {
-    if (!croppedImageBlob && !selectedFile) return;
+    if (!selectedFile) {
+      toast({
+        title: 'Lỗi',
+        description: 'Vui lòng chọn ảnh trước',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     // Check if employeeId is available
     if (!employeeId) {
@@ -145,7 +152,7 @@ export function AvatarUpload({ employeeId, currentAvatarUrl, fullName, onAvatarU
 
     try {
       // Use compressed blob if available, otherwise compress the original file
-      const fileToUpload = croppedImageBlob || await compressImage(selectedFile!);
+      const fileToUpload = croppedImageBlob || await compressImage(selectedFile);
       
       const fileExt = 'jpg'; // Always save as JPEG for better compression
       const fileName = `${employeeId}-${Date.now()}.${fileExt}`;
@@ -312,7 +319,7 @@ export function AvatarUpload({ employeeId, currentAvatarUrl, fullName, onAvatarU
 
               <Button
                 onClick={handleUpload}
-                disabled={isUploading || !selectedFile || !employeeId}
+                disabled={isUploading || !selectedFile}
                 className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 flex items-center gap-2"
               >
                 <Upload className="h-4 w-4" />
