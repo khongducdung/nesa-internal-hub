@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AvatarUploadProps {
-  employeeId: string;
+  employeeId?: string;
   currentAvatarUrl?: string;
   fullName?: string;
   onAvatarUpdated: (url: string) => void;
@@ -118,6 +118,16 @@ export function AvatarUpload({ employeeId, currentAvatarUrl, fullName, onAvatarU
 
   const handleUpload = async () => {
     if (!croppedImageBlob && !selectedFile) return;
+
+    // Check if employeeId is available
+    if (!employeeId) {
+      toast({
+        title: 'Lỗi',
+        description: 'Không tìm thấy thông tin nhân viên. Vui lòng thử lại sau.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setIsUploading(true);
 
@@ -284,7 +294,7 @@ export function AvatarUpload({ employeeId, currentAvatarUrl, fullName, onAvatarU
 
               <Button
                 onClick={handleUpload}
-                disabled={isUploading || !selectedFile}
+                disabled={isUploading || !selectedFile || !employeeId}
                 className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 flex items-center gap-2"
               >
                 <Upload className="h-4 w-4" />

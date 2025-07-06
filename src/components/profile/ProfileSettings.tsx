@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -93,7 +92,7 @@ export function ProfileSettings() {
   }, [user?.id, profileForm]);
 
   const handleAvatarUpdated = (url: string) => {
-    setEmployee({ ...employee, avatar_url: url });
+    setEmployee(prev => ({ ...prev, avatar_url: url }));
   };
 
   const onUpdateProfile = async (data: ProfileFormData) => {
