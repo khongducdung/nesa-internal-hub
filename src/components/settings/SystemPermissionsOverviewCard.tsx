@@ -88,139 +88,167 @@ export function SystemPermissionsOverviewCard() {
 
   return (
     <Card className="border-0 shadow-sm">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-3">
-          <div className="p-2 bg-purple-100 rounded-lg">
-            <Shield className="h-5 w-5 text-purple-600" />
-          </div>
-          Tổng quan hệ thống phân quyền
-          <Badge variant="outline" className="ml-2 bg-purple-50 text-purple-700 border-purple-200">
-            {allPermissions.length} quyền
-          </Badge>
-        </CardTitle>
+      <CardHeader className="pb-6">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-sm">
+              <Shield className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                Hệ thống phân quyền
+                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                  {allPermissions.length} quyền
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground font-normal mt-1">
+                Quản lý chi tiết quyền truy cập theo từng module
+              </p>
+            </div>
+          </CardTitle>
+        </div>
       </CardHeader>
       
       <CardContent className="space-y-6">
-        {/* Thống kê tổng quan */}
-        <div className="grid grid-cols-3 gap-4">
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex items-center gap-2">
-              <div className="p-1 bg-blue-100 rounded">
-                <Shield className="h-4 w-4 text-blue-600" />
-              </div>
+        {/* Enhanced Statistics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 p-6 text-white">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-blue-700 font-medium">Tổng số module</p>
-                <p className="text-2xl font-bold text-blue-900">{moduleCategories.length}</p>
+                <p className="text-blue-100 text-sm font-medium">Tổng số module</p>
+                <p className="text-3xl font-bold mt-1">{moduleCategories.length}</p>
+                <p className="text-blue-100 text-xs mt-1">Module đang hoạt động</p>
+              </div>
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Shield className="h-6 w-6" />
               </div>
             </div>
+            <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-white/10 rounded-full"></div>
           </div>
           
-          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-            <div className="flex items-center gap-2">
-              <div className="p-1 bg-green-100 rounded">
-                <Wrench className="h-4 w-4 text-green-600" />
-              </div>
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-green-500 to-green-600 p-6 text-white">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-700 font-medium">Quyền quản lý</p>
-                <p className="text-2xl font-bold text-green-900">
+                <p className="text-green-100 text-sm font-medium">Quyền quản lý</p>
+                <p className="text-3xl font-bold mt-1">
                   {allPermissions.filter(p => p.action === 'manage').length}
                 </p>
+                <p className="text-green-100 text-xs mt-1">Quyền cấp cao</p>
+              </div>
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Wrench className="h-6 w-6" />
               </div>
             </div>
+            <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-white/10 rounded-full"></div>
           </div>
           
-          <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-            <div className="flex items-center gap-2">
-              <div className="p-1 bg-amber-100 rounded">
-                <Eye className="h-4 w-4 text-amber-600" />
-              </div>
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 p-6 text-white">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-amber-700 font-medium">Quyền xem</p>
-                <p className="text-2xl font-bold text-amber-900">
+                <p className="text-amber-100 text-sm font-medium">Quyền xem</p>
+                <p className="text-3xl font-bold mt-1">
                   {allPermissions.filter(p => p.action === 'view').length}
                 </p>
+                <p className="text-amber-100 text-xs mt-1">Quyền cơ bản</p>
+              </div>
+              <div className="p-3 bg-white/20 rounded-lg">
+                <Eye className="h-6 w-6" />
               </div>
             </div>
+            <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-white/10 rounded-full"></div>
           </div>
         </div>
 
-        {/* Chi tiết từng module */}
+        {/* Module Permissions Grid */}
         <div>
-          <h3 className="text-lg font-semibold mb-4">Chi tiết quyền theo module</h3>
-          <ScrollArea className="h-[400px]">
-            <div className="space-y-4">
-              {Object.entries(permissionsByCategory).map(([categoryName, data]) => {
-                const { category, permissions, managePermissions, viewPermissions } = data;
-                
-                return (
-                  <Card key={category.id} className="border-gray-100">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base flex items-center gap-3">
-                        <div className="p-2 bg-gray-100 rounded-lg">
-                          {getModuleIcon(category.icon)}
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-foreground">Chi tiết quyền theo module</h3>
+            <Badge variant="outline" className="bg-gray-50">
+              {Object.keys(permissionsByCategory).length} module
+            </Badge>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {Object.entries(permissionsByCategory).map(([categoryName, data]) => {
+              const { category, permissions, managePermissions, viewPermissions } = data;
+              
+              return (
+                <Card key={category.id} className="border border-gray-200 hover:border-primary/20 transition-colors group">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-base flex items-center gap-3">
+                      <div className="p-2 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg group-hover:from-primary/10 group-hover:to-primary/20 transition-all">
+                        {getModuleIcon(category.icon)}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold">{category.description}</span>
+                          <Badge variant="outline" className="text-xs">
+                            {permissions.length}
+                          </Badge>
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span>{category.description}</span>
-                            <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
-                              {permissions.length} quyền
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {managePermissions.length} quản lý • {viewPermissions.length} xem
+                        </p>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 space-y-4">
+                    {/* Manage Permissions */}
+                    {managePermissions.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium text-green-700 flex items-center gap-1">
+                          <Wrench className="h-3 w-3" />
+                          Quyền quản lý ({managePermissions.length})
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {managePermissions.slice(0, 4).map((permission) => (
+                            <Badge 
+                              key={permission.id} 
+                              variant="outline" 
+                              className="text-xs bg-green-50 text-green-700 border-green-200 hover:bg-green-100 transition-colors"
+                            >
+                              {permission.description}
                             </Badge>
-                          </div>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {managePermissions.length} quyền quản lý • {viewPermissions.length} quyền xem
-                          </p>
-                        </div>
-                        <ChevronRight className="h-5 w-5 text-gray-400" />
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="grid grid-cols-2 gap-3">
-                        {/* Quyền quản lý */}
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-medium text-green-700 flex items-center gap-1">
-                            <Wrench className="h-3 w-3" />
-                            Quyền quản lý ({managePermissions.length})
-                          </h4>
-                          <div className="space-y-1">
-                            {managePermissions.slice(0, 3).map((permission) => (
-                              <div key={permission.id} className="text-xs p-2 bg-green-50 rounded border border-green-200">
-                                {permission.description}
-                              </div>
-                            ))}
-                            {managePermissions.length > 3 && (
-                              <div className="text-xs text-green-600 p-2">
-                                +{managePermissions.length - 3} quyền khác...
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Quyền xem */}
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-medium text-amber-700 flex items-center gap-1">
-                            <Eye className="h-3 w-3" />
-                            Quyền xem ({viewPermissions.length})
-                          </h4>
-                          <div className="space-y-1">
-                            {viewPermissions.slice(0, 3).map((permission) => (
-                              <div key={permission.id} className="text-xs p-2 bg-amber-50 rounded border border-amber-200">
-                                {permission.description}
-                              </div>
-                            ))}
-                            {viewPermissions.length > 3 && (
-                              <div className="text-xs text-amber-600 p-2">
-                                +{viewPermissions.length - 3} quyền khác...
-                              </div>
-                            )}
-                          </div>
+                          ))}
+                          {managePermissions.length > 4 && (
+                            <Badge variant="outline" className="text-xs bg-green-50 text-green-600 border-green-200">
+                              +{managePermissions.length - 4}
+                            </Badge>
+                          )}
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </ScrollArea>
+                    )}
+
+                    {/* View Permissions */}
+                    {viewPermissions.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="text-sm font-medium text-amber-700 flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          Quyền xem ({viewPermissions.length})
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {viewPermissions.slice(0, 4).map((permission) => (
+                            <Badge 
+                              key={permission.id} 
+                              variant="outline" 
+                              className="text-xs bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 transition-colors"
+                            >
+                              {permission.description}
+                            </Badge>
+                          ))}
+                          {viewPermissions.length > 4 && (
+                            <Badge variant="outline" className="text-xs bg-amber-50 text-amber-600 border-amber-200">
+                              +{viewPermissions.length - 4}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       </CardContent>
     </Card>
