@@ -12,7 +12,8 @@ import {
   UserX,
   Eye,
   Download,
-  RefreshCw
+  RefreshCw,
+  Shield
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -41,12 +42,14 @@ import {
 import { useSystemUsers, useDeleteSystemUser } from '@/hooks/useSystemUsers';
 import { UserManagementDialog } from './UserManagementDialog';
 import { UserViewDialog } from './UserViewDialog';
+import { UserPermissionsDialog } from './UserPermissionsDialog';
 import { toast } from '@/hooks/use-toast';
 import type { SystemUser } from '@/hooks/useSystemUsers';
 
 export function UserManagementCard() {
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [userViewDialogOpen, setUserViewDialogOpen] = useState(false);
+  const [userPermissionsDialogOpen, setUserPermissionsDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<SystemUser | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
@@ -69,6 +72,11 @@ export function UserManagementCard() {
   const handleViewUser = (user: SystemUser) => {
     setSelectedUser(user);
     setUserViewDialogOpen(true);
+  };
+
+  const handleManagePermissions = (user: SystemUser) => {
+    setSelectedUser(user);
+    setUserPermissionsDialogOpen(true);
   };
 
   const handleDeleteUser = (user: SystemUser) => {
@@ -316,6 +324,10 @@ export function UserManagementCard() {
                           <Eye className="h-4 w-4 mr-2" />
                           Xem chi tiết
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleManagePermissions(user)}>
+                          <Shield className="h-4 w-4 mr-2" />
+                          Cấp quyền
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem 
                           className="text-red-600 hover:bg-red-50"
@@ -343,6 +355,12 @@ export function UserManagementCard() {
         user={selectedUser}
         open={userViewDialogOpen}
         onOpenChange={setUserViewDialogOpen}
+      />
+
+      <UserPermissionsDialog
+        user={selectedUser}
+        open={userPermissionsDialogOpen}
+        onOpenChange={setUserPermissionsDialogOpen}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
