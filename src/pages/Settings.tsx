@@ -9,6 +9,7 @@ import { UserManagementCard } from '@/components/settings/UserManagementCard';
 import { SecurityCard } from '@/components/settings/SecurityCard';
 import { SystemLogsCard } from '@/components/settings/SystemLogsCard';
 import { SystemSettingsCard } from '@/components/settings/SystemSettingsCard';
+import { SystemPermissionsOverviewCard } from '@/components/settings/SystemPermissionsOverviewCard';
 
 export default function Settings() {
   return (
@@ -55,6 +56,11 @@ export default function Settings() {
             <PerformanceMonitorCard />
             <SecurityCard />
           </div>
+        </div>
+
+        {/* System Permissions - Full Width */}
+        <div className="mb-8">
+          <SystemPermissionsOverviewCard />
         </div>
 
         {/* System Logs - Full Width */}
