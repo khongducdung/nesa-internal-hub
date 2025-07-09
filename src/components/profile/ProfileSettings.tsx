@@ -11,6 +11,7 @@ import { AvatarUpload } from './AvatarUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { User, Lock, Save } from 'lucide-react';
 
 const profileFormSchema = z.object({
@@ -36,9 +37,9 @@ type PasswordFormData = z.infer<typeof passwordFormSchema>;
 
 export function ProfileSettings() {
   const { user, profile } = useAuth();
+  const { employee, isLoading: profileLoading, updateEmployeeData, updateAvatar } = useProfile();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
-  const [employee, setEmployee] = React.useState<any>(null);
 
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
@@ -57,42 +58,26 @@ export function ProfileSettings() {
   });
 
   React.useEffect(() => {
-    const fetchEmployeeData = async () => {
-      if (!user?.id) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('employees')
-          .select('*')
-          .eq('auth_user_id', user.id)
-          .single();
+    if (employee) {
+      profileForm.reset({
+        full_name: employee.full_name || '',
+        email: employee.email || '',
+        phone: employee.phone || '',
+        address: employee.address || '',
+        emergency_contact_name: employee.emergency_contact_name || '',
+        emergency_contact_phone: employee.emergency_contact_phone || '',
+      });
+    }
+  }, [employee, profileForm]);
 
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching employee data:', error);
-          return;
-        }
-
-        if (data) {
-          setEmployee(data);
-          profileForm.reset({
-            full_name: data.full_name || '',
-            email: data.email || '',
-            phone: data.phone || '',
-            address: data.address || '',
-            emergency_contact_name: data.emergency_contact_name || '',
-            emergency_contact_phone: data.emergency_contact_phone || '',
-          });
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      }
-    };
-
-    fetchEmployeeData();
-  }, [user?.id, profileForm]);
-
-  const handleAvatarUpdated = (url: string) => {
-    setEmployee(prev => ({ ...prev, avatar_url: url }));
+  const handleAvatarUpdated = async (url: string) => {
+    const success = await updateAvatar(url);
+    if (success) {
+      toast({
+        title: 'Thành công',
+        description: 'Cập nhật ảnh đại diện thành công',
+      });
+    }
   };
 
   const onUpdateProfile = async (data: ProfileFormData) => {
@@ -112,6 +97,14 @@ export function ProfileSettings() {
         .eq('id', employee.id);
 
       if (error) throw error;
+
+      updateEmployeeData({
+        full_name: data.full_name,
+        phone: data.phone || undefined,
+        address: data.address || undefined,
+        emergency_contact_name: data.emergency_contact_name || undefined,
+        emergency_contact_phone: data.emergency_contact_phone || undefined,
+      });
 
       toast({
         title: 'Thành công',
@@ -178,6 +171,20 @@ export function ProfileSettings() {
   const formatSalary = (salary: number) => {
     return new Intl.NumberFormat('vi-VN').format(salary);
   };
+
+  if (profileLoading) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-8 p-6">
+        <div className="animate-pulse">
+          <div className="h-32 bg-gray-200 rounded-lg mb-6"></div>
+          <div className="space-y-4">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 p-6">

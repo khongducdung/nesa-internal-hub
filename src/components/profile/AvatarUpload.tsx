@@ -140,9 +140,10 @@ export function AvatarUpload({ employeeId, currentAvatarUrl, fullName, onAvatarU
 
     // Check if employeeId is available
     if (!employeeId) {
+      console.error('Employee ID not found:', { employeeId, fullName });
       toast({
         title: 'Lỗi',
-        description: 'Không tìm thấy thông tin nhân viên. Vui lòng thử lại sau.',
+        description: 'Đang tải thông tin nhân viên. Vui lòng thử lại sau vài giây.',
         variant: 'destructive',
       });
       return;

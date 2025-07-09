@@ -2,10 +2,20 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Menu, Bell, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Menu, Bell, PanelLeftClose, PanelLeftOpen, User, LogOut, Settings } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useNotificationCount } from '@/hooks/useNotifications';
 import { NotificationWidget } from '@/components/widgets/NotificationWidget';
+import { UserAvatar } from '@/components/ui/user-avatar';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -20,6 +30,13 @@ export function Header({
 }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
   const { data: notificationCount = 0 } = useNotificationCount();
+  const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <>
@@ -70,6 +87,44 @@ export function Header({
                 </span>
               )}
             </Button>
+
+            {/* User Avatar Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+                  <UserAvatar size="md" showOnlineStatus />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex items-center space-x-3 p-2">
+                    <UserAvatar size="sm" />
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {profile?.full_name || 'Chưa cập nhật'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {profile?.email || 'No email'}
+                      </p>
+                    </div>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Hồ sơ cá nhân</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/settings')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Cài đặt</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Đăng xuất</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
