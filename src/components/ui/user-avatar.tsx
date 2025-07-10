@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useProfile } from '@/hooks/useProfile';
@@ -8,6 +9,7 @@ interface UserAvatarProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
   showOnlineStatus?: boolean;
+  forceRefresh?: boolean;
 }
 
 const sizeMap = {
@@ -17,13 +19,23 @@ const sizeMap = {
   xl: 'h-24 w-24 text-2xl'
 };
 
-export function UserAvatar({ size = 'md', className, showOnlineStatus = false }: UserAvatarProps) {
+export function UserAvatar({ size = 'md', className, showOnlineStatus = false, forceRefresh = false }: UserAvatarProps) {
   const { profile } = useAuth();
   const { employee } = useProfile();
 
   const displayName = employee?.full_name || profile?.full_name || 'User';
-  const avatarUrl = employee?.avatar_url;
+  // Add timestamp to force refresh the image if needed
+  const avatarUrl = employee?.avatar_url ? 
+    (forceRefresh ? `${employee.avatar_url}?t=${Date.now()}` : employee.avatar_url) : 
+    undefined;
   const initials = displayName.charAt(0).toUpperCase();
+
+  console.log('UserAvatar rendering:', {
+    displayName,
+    avatarUrl,
+    employee: employee?.id,
+    profile: profile?.id
+  });
 
   return (
     <div className="relative">
@@ -31,7 +43,9 @@ export function UserAvatar({ size = 'md', className, showOnlineStatus = false }:
         <AvatarImage 
           src={avatarUrl} 
           alt={displayName}
-          className="object-cover" 
+          className="object-cover"
+          onLoad={() => console.log('Avatar image loaded:', avatarUrl)}
+          onError={(e) => console.error('Avatar image load error:', e, avatarUrl)}
         />
         <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold">
           {initials}

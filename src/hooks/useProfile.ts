@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -48,6 +49,7 @@ export function useProfile() {
 
       if (existingEmployee) {
         setEmployee(existingEmployee);
+        console.log('Employee found:', existingEmployee);
       } else if (fetchError?.code === 'PGRST116') {
         // Không tìm thấy employee record, tạo mới
         console.log('Creating new employee record for user:', user.id);
@@ -74,6 +76,7 @@ export function useProfile() {
           });
         } else {
           setEmployee(createdEmployee);
+          console.log('Employee created:', createdEmployee);
           toast({
             title: 'Thành công',
             description: 'Đã tạo hồ sơ nhân viên thành công',
@@ -95,21 +98,41 @@ export function useProfile() {
   };
 
   const updateEmployeeData = (updates: Partial<Employee>) => {
-    setEmployee(prev => prev ? { ...prev, ...updates } : null);
+    setEmployee(prev => {
+      const updated = prev ? { ...prev, ...updates } : null;
+      console.log('Employee data updated:', updated);
+      return updated;
+    });
   };
 
   const updateAvatar = async (avatarUrl: string) => {
-    if (!employee?.id) return false;
+    if (!employee?.id) {
+      console.error('No employee ID available for avatar update');
+      return false;
+    }
 
     try {
+      console.log('Updating avatar for employee:', employee.id, 'with URL:', avatarUrl);
+      
       const { error } = await supabase
         .from('employees')
         .update({ avatar_url: avatarUrl })
         .eq('id', employee.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Avatar update error:', error);
+        throw error;
+      }
 
+      // Cập nhật state local ngay lập tức
       updateEmployeeData({ avatar_url: avatarUrl });
+      
+      // Force refresh để đảm bảo UI được cập nhật
+      setTimeout(() => {
+        fetchOrCreateEmployee();
+      }, 500);
+
+      console.log('Avatar updated successfully');
       return true;
     } catch (error) {
       console.error('Error updating avatar:', error);

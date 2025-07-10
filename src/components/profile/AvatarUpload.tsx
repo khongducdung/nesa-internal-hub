@@ -20,6 +20,7 @@ export function AvatarUpload({ employeeId, currentAvatarUrl, fullName, onAvatarU
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [croppedImageBlob, setCroppedImageBlob] = useState<Blob | null>(null);
+  const [avatarKey, setAvatarKey] = useState(Date.now()); // For forcing re-render
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
@@ -156,8 +157,11 @@ export function AvatarUpload({ employeeId, currentAvatarUrl, fullName, onAvatarU
       const fileToUpload = croppedImageBlob || await compressImage(selectedFile);
       
       const fileExt = 'jpg'; // Always save as JPEG for better compression
-      const fileName = `${employeeId}-${Date.now()}.${fileExt}`;
+      const timestamp = Date.now();
+      const fileName = `${employeeId}-${timestamp}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
+
+      console.log('Uploading avatar:', { fileName, filePath, fileSize: fileToUpload.size });
 
       // Delete old avatar if exists
       if (currentAvatarUrl) {
@@ -183,12 +187,17 @@ export function AvatarUpload({ employeeId, currentAvatarUrl, fullName, onAvatarU
           upsert: true
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('employee-files')
         .getPublicUrl(filePath);
+
+      console.log('Avatar uploaded, public URL:', publicUrl);
 
       // Update employee record
       const { error: updateError } = await supabase
@@ -196,10 +205,16 @@ export function AvatarUpload({ employeeId, currentAvatarUrl, fullName, onAvatarU
         .update({ avatar_url: publicUrl })
         .eq('id', employeeId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Database update error:', updateError);
+        throw updateError;
+      }
 
       // Call callback to update parent component
       onAvatarUpdated(publicUrl);
+      
+      // Force re-render of avatar by updating key
+      setAvatarKey(Date.now());
       
       // Reset states and close dialog
       setDialogOpen(false);
@@ -211,6 +226,8 @@ export function AvatarUpload({ employeeId, currentAvatarUrl, fullName, onAvatarU
         title: 'Thành công',
         description: 'Cập nhật ảnh đại diện thành công',
       });
+
+      console.log('Avatar upload process completed successfully');
 
     } catch (error: any) {
       console.error('Error uploading avatar:', error);
@@ -233,11 +250,19 @@ export function AvatarUpload({ employeeId, currentAvatarUrl, fullName, onAvatarU
     }
   };
 
+  // Create avatar URL with cache busting
+  const displayAvatarUrl = currentAvatarUrl ? `${currentAvatarUrl}?key=${avatarKey}` : undefined;
+
   return (
     <>
       <div className="relative">
         <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
-          <AvatarImage src={currentAvatarUrl} className="object-cover" />
+          <AvatarImage 
+            src={displayAvatarUrl} 
+            className="object-cover"
+            onLoad={() => console.log('Profile avatar loaded:', displayAvatarUrl)}
+            onError={(e) => console.error('Profile avatar load error:', e)}
+          />
           <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-2xl font-semibold">
             {fullName?.charAt(0) || 'U'}
           </AvatarFallback>

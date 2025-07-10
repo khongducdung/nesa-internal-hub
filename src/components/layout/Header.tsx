@@ -15,6 +15,7 @@ import { useNotificationCount } from '@/hooks/useNotifications';
 import { NotificationWidget } from '@/components/widgets/NotificationWidget';
 import { UserAvatar } from '@/components/ui/user-avatar';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
@@ -31,12 +32,27 @@ export function Header({
   const [showNotifications, setShowNotifications] = useState(false);
   const { data: notificationCount = 0 } = useNotificationCount();
   const { profile, signOut } = useAuth();
+  const { employee } = useProfile();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
   };
+
+  // Force refresh avatar on header by adding timestamp
+  const [avatarRefreshKey, setAvatarRefreshKey] = useState(Date.now());
+
+  // Refresh avatar every 5 seconds if on profile page
+  React.useEffect(() => {
+    const isProfilePage = window.location.pathname === '/profile';
+    if (isProfilePage) {
+      const interval = setInterval(() => {
+        setAvatarRefreshKey(Date.now());
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, []);
 
   return (
     <>
@@ -92,20 +108,34 @@ export function Header({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
-                  <UserAvatar size="md" showOnlineStatus />
+                  <UserAvatar 
+                    size="md" 
+                    showOnlineStatus 
+                    forceRefresh={true}
+                    key={avatarRefreshKey}
+                  />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex items-center space-x-3 p-2">
-                    <UserAvatar size="sm" />
+                    <UserAvatar 
+                      size="sm" 
+                      forceRefresh={true}
+                      key={`sm-${avatarRefreshKey}`}
+                    />
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">
-                        {profile?.full_name || 'Chưa cập nhật'}
+                        {employee?.full_name || profile?.full_name || 'Chưa cập nhật'}
                       </p>
                       <p className="text-xs leading-none text-muted-foreground">
-                        {profile?.email || 'No email'}
+                        {employee?.email || profile?.email || 'No email'}
                       </p>
+                      {employee?.employee_code && (
+                        <p className="text-xs leading-none text-muted-foreground">
+                          Mã NV: {employee.employee_code}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </DropdownMenuLabel>
