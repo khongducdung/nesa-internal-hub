@@ -1,7 +1,7 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Users, Building2, Settings, X, Home, FileText, TrendingUp, Target, BarChart3, LogOut, Clock } from 'lucide-react';
+import { Users, Building2, Settings, X, Home, FileText, TrendingUp, Target, BarChart3, LogOut, Clock, GraduationCap, FolderKanban } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useDepartments } from '@/hooks/useDepartments';
@@ -41,6 +41,8 @@ export function Sidebar({ isOpen, toggleSidebar, isCollapsed, toggleCollapse }: 
     { icon: FileText, label: 'Quản lý quy trình', path: '/processes', access: 'all' },
     { icon: TrendingUp, label: 'Quản lý KPI', path: '/kpi', access: 'all' },
     { icon: Target, label: 'Quản lý OKR', path: '/okr', access: 'all' },
+    { icon: GraduationCap, label: 'Đào tạo', path: '/training', access: 'all' },
+    { icon: FolderKanban, label: 'Quản lý dự án', path: '/projects', access: 'all' },
     { icon: Settings, label: 'Cài đặt hệ thống', path: '/settings', access: 'super_admin' }
   ];
 
