@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -491,7 +491,7 @@ export type Database = {
           action: string
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_values: Json | null
           old_values: Json | null
           record_id: string | null
@@ -503,7 +503,7 @@ export type Database = {
           action: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           record_id?: string | null
@@ -515,7 +515,7 @@ export type Database = {
           action?: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           record_id?: string | null
@@ -4234,7 +4234,7 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           is_active: boolean
           last_activity: string
           session_token: string
@@ -4245,7 +4245,7 @@ export type Database = {
           created_at?: string
           expires_at: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_active?: boolean
           last_activity?: string
           session_token: string
@@ -4256,7 +4256,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_active?: boolean
           last_activity?: string
           session_token?: string
@@ -4458,82 +4458,67 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      auto_assign_training_requirements: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      auto_assign_training_requirements: { Args: never; Returns: undefined }
+      cleanup_expired_sessions: { Args: never; Returns: number }
       create_admin_user: {
         Args: {
           p_email: string
-          p_password: string
           p_full_name: string
+          p_password: string
           p_role?: Database["public"]["Enums"]["system_role"]
         }
         Returns: Json
       }
       create_notification: {
         Args: {
-          p_user_id: string
-          p_title: string
-          p_message: string
-          p_type?: string
-          p_category?: string
-          p_reference_id?: string
-          p_reference_type?: string
-          p_action_url?: string
           p_action_label?: string
+          p_action_url?: string
+          p_category?: string
           p_created_by?: string
           p_expires_at?: string
+          p_message: string
+          p_reference_id?: string
+          p_reference_type?: string
+          p_title: string
+          p_type?: string
+          p_user_id: string
         }
         Returns: string
       }
-      get_system_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_unread_notification_count: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      get_system_stats: { Args: never; Returns: Json }
+      get_unread_notification_count: { Args: never; Returns: number }
       get_user_permissions: {
         Args: { _user_id: string }
         Returns: {
+          action: string
+          module: string
           permission_id: string
           permission_name: string
-          module: string
-          action: string
           source: string
         }[]
       }
       has_permission: {
-        Args: { _user_id: string; _permission_name: string }
+        Args: { _permission_name: string; _user_id: string }
         Returns: boolean
       }
       has_system_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["system_role"]
+          _user_id: string
         }
         Returns: boolean
       }
       log_audit_action: {
         Args: {
           p_action: string
-          p_table_name?: string
-          p_record_id?: string
-          p_old_values?: Json
           p_new_values?: Json
+          p_old_values?: Json
+          p_record_id?: string
+          p_table_name?: string
         }
         Returns: string
       }
-      mark_all_notifications_read: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      mark_all_notifications_read: { Args: never; Returns: number }
       mark_notification_read: {
         Args: { notification_id: string }
         Returns: boolean
